@@ -66,13 +66,17 @@ class LeaveLedgerController extends Controller
     }
 
 
-    public function pending()
-{
-    $applications = \App\Models\LeaveApplication::with('user')
-        ->where('status', 'pending')->latest()->paginate(15);
+        public function pending(Request $request)
+        {
+            $applications = LeaveApplication::with('user')
+                ->where('status', 'pending')
+                ->when($request->type, fn ($q, $type) => $q->where('leave_type', $type))
+                ->latest()
+                ->paginate(15)
+                ->withQueryString();
 
-    return view('admin.leave.pending', compact('applications'));
-}
+            return view('admin.leave.pending', compact('applications'));
+        }
 
 public function approve(Request $request, LeaveApplication $application, LeaveLedgerService $service)
 {
@@ -122,13 +126,19 @@ public function index(Request $request)
                   ->orWhere('employee_number', 'like', "%{$search}%");
             });
         })
-        ->orderBy('name')
+        ->when($request->college, fn ($q, $college) => $q->where('department', $college))
+        ->when($request->sort === 'low_balance', function ($q) {
+            $q->leftJoin('leave_balances', 'leave_balances.user_id', '=', 'users.id')
+              ->orderByRaw('COALESCE(leave_balances.vl_balance, 0) + COALESCE(leave_balances.sl_balance, 0) ASC')
+              ->select('users.*');
+        }, fn ($q) => $q->orderBy('name'))
         ->paginate(15)
         ->withQueryString();
 
-    $pendingCount = \App\Models\LeaveApplication::where('status', 'pending')->count();
+    $pendingCount = LeaveApplication::where('status', 'pending')->count();
+    $colleges = config('colleges');
 
-    return view('admin.leave.index', compact('employees', 'pendingCount'));
+    return view('admin.leave.index', compact('employees', 'pendingCount', 'colleges'));
 }
 
 public function bulkStoreEarned(Request $request, LeaveLedgerService $service)

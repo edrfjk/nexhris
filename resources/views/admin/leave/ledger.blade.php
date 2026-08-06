@@ -106,6 +106,32 @@
     </form>
 </x-card>
 
+<x-card title="Manual Adjustment" class="mb-6">
+    <p class="text-xs text-gray-400 mb-3">Use this only for corrections (e.g. encoding errors). Positive values add credits, negative values deduct.</p>
+    <form method="POST" action="{{ route('admin.leave.adjust.store', $employee) }}" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end text-sm">
+        @csrf
+        <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Date</label>
+            <input type="date" name="date" class="border border-gray-300 rounded-lg px-2.5 py-2 w-full focus:ring-2 focus:ring-maroon-700 focus:border-transparent" required>
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">VL Adjustment</label>
+            <input type="number" step="0.001" name="vl_adjustment" placeholder="e.g. -1.5" class="border border-gray-300 rounded-lg px-2.5 py-2 w-full focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">SL Adjustment</label>
+            <input type="number" step="0.001" name="sl_adjustment" placeholder="e.g. -1.5" class="border border-gray-300 rounded-lg px-2.5 py-2 w-full focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
+        </div>
+        <button class="inline-flex items-center justify-center gap-1.5 bg-gray-700 text-white rounded-lg px-4 py-2 hover:bg-gray-800 transition">
+            Post Adjustment
+        </button>
+        <div class="sm:col-span-4">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Remarks (required)</label>
+            <input type="text" name="remarks" placeholder="Reason for this adjustment" class="border border-gray-300 rounded-lg px-2.5 py-2 w-full focus:ring-2 focus:ring-maroon-700 focus:border-transparent" required>
+        </div>
+    </form>
+</x-card>
+
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     <div class="px-5 py-3 border-b border-gray-100">
         <h3 class="text-sm font-semibold text-gray-700">Ledger History</h3>

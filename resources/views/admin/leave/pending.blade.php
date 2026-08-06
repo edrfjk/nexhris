@@ -19,6 +19,36 @@
     </div>
 @endif
 
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+    <form method="GET" class="flex flex-wrap items-end gap-3">
+
+        <div class="w-40">
+            <label class="block text-xs font-medium text-gray-500 mb-1.5">
+                Leave Type
+            </label>
+
+            <select
+                name="type"
+                onchange="this.form.submit()"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
+                       focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
+
+                <option value="">All Types</option>
+
+                <option value="VL" @selected(request('type') === 'VL')>
+                    Vacation Leave
+                </option>
+
+                <option value="SL" @selected(request('type') === 'SL')>
+                    Sick Leave
+                </option>
+
+            </select>
+        </div>
+
+    </form>
+</div>
+
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     <table class="w-full text-sm">
         <thead class="bg-gray-50 text-left text-gray-500">
@@ -61,7 +91,13 @@
                         <x-badge :color="$typeColor">{{ $application->leave_type }}</x-badge>
                     </td>
                     <td class="px-5 py-3 text-gray-600">
-                        {{ $application->date_from->format('M d, Y') }} – {{ $application->date_to->format('M d, Y') }}
+                    {{ $application->date_from->format('M d, Y') }}
+                    –
+                    {{ $application->date_to->format('M d, Y') }}
+
+                    <p class="text-xs text-gray-400 mt-0.5">
+                        Filed {{ $application->created_at->diffForHumans() }}
+                    </p>
                     </td>
                     <td class="px-5 py-3 text-gray-600">{{ $application->days }}</td>
                     <td class="px-5 py-3 text-gray-500 max-w-[220px] truncate" title="{{ $application->reason }}">{{ $application->reason ?: '—' }}</td>
