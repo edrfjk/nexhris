@@ -6,45 +6,65 @@ use ZipArchive;
 
 class PdsCheckboxService
 {
-    /**
-     * @param string $filePath   Path to the already-saved xlsx (after PdsSpreadsheetExportService)
-     * @param array  $labelChecks e.g. ['Male' => true, 'Single' => true, 'Filipino' => true]
-     *                            — checkboxes on sheet C1 matched by their exact visible label
-     * @param array  $yesNoChecks e.g. [6 => false, 8 => false, 13 => true, ...]
-     *                            — keyed by the question's Excel row on sheet C4,
-     *                              value is true for YES / false for NO
-     */
     public function apply(string $filePath, array $labelChecks = [], array $yesNoChecks = []): void
     {
         $zip = new ZipArchive();
-        if ($zip->open($filePath) !== true) {
-            throw new \RuntimeException("Unable to open {$filePath} for checkbox post-processing.");
+        $openResult = $zip->open($filePath);
+        if ($openResult !== true) {
+            throw new \RuntimeException("Unable to open {$filePath} for checkbox post-processing. ZipArchive error code: {$openResult}");
         }
 
+        $modified = false;
+
         $vml1 = $zip->getFromName('xl/drawings/vmlDrawing1.vml');
-        if ($vml1 !== false) {
-            foreach ($labelChecks as $label => $checked) {
-                if ($checked) {
-                    $vml1 = $this->checkByLabel($vml1, (string) $label);
-                }
+        if ($vml1 === false) {
+            $zip->close();
+            throw new \RuntimeException('vmlDrawing1.vml not found inside the generated xlsx.');
+        }
+
+        $originalVml1 = $vml1;
+        foreach ($labelChecks as $label => $checked) {
+            if ($checked) {
+                $vml1 = $this->checkByLabel($vml1, (string) $label);
             }
-            $zip->addFromString('xl/drawings/vmlDrawing1.vml', $vml1);
+        }
+        if ($vml1 !== $originalVml1) {
+            if (!$zip->addFromString('xl/drawings/vmlDrawing1.vml', $vml1)) {
+                $zip->close();
+                throw new \RuntimeException('Failed to write updated vmlDrawing1.vml back into the xlsx.');
+            }
+            $modified = true;
         }
 
         $vml2 = $zip->getFromName('xl/drawings/vmlDrawing2.vml');
         if ($vml2 !== false) {
+            $originalVml2 = $vml2;
             foreach ($yesNoChecks as $targetRow => $answerYes) {
                 if ($answerYes === null) {
                     continue;
                 }
                 $vml2 = $this->checkNearestYesNo($vml2, (int) $targetRow, (bool) $answerYes);
             }
-            $zip->addFromString('xl/drawings/vmlDrawing2.vml', $vml2);
+            if ($vml2 !== $originalVml2) {
+                if (!$zip->addFromString('xl/drawings/vmlDrawing2.vml', $vml2)) {
+                    $zip->close();
+                    throw new \RuntimeException('Failed to write updated vmlDrawing2.vml back into the xlsx.');
+                }
+                $modified = true;
+            }
         }
 
-        $zip->close();
-    }
+        if (!$zip->close()) {
+            throw new \RuntimeException('Failed to finalize the xlsx after checkbox post-processing.');
+        }
 
+        if (!$modified) {
+            \Illuminate\Support\Facades\Log::warning('PDS checkbox step ran but matched nothing — labelChecks/yesNoChecks may be empty or labels did not match any shape.', [
+                'labelChecks' => $labelChecks,
+                'yesNoChecks' => $yesNoChecks,
+            ]);
+        }
+    }
     private function getShapes(string $vml): array
     {
         preg_match_all('/<v:shape\b.*?<\/v:shape>/s', $vml, $m);
@@ -57,12 +77,24 @@ class PdsCheckboxService
             return null;
         }
 
-        return trim(preg_replace('/\s+/', ' ', strip_tags($lm[1])));
+        $label = strip_tags($lm[1]);
+
+        // Strip UTF-8 non-breaking spaces (0xC2 0xA0) that the template embeds
+        // before each checkbox caption — plain trim()/preg_replace('/\s+/')
+        // don't recognize these as whitespace since they're multi-byte.
+        $label = str_replace("\xC2\xA0", ' ', $label);
+        $label = str_replace("\xA0", ' ', $label);
+        $label = html_entity_decode($label, ENT_QUOTES, 'UTF-8');
+        $label = preg_replace('/\s+/u', ' ', $label);
+
+        return trim($label);
     }
 
     private function checkByLabel(string $vml, string $label): string
     {
-        return preg_replace_callback('/<v:shape\b.*?<\/v:shape>/s', function ($m) use ($label) {
+        $matchedAny = false;
+
+        $result = preg_replace_callback('/<v:shape\b.*?<\/v:shape>/s', function ($m) use ($label, &$matchedAny) {
             $shape = $m[0];
 
             if (stripos($shape, 'ObjectType="Checkbox"') === false) {
@@ -70,20 +102,27 @@ class PdsCheckboxService
             }
 
             $shapeLabel = $this->shapeLabel($shape);
+
+            \Illuminate\Support\Facades\Log::info('Checkbox candidate', [
+                'wanted' => $label,
+                'found' => $shapeLabel,
+            ]);
+
             if ($shapeLabel === null || strcasecmp($shapeLabel, $label) !== 0) {
                 return $shape;
             }
 
+            $matchedAny = true;
             return $this->markChecked($shape);
         }, $vml);
+
+        if (!$matchedAny) {
+            \Illuminate\Support\Facades\Log::warning("checkByLabel found NO match for label: {$label}");
+        }
+
+        return $result;
     }
 
-    /**
-     * The Yes/No checkboxes on the questionnaire page all share the same
-     * two labels ("YES" / "NO"), so we identify the right pair by finding
-     * the checkbox whose vertical position on the sheet sits closest to
-     * the target question's row.
-     */
     private function checkNearestYesNo(string $vml, int $targetRow, bool $answerYes): string
     {
         $shapes = $this->getShapes($vml);
@@ -105,7 +144,7 @@ class PdsCheckboxService
                 continue;
             }
 
-            $shapeRow = (int) $am[1] + 1; // VML rows are 0-indexed
+            $shapeRow = (int) $am[1] + 1;
             $distance = abs($shapeRow - $targetRow);
 
             if ($distance < $bestDistance) {

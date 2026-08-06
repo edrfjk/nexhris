@@ -1,8 +1,10 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\LeaveApplication;
 use App\Services\LeaveLedgerService;
 use Illuminate\Http\Request;
 
@@ -108,5 +110,51 @@ public function decline(Request $request, LeaveApplication $application)
     ]);
 
     return back()->with('success', 'Leave application declined.');
+}
+
+public function index(Request $request)
+{
+    $employees = User::where('role', 'employee')
+        ->with('leaveBalance')
+        ->when($request->search, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('employee_number', 'like', "%{$search}%");
+            });
+        })
+        ->orderBy('name')
+        ->paginate(15)
+        ->withQueryString();
+
+    $pendingCount = \App\Models\LeaveApplication::where('status', 'pending')->count();
+
+    return view('admin.leave.index', compact('employees', 'pendingCount'));
+}
+
+public function bulkStoreEarned(Request $request, LeaveLedgerService $service)
+{
+    $data = $request->validate([
+        'period_from' => ['required', 'date'],
+        'period_to' => ['required', 'date', 'after_or_equal:period_from'],
+        'vl_earned' => ['nullable', 'numeric', 'min:0'],
+        'sl_earned' => ['nullable', 'numeric', 'min:0'],
+        'remarks' => ['nullable', 'string', 'max:255'],
+    ]);
+
+    $employees = User::where('role', 'employee')->where('status', 'active')->get();
+
+    foreach ($employees as $employee) {
+        $service->postEntry(
+            employee: $employee,
+            periodFrom: $data['period_from'],
+            periodTo: $data['period_to'],
+            type: 'earned',
+            remarks: $data['remarks'] ?? "Earned during {$data['period_from']} - {$data['period_to']}",
+            vlEarned: $data['vl_earned'] ?? 0,
+            slEarned: $data['sl_earned'] ?? 0,
+        );
+    }
+
+    return back()->with('success', "Leave credits posted to {$employees->count()} employee(s).");
 }
 }

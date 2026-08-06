@@ -22,7 +22,10 @@ class PdsSpreadsheetExportService
 
     public function fill(User $user): \PhpOffice\PhpSpreadsheet\Spreadsheet
     {
-        $templatePath = storage_path('app/pds-template/CS-Form-212.xlsx');
+        // Keep the CSC workbook intact and only populate its designated cells.
+        // LibreOffice then prints the workbook using its built-in legal-size,
+        // four-page layout, preserving the official CS Form 212 format.
+        $templatePath = resource_path('templates/CS-Form-212-2026.xlsx');
         $spreadsheet = IOFactory::load($templatePath);
 
         $this->fillPersonalPage($spreadsheet->getSheetByName('C1'), $user);
@@ -43,7 +46,9 @@ class PdsSpreadsheetExportService
             $this->set($sheet, 'L12', $p->name_extension);
             $this->set($sheet, 'D12', $p->middle_name);
             $this->set($sheet, 'D13', optional($p->date_of_birth)->format('d/m/Y'));
-            $this->set($sheet, 'J13', $p->citizenship);
+            if ($p->is_dual_citizen && $p->dual_citizenship_country) {
+            $this->set($sheet, 'J13', $p->dual_citizenship_country);
+}
             $this->set($sheet, 'D15', $p->place_of_birth);
 
             $this->set($sheet, 'D22', $p->height_m);
@@ -113,6 +118,8 @@ class PdsSpreadsheetExportService
             $this->set($sheet, "M{$row}", $edu->year_graduated);
             $this->set($sheet, "N{$row}", $edu->scholarship_honors);
         }
+
+        $this->applyPageSignature($sheet, 'D60', 'J60', $user);
     }
 
     private function fillEligibilityAndWork(Worksheet $sheet, User $user): void
@@ -142,6 +149,8 @@ class PdsSpreadsheetExportService
             $this->set($sheet, "M{$row}", $work->is_government_service ? 'Y' : 'N');
             $row++;
         }
+
+        $this->applyPageSignature($sheet, 'D47', 'I47', $user);
     }
 
     private function fillVoluntaryTrainingOther(Worksheet $sheet, User $user): void
@@ -175,6 +184,8 @@ class PdsSpreadsheetExportService
             $this->fillListColumn($sheet, 'C', 42, 48, $other->non_academic_distinctions ?? []);
             $this->fillListColumn($sheet, 'I', 42, 48, $other->membership_associations ?? []);
         }
+
+        $this->applyPageSignature($sheet, 'C50', 'G50', $user);
     }
 
     private function fillReferencesAndDeclaration(Worksheet $sheet, User $user): void
@@ -206,16 +217,7 @@ class PdsSpreadsheetExportService
                 $photo->setWorksheet($sheet);
             }
 
-            if ($d->signature_path && Storage::disk('public')->exists($d->signature_path)) {
-                $signature = new Drawing();
-                $signature->setPath(storage_path('app/public/' . $d->signature_path));
-                $signature->setCoordinates('F60');
-                $signature->setWidth(140);
-                $signature->setHeight(50);
-                $signature->setOffsetX(5);
-                $signature->setOffsetY(20);
-                $signature->setWorksheet($sheet);
-            }
+            $this->applyPageSignature($sheet, 'F60', 'J65', $user, 140, 50, 20);
         }
 
         // Note: the "SUBSCRIBED AND SWORN..." / "Person Administering Oath"
@@ -259,6 +261,43 @@ class PdsSpreadsheetExportService
     }
 
     /**
+     * The CSC form requires the applicant's signature and date on each page.
+     * Add the saved signature to the template's signature box without changing
+     * any of the official form's labels, borders, or page settings.
+     */
+    private function applyPageSignature(
+        Worksheet $sheet,
+        string $signatureCell,
+        string $dateCell,
+        User $user,
+        int $width = 130,
+        int $height = 25,
+        int $offsetY = 2,
+    ): void {
+        $declaration = $user->pdsDeclaration;
+        if (!$declaration) {
+            return;
+        }
+
+        if ($declaration->date_accomplished) {
+            $this->set($sheet, $dateCell, $declaration->date_accomplished->format('d/m/Y'));
+        }
+
+        if (!$declaration->signature_path || !Storage::disk('public')->exists($declaration->signature_path)) {
+            return;
+        }
+
+        $signature = new Drawing();
+        $signature->setPath(storage_path('app/public/' . $declaration->signature_path));
+        $signature->setCoordinates($signatureCell);
+        $signature->setWidth($width);
+        $signature->setHeight($height);
+        $signature->setOffsetX(5);
+        $signature->setOffsetY($offsetY);
+        $signature->setWorksheet($sheet);
+    }
+
+    /**
      * Replaces the underscore blank-line portion of a "give details" prompt
      * with an actual clean sentence, instead of leaving decorative
      * underscores or overwriting the instruction text entirely.
@@ -270,8 +309,13 @@ class PdsSpreadsheetExportService
         }
 
         $existing = (string) $sheet->getCell($cell)->getValue();
-        $label = trim(preg_replace('/_+/', '', $existing));
-        $label = rtrim($label, ': ') . ': ';
+
+        // Strip the underscore blank-line, then strip any existing
+        // "If YES, give details:"-style phrase so it never gets doubled.
+        $label = preg_replace('/_+/', '', $existing);
+        $label = preg_replace('/if\s*yes,?\s*(give|please)?\s*(details|specify)[^:]*:?/i', '', $label);
+        $label = trim($label);
+        $label = $label !== '' ? $label . ': ' : 'If YES, give details: ';
 
         $sheet->setCellValueExplicit($cell, $label . $details, DataType::TYPE_STRING);
         $sheet->getStyle($cell)->getAlignment()->setWrapText(true);

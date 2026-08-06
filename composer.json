@@ -10,7 +10,9 @@
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
-        "phpoffice/phpspreadsheet": "^5.9"
+        "phpoffice/phpspreadsheet": "^5.9",
+        "setasign/fpdf": "1.8",
+        "setasign/fpdi": "2.6"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

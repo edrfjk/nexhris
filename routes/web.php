@@ -14,7 +14,16 @@ use App\Http\Controllers\Employee\PdsVoluntaryWorkController;
 use App\Http\Controllers\Employee\PdsTrainingController;
 use App\Http\Controllers\Employee\PdsReferenceController;
 use App\Http\Controllers\Employee\PdsPdfController;
+use App\Http\Controllers\Employee\MyIdController;
+use App\Http\Controllers\Admin\PdsReviewController;
+use App\Http\Controllers\Admin\HrPolicyController;
+use App\Http\Controllers\Admin\DashboardController;
+
+
+
+
 use Illuminate\Support\Facades\Route;
+
 
 Route::get('/', fn () => redirect('/login'));
 
@@ -28,27 +37,42 @@ Route::middleware('auth')->group(function () {
 
     // ===== ADMIN ROUTES =====
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/dashboard', fn () => view('admin.dashboard'))->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        Route::resource('employees', EmployeeController::class)->parameters([
+        Route::resource('employees', EmployeeController::class)->except(['destroy'])->parameters([
             'employees' => 'employee',
         ]);
 
+        Route::patch('/employees/{employee}/status', [EmployeeController::class, 'updateStatus'])->name('employees.status.update');
+        Route::post('/employees/{employee}/photo', [EmployeeController::class, 'updatePhoto'])->name('employees.photo.update');
+        Route::get('/leave', [LeaveLedgerController::class, 'index'])->name('leave.index');
+        Route::post('/leave/bulk-earned', [LeaveLedgerController::class, 'bulkStoreEarned'])->name('leave.bulk-earned.store');
         Route::get('/leave/pending', [LeaveLedgerController::class, 'pending'])->name('leave.pending');
         Route::post('/leave/{application}/approve', [LeaveLedgerController::class, 'approve'])->name('leave.approve');
         Route::post('/leave/{application}/decline', [LeaveLedgerController::class, 'decline'])->name('leave.decline');
         Route::get('/leave/{employee}/ledger', [LeaveLedgerController::class, 'show'])->name('leave.ledger');
         Route::post('/leave/{employee}/earned', [LeaveLedgerController::class, 'storeEarned'])->name('leave.earned.store');
         Route::post('/leave/{employee}/adjust', [LeaveLedgerController::class, 'storeAdjustment'])->name('leave.adjust.store');
+        Route::get('/pds', [PdsReviewController::class, 'index'])->name('pds.index');
+        Route::get('/pds/{employee}', [PdsReviewController::class, 'show'])->name('pds.show');
+        Route::post('/pds/{employee}/approve', [PdsReviewController::class, 'approve'])->name('pds.approve');
+        Route::post('/pds/{employee}/return', [PdsReviewController::class, 'returnForRevision'])->name('pds.return');
+        Route::get('/pds/{employee}/download', [PdsReviewController::class, 'download'])->name('pds.download');
+        Route::resource('policies', HrPolicyController::class)->except(['show']);
+        Route::post('/policies/{policy}/toggle-publish', [HrPolicyController::class, 'togglePublish'])->name('policies.toggle-publish');
     });
 
-    // ===== EMPLOYEE ROUTES =====
-    Route::get('/dashboard', fn () => view('employee.dashboard'))->name('employee.dashboard');
+        // ===== EMPLOYEE ROUTES =====
+        Route::get('/dashboard', fn () => view('employee.dashboard'))->name('employee.dashboard');
 
-    Route::prefix('leave')->name('leave.')->group(function () {
-        Route::get('/', [LeaveApplicationController::class, 'index'])->name('index');
-        Route::post('/', [LeaveApplicationController::class, 'store'])->name('store');
-    });
+        Route::prefix('leave')->name('leave.')->group(function () {
+            Route::get('/', [LeaveApplicationController::class, 'index'])->name('index');
+            Route::post('/', [LeaveApplicationController::class, 'store'])->name('store');
+        });
+
+        // ===== MY ID ROUTES =====
+        Route::get('/my-id', [MyIdController::class, 'show'])->name('my-id.show');
+        Route::post('/my-id/photo', [MyIdController::class, 'updatePhoto'])->name('my-id.photo.update');
 
     // ===== PDS ROUTES (employee-facing) =====
     Route::prefix('pds')->name('pds.')->group(function () {
