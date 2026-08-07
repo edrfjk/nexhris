@@ -12,13 +12,6 @@
     </x-slot:actions>
 </x-page-header>
 
-@if (session('success'))
-    <div class="mb-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 12.75l6 6 9-13.5"/></svg>
-        {{ session('success') }}
-    </div>
-@endif
-
 <!-- Stat cards -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 ring-1 ring-gray-100 p-4">
@@ -174,97 +167,39 @@
                         </form>
                     </td>
                     <td class="px-5 py-3 text-gray-500">{{ $policy->creator->name ?? '—' }}</td>
-<td class="px-5 py-3">
-    <div class="flex items-center justify-end gap-1.5" x-data="{ preview: false }">
+                    <td class="px-5 py-3">
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button @click="preview = true" title="Preview"
+                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-maroon-800 hover:bg-maroon-50 transition">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </button>
 
-        {{-- Preview --}}
-        <button
-            @click="preview = true"
-            title="Preview"
-            class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-maroon-800 hover:bg-maroon-50 transition">
+                            <a href="{{ route('admin.policies.edit', $policy) }}" title="Edit"
+                               class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 7.125L16.875 4.5"/>
+                                </svg>
+                            </a>
 
-            <svg class="w-5 h-5"
-                 fill="none"
-                 viewBox="0 0 24 24"
-                 stroke="currentColor">
-                <path stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="1.5"
-                      d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
-                <path stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="1.5"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-        </button>
+                            <form action="{{ route('admin.policies.destroy', $policy) }}" method="POST" onsubmit="return confirm('Delete this policy?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" title="Delete"
+                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 7.5h12"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 7.5V5.625A1.125 1.125 0 0110.875 4.5h2.25A1.125 1.125 0 0114.25 5.625V7.5"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 7.5l.75 11.25A1.125 1.125 0 0010.122 19.5h3.756A1.125 1.125 0 0015 18.75L15.75 7.5"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.5 10.5v6m3-6v6"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
 
-        {{-- Edit --}}
-        <a href="{{ route('admin.policies.edit', $policy) }}"
-           title="Edit"
-           class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition">
-
-            <svg class="w-5 h-5"
-                 fill="none"
-                 viewBox="0 0 24 24"
-                 stroke="currentColor">
-                <path stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="1.5"
-                      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
-                <path stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="1.5"
-                      d="M19.5 7.125L16.875 4.5"/>
-            </svg>
-        </a>
-
-        {{-- Delete --}}
-        <form action="{{ route('admin.policies.destroy', $policy) }}"
-              method="POST"
-              onsubmit="return confirm('Delete this policy?')">
-
-            @csrf
-            @method('DELETE')
-
-            <button
-                type="submit"
-                title="Delete"
-                class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition">
-
-                <svg class="w-5 h-5"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor">
-                    <path stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="1.5"
-                          d="M6 7.5h12"/>
-                    <path stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="1.5"
-                          d="M9.75 7.5V5.625A1.125 1.125 0 0110.875 4.5h2.25A1.125 1.125 0 0114.25 5.625V7.5"/>
-                    <path stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="1.5"
-                          d="M8.25 7.5l.75 11.25A1.125 1.125 0 0010.122 19.5h3.756A1.125 1.125 0 0015 18.75L15.75 7.5"/>
-                    <path stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="1.5"
-                          d="M10.5 10.5v6m3-6v6"/>
-                </svg>
-            </button>
-
-        </form>
-
-        {{-- Preview Modal --}}
-        <template x-teleport="body">
-            <!-- your existing preview modal -->
-        </template>
-
-    </div>
-</td>
-
-                    <!-- Preview modal -->
                     <template x-teleport="body">
                         <div x-show="preview" x-cloak class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" @click.self="preview = false">
                             <div class="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto" @click.stop>

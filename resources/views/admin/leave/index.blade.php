@@ -35,12 +35,6 @@
     </x-slot:actions>
 </x-page-header>
 
-@if (session('success'))
-    <div class="mb-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 12.75l6 6 9-13.5"/></svg>
-        {{ session('success') }}
-    </div>
-@endif
 
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 ring-1 ring-gray-100 p-4">
