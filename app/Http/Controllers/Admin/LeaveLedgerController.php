@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\LeaveApplication;
 use App\Services\LeaveLedgerService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class LeaveLedgerController extends Controller
@@ -167,4 +168,22 @@ public function bulkStoreEarned(Request $request, LeaveLedgerService $service)
 
     return back()->with('success', "Leave credits posted to {$employees->count()} employee(s).");
 }
+
+public function exportLedgerPdf(User $employee)
+{
+    $ledger = $employee->leaveLedgerEntries()->orderBy('period_from')->get();
+    $balance = $employee->leaveBalance;
+
+    $pdf = Pdf::loadView('admin.leave.ledger-pdf', [
+        'employee' => $employee,
+        'ledger' => $ledger,
+        'balance' => $balance,
+        'generatedAt' => now(),
+    ])->setPaper('legal', 'landscape');
+
+    $filename = 'Leave_Ledger_' . preg_replace('/[^A-Za-z0-9_]/', '_', $employee->name) . '_' . now()->format('Ymd') . '.pdf';
+
+    return $pdf->stream($filename);
+}
+
 }
