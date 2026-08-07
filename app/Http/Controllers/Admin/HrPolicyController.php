@@ -10,19 +10,30 @@ use Illuminate\Support\Facades\Storage;
 
 class HrPolicyController extends Controller
 {
-    public function index(Request $request)
-    {
-        $policies = HrPolicy::with('creator')
-            ->when($request->search, fn ($q, $search) => $q->where('title', 'like', "%{$search}%"))
-            ->when($request->category, fn ($q, $category) => $q->where('category', $category))
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+public function index(Request $request)
+{
+    $policies = HrPolicy::with('creator')
+        ->when($request->search, fn ($q, $search) => $q->where('title', 'like', "%{$search}%"))
+        ->when($request->category, fn ($q, $category) => $q->where('category', $category))
+        ->when($request->type, fn ($q, $type) => $q->where('type', $type))
+        ->when($request->status, function ($q, $status) {
+            $q->where('is_published', $status === 'published');
+        })
+        ->latest()
+        ->paginate(10)
+        ->withQueryString();
 
-        $categories = HrPolicy::whereNotNull('category')->distinct()->pluck('category');
+    $categories = HrPolicy::whereNotNull('category')->distinct()->pluck('category');
 
-        return view('admin.policies.index', compact('policies', 'categories'));
-    }
+    $totalCount = HrPolicy::count();
+    $publishedCount = HrPolicy::where('is_published', true)->count();
+    $draftCount = HrPolicy::where('is_published', false)->count();
+    $fileCount = HrPolicy::where('type', 'file')->count();
+
+    return view('admin.policies.index', compact(
+        'policies', 'categories', 'totalCount', 'publishedCount', 'draftCount', 'fileCount'
+    ));
+}
 
     public function create()
     {

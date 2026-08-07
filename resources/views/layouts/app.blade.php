@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
     <style>[x-cloak] { display: none !important; }</style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -157,5 +158,7 @@
         });
     }, 4000);
 </script>
+
+@stack('scripts')
 </body>
 </html>
