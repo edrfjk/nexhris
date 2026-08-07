@@ -30,6 +30,14 @@ class LeaveLedgerService
             $newVlBalance = $balance->vl_balance + $vlEarned - $vlUsed;
             $newSlBalance = $balance->sl_balance + $slEarned - $slUsed;
 
+            if ($newVlBalance < 0 || $newSlBalance < 0) {
+                throw new \RuntimeException(
+                    "This would result in a negative balance for {$employee->name} " .
+                    "(VL: " . number_format($newVlBalance, 3) . ", SL: " . number_format($newSlBalance, 3) . "). " .
+                    "Adjust the values and try again."
+                );
+            }
+
             $entry = LeaveLedgerEntry::create([
                 'user_id' => $employee->id,
                 'period_from' => $periodFrom,

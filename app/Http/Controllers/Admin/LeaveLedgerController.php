@@ -11,24 +11,26 @@ use Illuminate\Http\Request;
 
 class LeaveLedgerController extends Controller
 {
-    public function show(User $employee)
-    {
-        $ledger = $employee->leaveLedgerEntries()->orderBy('period_from')->get();
-        $balance = $employee->leaveBalance;
+public function show(User $employee)
+{
+    $ledger = $employee->leaveLedgerEntries()->orderBy('period_from')->get();
+    $balance = $employee->leaveBalance;
+    $applications = $employee->leaveApplications()->latest()->paginate(10, ['*'], 'apps_page');
 
-        return view('admin.leave.ledger', compact('employee', 'ledger', 'balance'));
-    }
+    return view('admin.leave.ledger', compact('employee', 'ledger', 'balance', 'applications'));
+}
 
-    public function storeEarned(Request $request, User $employee, LeaveLedgerService $service)
-    {
-        $data = $request->validate([
-            'period_from' => ['required', 'date'],
-            'period_to' => ['required', 'date', 'after_or_equal:period_from'],
-            'vl_earned' => ['nullable', 'numeric', 'min:0'],
-            'sl_earned' => ['nullable', 'numeric', 'min:0'],
-            'remarks' => ['nullable', 'string', 'max:255'],
-        ]);
+public function storeEarned(Request $request, User $employee, LeaveLedgerService $service)
+{
+    $data = $request->validate([
+        'period_from' => ['required', 'date'],
+        'period_to' => ['required', 'date', 'after_or_equal:period_from'],
+        'vl_earned' => ['nullable', 'numeric'],
+        'sl_earned' => ['nullable', 'numeric'],
+        'remarks' => ['nullable', 'string', 'max:255'],
+    ]);
 
+    try {
         $service->postEntry(
             employee: $employee,
             periodFrom: $data['period_from'],
@@ -38,19 +40,23 @@ class LeaveLedgerController extends Controller
             vlEarned: $data['vl_earned'] ?? 0,
             slEarned: $data['sl_earned'] ?? 0,
         );
-
-        return back()->with('success', 'Leave credits posted to ledger.');
+    } catch (\RuntimeException $e) {
+        return back()->with('error', $e->getMessage());
     }
 
-    public function storeAdjustment(Request $request, User $employee, LeaveLedgerService $service)
-    {
-        $data = $request->validate([
-            'date' => ['required', 'date'],
-            'vl_adjustment' => ['nullable', 'numeric'], // can be negative
-            'sl_adjustment' => ['nullable', 'numeric'],
-            'remarks' => ['required', 'string', 'max:255'],
-        ]);
+    return back()->with('success', 'Leave credits posted to ledger.');
+}
 
+public function storeAdjustment(Request $request, User $employee, LeaveLedgerService $service)
+{
+    $data = $request->validate([
+        'date' => ['required', 'date'],
+        'vl_adjustment' => ['nullable', 'numeric'],
+        'sl_adjustment' => ['nullable', 'numeric'],
+        'remarks' => ['required', 'string', 'max:255'],
+    ]);
+
+    try {
         $service->postEntry(
             employee: $employee,
             periodFrom: $data['date'],
@@ -62,12 +68,52 @@ class LeaveLedgerController extends Controller
             slEarned: max(0, $data['sl_adjustment'] ?? 0),
             slUsed: abs(min(0, $data['sl_adjustment'] ?? 0)),
         );
-
-        return back()->with('success', 'Adjustment posted.');
+    } catch (\RuntimeException $e) {
+        return back()->with('error', $e->getMessage());
     }
 
+    return back()->with('success', 'Adjustment posted.');
+}
 
-        public function pending(Request $request)
+public function bulkStoreEarned(Request $request, LeaveLedgerService $service)
+{
+    $data = $request->validate([
+        'period_from' => ['required', 'date'],
+        'period_to' => ['required', 'date', 'after_or_equal:period_from'],
+        'vl_earned' => ['nullable', 'numeric', 'min:0'],
+        'sl_earned' => ['nullable', 'numeric', 'min:0'],
+        'remarks' => ['nullable', 'string', 'max:255'],
+    ]);
+
+    $employees = User::where('role', 'employee')->where('status', 'active')->get();
+    $skipped = [];
+
+    foreach ($employees as $employee) {
+        try {
+            $service->postEntry(
+                employee: $employee,
+                periodFrom: $data['period_from'],
+                periodTo: $data['period_to'],
+                type: 'earned',
+                remarks: $data['remarks'] ?? "Earned during {$data['period_from']} - {$data['period_to']}",
+                vlEarned: $data['vl_earned'] ?? 0,
+                slEarned: $data['sl_earned'] ?? 0,
+            );
+        } catch (\RuntimeException $e) {
+            $skipped[] = $employee->name;
+        }
+    }
+
+    $message = "Leave credits posted to " . ($employees->count() - count($skipped)) . " employee(s).";
+    if ($skipped) {
+        $message .= " Skipped: " . implode(', ', $skipped) . " (would go negative).";
+    }
+
+    return back()->with('success', $message);
+}
+
+
+    public function pending(Request $request)
         {
             $applications = LeaveApplication::with('user')
                 ->where('status', 'pending')
@@ -77,7 +123,7 @@ class LeaveLedgerController extends Controller
                 ->withQueryString();
 
             return view('admin.leave.pending', compact('applications'));
-        }
+    }
 
 public function approve(Request $request, LeaveApplication $application, LeaveLedgerService $service)
 {
@@ -142,32 +188,6 @@ public function index(Request $request)
     return view('admin.leave.index', compact('employees', 'pendingCount', 'colleges'));
 }
 
-public function bulkStoreEarned(Request $request, LeaveLedgerService $service)
-{
-    $data = $request->validate([
-        'period_from' => ['required', 'date'],
-        'period_to' => ['required', 'date', 'after_or_equal:period_from'],
-        'vl_earned' => ['nullable', 'numeric', 'min:0'],
-        'sl_earned' => ['nullable', 'numeric', 'min:0'],
-        'remarks' => ['nullable', 'string', 'max:255'],
-    ]);
-
-    $employees = User::where('role', 'employee')->where('status', 'active')->get();
-
-    foreach ($employees as $employee) {
-        $service->postEntry(
-            employee: $employee,
-            periodFrom: $data['period_from'],
-            periodTo: $data['period_to'],
-            type: 'earned',
-            remarks: $data['remarks'] ?? "Earned during {$data['period_from']} - {$data['period_to']}",
-            vlEarned: $data['vl_earned'] ?? 0,
-            slEarned: $data['sl_earned'] ?? 0,
-        );
-    }
-
-    return back()->with('success', "Leave credits posted to {$employees->count()} employee(s).");
-}
 
 public function exportLedgerPdf(User $employee)
 {

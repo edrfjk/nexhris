@@ -4,6 +4,11 @@
 @section('content')
 <x-page-header title="Leave Ledger">
     <x-slot:actions>
+        <a href="{{ route('admin.leave.ledger.pdf', $employee) }}" target="_blank"
+           class="inline-flex items-center gap-1.5 bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9.75L12 3.75m0 6l3-3m-3 3l-3-3M3.75 15.75v3a2.25 2.25 0 002.25 2.25h12a2.25 2.25 0 002.25-2.25v-3"/></svg>
+            Export PDF
+        </a>
         <a href="{{ route('admin.leave.index') }}"
            class="inline-flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50 transition">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -172,5 +177,74 @@
             </tbody>
         </table>
     </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
+    <div class="px-5 py-3 border-b border-gray-100">
+        <h3 class="text-sm font-semibold text-gray-700">Application History</h3>
+    </div>
+    <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-left text-gray-500">
+            <tr>
+                <th class="px-5 py-2.5 font-medium">Type</th>
+                <th class="px-5 py-2.5 font-medium">Dates</th>
+                <th class="px-5 py-2.5 font-medium">Days</th>
+                <th class="px-5 py-2.5 font-medium">Status</th>
+                <th class="px-5 py-2.5 font-medium">Filed</th>
+                <th class="px-5 py-2.5 font-medium text-right">Reason</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($applications as $app)
+                <tr class="border-t border-gray-100 hover:bg-gray-50 transition" x-data="{ open: false }">
+                    <td class="px-5 py-2.5"><x-badge :color="$app->leave_type === 'VL' ? 'blue' : 'green'">{{ $app->leave_type }}</x-badge></td>
+                    <td class="px-5 py-2.5 text-gray-600">{{ $app->date_from->format('M d') }} – {{ $app->date_to->format('M d, Y') }}</td>
+                    <td class="px-5 py-2.5 text-gray-600">{{ $app->days }}</td>
+                    <td class="px-5 py-2.5">
+                        <x-badge :color="match($app->status) { 'approved' => 'green', 'declined' => 'red', default => 'yellow' }">
+                            {{ ucfirst($app->status) }}
+                        </x-badge>
+                    </td>
+                    <td class="px-5 py-2.5 text-gray-400 text-xs">{{ $app->created_at->format('M d, Y') }}</td>
+                    <td class="px-5 py-2.5 text-right">
+                        @if ($app->reason)
+                            <button @click="open = true" class="text-xs text-blue-600 hover:underline">View</button>
+                        @else
+                            <span class="text-xs text-gray-300">—</span>
+                        @endif
+                    </td>
+                </tr>
+
+                @if ($app->reason)
+                <template x-teleport="body">
+                    <div x-show="open" x-cloak class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" @click.self="open = false">
+                        <div class="bg-white rounded-xl shadow-lg max-w-md w-full p-5" @click.stop>
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <p class="font-semibold text-gray-800">{{ $app->leave_type }} — {{ $app->date_from->format('M d') }} to {{ $app->date_to->format('M d, Y') }}</p>
+                                    <x-badge :color="match($app->status) { 'approved' => 'green', 'declined' => 'red', default => 'yellow' }" class="mt-1">
+                                        {{ ucfirst($app->status) }}
+                                    </x-badge>
+                                </div>
+                                <button @click="open = false" class="text-gray-400 hover:text-gray-600">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-400 mb-1">Reason</p>
+                            <p class="text-sm text-gray-700">{{ $app->reason }}</p>
+                            @if ($app->remarks)
+                                <p class="text-xs text-gray-400 mt-3 mb-1">HR Remarks</p>
+                                <p class="text-sm text-gray-700">{{ $app->remarks }}</p>
+                            @endif
+                        </div>
+                    </div>
+                </template>
+                @endif
+            @empty
+                <tr><td colspan="6"><x-empty-state message="No leave applications on record." /></td></tr>
+            @endforelse
+        </tbody>
+    </table>
+    <div class="px-5 py-3">{{ $applications->links() }}</div>
 </div>
 @endsection
