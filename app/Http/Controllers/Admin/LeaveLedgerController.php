@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\LeaveApplication;
 use App\Services\LeaveLedgerService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Http\Request;
 
 class LeaveLedgerController extends Controller
@@ -204,6 +206,126 @@ public function exportLedgerPdf(User $employee)
     $filename = 'Leave_Ledger_' . preg_replace('/[^A-Za-z0-9_]/', '_', $employee->name) . '_' . now()->format('Ymd') . '.pdf';
 
     return $pdf->stream($filename);
+}
+
+
+// ── Replace the existing calendar() method in LeaveLedgerController with this ──
+
+public function calendar(Request $request)
+{
+    $month = $request->input('month', now()->format('Y-m'));
+    $start = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
+    $end = $start->copy()->endOfMonth();
+
+    // Widened from ->where('status', 'approved') to include pending too, so HR can
+    // spot potential scheduling conflicts before approving. Declined applications
+    // are still excluded since they never actually happened.
+    $applications = LeaveApplication::with('user')
+        ->whereIn('status', ['approved', 'pending'])
+        ->where('date_from', '<=', $end)
+        ->where('date_to', '>=', $start)
+        ->get();
+
+    $days = $this->buildCalendarDays($start, $end, $applications);
+
+    return view('admin.leave.calendar', compact('days', 'start', 'end', 'month'));
+}
+
+// ── New: extracted the day-bucketing loop into its own method so both calendar()
+//    and exportMonthPdf() can share it instead of duplicating the logic ──
+
+private function buildCalendarDays($start, $end, $applications)
+{
+    $days = [];
+    $cursor = $start->copy();
+
+    while ($cursor <= $end) {
+        $days[$cursor->format('Y-m-d')] = collect();
+        $cursor->addDay();
+    }
+
+    foreach ($applications as $app) {
+        $rangeStart = $app->date_from->lt($start) ? $start->copy() : $app->date_from->copy();
+        $rangeEnd = $app->date_to->gt($end) ? $end->copy() : $app->date_to->copy();
+        $d = $rangeStart->copy();
+        while ($d <= $rangeEnd) {
+            $days[$d->format('Y-m-d')]->push($app);
+            $d->addDay();
+        }
+    }
+
+    return $days;
+}
+
+// ── New: export the visible month as a printable PDF ──
+
+public function exportMonthPdf(Request $request)
+{
+    $month = $request->input('month', now()->format('Y-m'));
+    $start = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
+    $end = $start->copy()->endOfMonth();
+
+    // PDF only shows approved leaves — a printed board/payroll document showing
+    // still-pending requests as if they were confirmed would be misleading.
+    $applications = LeaveApplication::with('user')
+        ->where('status', 'approved')
+        ->where('date_from', '<=', $end)
+        ->where('date_to', '>=', $start)
+        ->get();
+
+    $days = $this->buildCalendarDays($start, $end, $applications);
+
+    $pdf = Pdf::loadView('admin.leave.calendar-pdf', [
+        'days' => $days,
+        'start' => $start,
+        'end' => $end,
+        'month' => $month,
+        'generatedAt' => now(),
+    ])->setPaper('legal', 'landscape');
+
+    $filename = 'Leave_Calendar_' . $start->format('F_Y') . '.pdf';
+
+    return $pdf->stream($filename);
+}
+
+public function exportAllPdf()
+{
+    $employees = User::where('role', 'employee')->with('leaveBalance')->orderBy('name')->get();
+
+    $pdf = Pdf::loadView('admin.leave.all-balances-pdf', compact('employees'))->setPaper('legal', 'portrait');
+
+    return $pdf->stream('Leave_Balances_' . now()->format('Ymd') . '.pdf');
+}
+
+public function exportAllExcel()
+{
+    $employees = User::where('role', 'employee')->with('leaveBalance')->orderBy('name')->get();
+
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->fromArray(['Employee No.', 'Name', 'College/Office', 'VL Balance', 'SL Balance'], null, 'A1');
+
+    $row = 2;
+    foreach ($employees as $employee) {
+        $sheet->fromArray([
+            $employee->employee_number,
+            $employee->name,
+            $employee->department,
+            number_format($employee->leaveBalance->vl_balance ?? 0, 3),
+            number_format($employee->leaveBalance->sl_balance ?? 0, 3),
+        ], null, "A{$row}");
+        $row++;
+    }
+
+    $filename = 'Leave_Balances_' . now()->format('Ymd') . '.xlsx';
+    $tempPath = storage_path('app/temp/' . $filename);
+    if (!is_dir(dirname($tempPath))) {
+        mkdir(dirname($tempPath), 0755, true);
+    }
+
+    (new Xlsx($spreadsheet))->save($tempPath);
+
+    return response()->download($tempPath, $filename)->deleteFileAfterSend(true);
 }
 
 }

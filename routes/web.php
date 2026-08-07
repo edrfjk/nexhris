@@ -54,6 +54,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/leave/{employee}/earned', [LeaveLedgerController::class, 'storeEarned'])->name('leave.earned.store');
         Route::post('/leave/{employee}/adjust', [LeaveLedgerController::class, 'storeAdjustment'])->name('leave.adjust.store');
         Route::get('/leave/{employee}/ledger/pdf', [LeaveLedgerController::class, 'exportLedgerPdf'])->name('leave.ledger.pdf');
+        Route::get('/leave/calendar', [LeaveLedgerController::class, 'calendar'])->name('leave.calendar');
+        Route::get('/leave/export/pdf', [LeaveLedgerController::class, 'exportAllPdf'])->name('leave.export.pdf');
+        Route::get('/leave/export/excel', [LeaveLedgerController::class, 'exportAllExcel'])->name('leave.export.excel');
+       Route::get('leave/calendar/export', [LeaveLedgerController::class, 'exportMonthPdf'])->name('leave.calendar.export');
         Route::get('/pds', [PdsReviewController::class, 'index'])->name('pds.index');
         Route::get('/pds/{employee}', [PdsReviewController::class, 'show'])->name('pds.show');
         Route::post('/pds/{employee}/approve', [PdsReviewController::class, 'approve'])->name('pds.approve');

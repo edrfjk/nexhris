@@ -4,6 +4,23 @@
 @section('content')
 <x-page-header title="Leave Management" subtitle="View employee leave balances and post earned credits.">
     <x-slot:actions>
+<a href="{{ route('admin.leave.calendar') }}"
+   class="inline-flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50 transition">
+
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M6.75 3v2.25m10.5-2.25v2.25M3.75 8.25h16.5M4.5 5.25h15A1.5 1.5 0 0121 6.75v12A1.5 1.5 0 0119.5 20.25h-15A1.5 1.5 0 013 18.75v-12A1.5 1.5 0 014.5 5.25z"/>
+    </svg>
+
+    Calendar View
+</a>
+
+<a href="{{ route('admin.leave.export.pdf') }}" target="_blank" class="inline-flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50 transition">PDF</a>
+<a href="{{ route('admin.leave.export.excel') }}" class="inline-flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50 transition">Excel</a>
+
+
         <a href="{{ route('admin.leave.pending') }}"
            class="relative inline-flex items-center gap-1.5 bg-maroon-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-maroon-900 transition">
             Pending Applications
@@ -13,6 +30,8 @@
                 </span>
             @endif
         </a>
+
+
     </x-slot:actions>
 </x-page-header>
 
