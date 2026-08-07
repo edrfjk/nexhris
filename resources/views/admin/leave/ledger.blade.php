@@ -179,72 +179,154 @@
     </div>
 </div>
 
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
-    <div class="px-5 py-3 border-b border-gray-100">
-        <h3 class="text-sm font-semibold text-gray-700">Application History</h3>
+{{-- Leave Applications History --}}
+<div class="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-100">
+        <h3 class="font-semibold text-gray-800">Leave Applications</h3>
+        <p class="text-sm text-gray-500">History of leave requests submitted by this employee.</p>
     </div>
+
     <table class="w-full text-sm">
         <thead class="bg-gray-50 text-left text-gray-500">
             <tr>
-                <th class="px-5 py-2.5 font-medium">Type</th>
-                <th class="px-5 py-2.5 font-medium">Dates</th>
-                <th class="px-5 py-2.5 font-medium">Days</th>
-                <th class="px-5 py-2.5 font-medium">Status</th>
-                <th class="px-5 py-2.5 font-medium">Filed</th>
-                <th class="px-5 py-2.5 font-medium text-right">Reason</th>
+                <th class="px-5 py-3 font-medium">Type</th>
+                <th class="px-5 py-3 font-medium">Period</th>
+                <th class="px-5 py-3 font-medium">Days</th>
+                <th class="px-5 py-3 font-medium">Status</th>
+                <th class="px-5 py-3 font-medium text-center">Reason</th>
             </tr>
         </thead>
-        <tbody>
-            @forelse ($applications as $app)
-                <tr class="border-t border-gray-100 hover:bg-gray-50 transition" x-data="{ open: false }">
-                    <td class="px-5 py-2.5"><x-badge :color="$app->leave_type === 'VL' ? 'blue' : 'green'">{{ $app->leave_type }}</x-badge></td>
-                    <td class="px-5 py-2.5 text-gray-600">{{ $app->date_from->format('M d') }} – {{ $app->date_to->format('M d, Y') }}</td>
-                    <td class="px-5 py-2.5 text-gray-600">{{ $app->days }}</td>
-                    <td class="px-5 py-2.5">
-                        <x-badge :color="match($app->status) { 'approved' => 'green', 'declined' => 'red', default => 'yellow' }">
-                            {{ ucfirst($app->status) }}
-                        </x-badge>
-                    </td>
-                    <td class="px-5 py-2.5 text-gray-400 text-xs">{{ $app->created_at->format('M d, Y') }}</td>
-                    <td class="px-5 py-2.5 text-right">
-                        @if ($app->reason)
-                            <button @click="open = true" class="text-xs text-blue-600 hover:underline">View</button>
-                        @else
-                            <span class="text-xs text-gray-300">—</span>
-                        @endif
-                    </td>
-                </tr>
 
-                @if ($app->reason)
-                <template x-teleport="body">
-                    <div x-show="open" x-cloak class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" @click.self="open = false">
-                        <div class="bg-white rounded-xl shadow-lg max-w-md w-full p-5" @click.stop>
-                            <div class="flex justify-between items-start mb-3">
-                                <div>
-                                    <p class="font-semibold text-gray-800">{{ $app->leave_type }} — {{ $app->date_from->format('M d') }} to {{ $app->date_to->format('M d, Y') }}</p>
-                                    <x-badge :color="match($app->status) { 'approved' => 'green', 'declined' => 'red', default => 'yellow' }" class="mt-1">
-                                        {{ ucfirst($app->status) }}
-                                    </x-badge>
-                                </div>
-                                <button @click="open = false" class="text-gray-400 hover:text-gray-600">
-                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                </button>
+        <tbody>
+        @forelse ($applications as $app)
+            <tr class="border-t border-gray-100 hover:bg-gray-50">
+                <td class="px-5 py-3">
+                    <x-badge :color="$app->leave_type === 'VL' ? 'blue' : 'green'">
+                        {{ $app->leave_type }}
+                    </x-badge>
+                </td>
+
+                <td class="px-5 py-3">
+                    {{ $app->date_from->format('M d, Y') }}
+                    —
+                    {{ $app->date_to->format('M d, Y') }}
+                </td>
+
+                <td class="px-5 py-3">
+                    {{ $app->days }}
+                </td>
+
+                <td class="px-5 py-3">
+                    <x-badge :color="match($app->status){
+                        'approved' => 'green',
+                        'declined' => 'red',
+                        default => 'yellow'
+                    }">
+                        {{ ucfirst($app->status) }}
+                    </x-badge>
+                </td>
+
+<td class="px-5 py-3 text-center">
+    @if($app->reason)
+        <div x-data="{ open: false }">
+        <button
+            @click="open = true"
+            class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-maroon-800 hover:bg-maroon-50 transition"
+            title="View Reason">
+
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                <path stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+
+        </button>
+
+            <template x-teleport="body">
+                <div
+                    x-show="open"
+                    x-cloak
+                    class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+                    @click.self="open = false">
+
+                    <div
+                        class="bg-white rounded-xl shadow-lg max-w-md w-full p-5"
+                        @click.stop>
+
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="font-semibold text-gray-800">
+                                    {{ $app->leave_type }}
+                                    —
+                                    {{ $app->date_from->format('M d') }}
+                                    to
+                                    {{ $app->date_to->format('M d, Y') }}
+                                </p>
+
+                                <x-badge :color="match($app->status){
+                                    'approved'=>'green',
+                                    'declined'=>'red',
+                                    default=>'yellow'
+                                }" class="inline-flex mt-2">
+                                    {{ ucfirst($app->status) }}
+                                </x-badge>
                             </div>
-                            <p class="text-xs text-gray-400 mb-1">Reason</p>
-                            <p class="text-sm text-gray-700">{{ $app->reason }}</p>
-                            @if ($app->remarks)
-                                <p class="text-xs text-gray-400 mt-3 mb-1">HR Remarks</p>
-                                <p class="text-sm text-gray-700">{{ $app->remarks }}</p>
-                            @endif
+
+                            <button
+                                @click="open = false"
+                                class="text-gray-400 hover:text-gray-600">
+
+                                <svg class="w-5 h-5"
+                                     fill="none"
+                                     viewBox="0 0 24 24"
+                                     stroke="currentColor">
+                                    <path stroke-linecap="round"
+                                          stroke-linejoin="round"
+                                          stroke-width="2"
+                                          d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+
+                            </button>
                         </div>
+
+                        <p class="text-xs text-gray-400 mb-1">Reason</p>
+                        <p class="text-sm text-gray-700">{{ $app->reason }}</p>
+
+                        @if($app->remarks)
+                            <p class="text-xs text-gray-400 mt-4 mb-1">HR Remarks</p>
+                            <p class="text-sm text-gray-700">{{ $app->remarks }}</p>
+                        @endif
+
                     </div>
-                </template>
-                @endif
-            @empty
-                <tr><td colspan="6"><x-empty-state message="No leave applications on record." /></td></tr>
-            @endforelse
+                </div>
+            </template>
+        </div>
+    @else
+        <span class="text-gray-400">—</span>
+    @endif
+</td>
+            </tr>
+
+        @empty
+
+            <tr>
+                <td colspan="5">
+                    <x-empty-state message="No leave applications on record." />
+                </td>
+            </tr>
+
+        @endforelse
+
         </tbody>
     </table>
-    <div class="px-5 py-3">{{ $applications->links() }}</div>
+
+    <div class="px-5 py-3 border-t border-gray-100">
+        {{ $applications->links() }}
+    </div>
 </div>
 @endsection
