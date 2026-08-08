@@ -25,13 +25,31 @@ public function index(Request $request)
         ->when($request->college, fn ($q, $college) => $q->where('department', $college))
         ->when($request->program, fn ($q, $program) => $q->where('program', $program))
         ->when($request->status, fn ($q, $status) => $q->where('status', $status))
-        ->orderBy('name')
+        ->when($request->sort, function ($q, $sort) {
+            match ($sort) {
+                'newest' => $q->orderByDesc('created_at'),
+                'oldest' => $q->orderBy('created_at'),
+                'employee_number' => $q->orderBy('employee_number'),
+                default => $q->orderBy('name'),
+            };
+        }, fn ($q) => $q->orderBy('name'))
         ->paginate(10)
         ->withQueryString();
-
+ 
     $colleges = config('colleges');
-
-    return view('admin.employees.index', compact('employees', 'colleges'));
+ 
+    // Global counts, unaffected by the current search/filter — same idea as
+    // $pendingCount on the leave page.
+    $activeCount      = User::where('role', 'employee')->where('status', 'active')->count();
+    $inactiveCount    = User::where('role', 'employee')->where('status', 'inactive')->count();
+    $newThisMonthCount = User::where('role', 'employee')
+        ->whereMonth('created_at', now()->month)
+        ->whereYear('created_at', now()->year)
+        ->count();
+ 
+    return view('admin.employees.index', compact(
+        'employees', 'colleges', 'activeCount', 'inactiveCount', 'newThisMonthCount'
+    ));
 }
 
     public function create()
