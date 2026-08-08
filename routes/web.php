@@ -57,7 +57,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/leave/calendar', [LeaveLedgerController::class, 'calendar'])->name('leave.calendar');
         Route::get('/leave/export/pdf', [LeaveLedgerController::class, 'exportAllPdf'])->name('leave.export.pdf');
         Route::get('/leave/export/excel', [LeaveLedgerController::class, 'exportAllExcel'])->name('leave.export.excel');
-       Route::get('leave/calendar/export', [LeaveLedgerController::class, 'exportMonthPdf'])->name('leave.calendar.export');
+        Route::get('leave/calendar/export', [LeaveLedgerController::class, 'exportMonthPdf'])->name('leave.calendar.export');
         Route::get('/pds', [PdsReviewController::class, 'index'])->name('pds.index');
         Route::get('/pds/{employee}', [PdsReviewController::class, 'show'])->name('pds.show');
         Route::post('/pds/{employee}/approve', [PdsReviewController::class, 'approve'])->name('pds.approve');
@@ -65,6 +65,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/pds/{employee}/download', [PdsReviewController::class, 'download'])->name('pds.download');
         Route::resource('policies', HrPolicyController::class)->except(['show']);
         Route::post('/policies/{policy}/toggle-publish', [HrPolicyController::class, 'togglePublish'])->name('policies.toggle-publish');
+        Route::post('/policies/{policy}/toggle-pin', [HrPolicyController::class, 'togglePin'])->name('policies.toggle-pin');
+Route::get('/policies/{policy}/compliance', [HrPolicyController::class, 'compliance'])->name('policies.compliance');
     });
 
         // ===== EMPLOYEE ROUTES =====

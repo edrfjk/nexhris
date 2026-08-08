@@ -124,4 +124,9 @@ public function pdsSubmissions()
 {
     return $this->hasMany(PdsSubmission::class);
 }
+
+public function policyViews()
+{
+    return $this->hasMany(HrPolicyView::class);
+}
 }
