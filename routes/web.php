@@ -45,6 +45,8 @@ Route::middleware('auth')->group(function () {
 
         Route::patch('/employees/{employee}/status', [EmployeeController::class, 'updateStatus'])->name('employees.status.update');
         Route::post('/employees/{employee}/photo', [EmployeeController::class, 'updatePhoto'])->name('employees.photo.update');
+        Route::get('/employees/export/pdf', [EmployeeController::class, 'exportPdf'])->name('employees.export.pdf');
+        Route::resource('employees', EmployeeController::class)->except(['destroy'])->parameters(['employees' => 'employee',]);
         Route::get('/leave', [LeaveLedgerController::class, 'index'])->name('leave.index');
         Route::post('/leave/bulk-earned', [LeaveLedgerController::class, 'bulkStoreEarned'])->name('leave.bulk-earned.store');
         Route::get('/leave/pending', [LeaveLedgerController::class, 'pending'])->name('leave.pending');

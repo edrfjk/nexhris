@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class EmployeeController extends Controller
@@ -35,9 +36,9 @@ public function index(Request $request)
         }, fn ($q) => $q->orderBy('name'))
         ->paginate(10)
         ->withQueryString();
- 
+
     $colleges = config('colleges');
- 
+
     // Global counts, unaffected by the current search/filter — same idea as
     // $pendingCount on the leave page.
     $activeCount      = User::where('role', 'employee')->where('status', 'active')->count();
@@ -46,10 +47,54 @@ public function index(Request $request)
         ->whereMonth('created_at', now()->month)
         ->whereYear('created_at', now()->year)
         ->count();
- 
+
     return view('admin.employees.index', compact(
         'employees', 'colleges', 'activeCount', 'inactiveCount', 'newThisMonthCount'
     ));
+}
+
+public function exportPdf(Request $request)
+{
+    $employees = User::where('role', 'employee')
+        ->when($request->search, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('employee_number', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        })
+        ->when($request->college, fn ($q, $college) => $q->where('department', $college))
+        ->when($request->program, fn ($q, $program) => $q->where('program', $program))
+        ->when($request->status, fn ($q, $status) => $q->where('status', $status))
+        ->when($request->sort, function ($q, $sort) {
+            match ($sort) {
+                'newest' => $q->orderByDesc('created_at'),
+                'oldest' => $q->orderBy('created_at'),
+                'employee_number' => $q->orderBy('employee_number'),
+                default => $q->orderBy('name'),
+            };
+        }, fn ($q) => $q->orderBy('name'))
+        ->get();
+
+    $colleges = config('colleges');
+
+    $filtersApplied = collect([
+        'Search' => $request->search,
+        'College/Office' => $request->college ? ($colleges[$request->college]['name'] ?? $request->college) : null,
+        'Status' => $request->status ? ucfirst($request->status) : null,
+    ])->filter();
+
+    $pdf = Pdf::loadView('admin.employees.pdf', [
+        'employees' => $employees,
+        'filtersApplied' => $filtersApplied,
+        'generatedAt' => now(),
+        'generatedBy' => auth()->user()->name ?? 'Admin',
+    ])->setPaper('a4', 'landscape');
+
+    // stream() sends Content-Disposition: inline, so the browser previews the
+    // PDF in the new tab instead of forcing a save dialog. The user can still
+    // save it from the browser's own PDF viewer (Ctrl+S / download icon).
+    return $pdf->stream('employee-directory-' . now()->format('Y-m-d') . '.pdf');
 }
 
     public function create()
