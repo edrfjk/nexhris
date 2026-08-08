@@ -1,34 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<style>
-    body { font-family: Arial, sans-serif; font-size: 10px; color: #1f2937; }
-    h1 { font-size: 16px; color: #7a1f1f; margin-bottom: 2px; }
-    p.sub { color: #6b7280; font-size: 10px; margin-bottom: 14px; }
-    table { width: 100%; border-collapse: collapse; }
-    th { background: #f3f4f6; border: 1px solid #d1d5db; padding: 6px; text-align: left; font-size: 9px; }
-    td { border: 1px solid #e5e7eb; padding: 6px; font-size: 9px; }
-</style>
+    <meta charset="utf-8">
+    @include('admin.pdf.partials.styles')
 </head>
 <body>
-    <h1>Employee Leave Balances</h1>
-    <p class="sub">Ilocos Sur Polytechnic State College — Tagudin Campus · Generated {{ now()->format('F d, Y g:i A') }}</p>
-    <table>
+
+    @include('admin.pdf.partials.header', [
+        'title' => 'Employee Leave Balances',
+        'subtitle' => $employees->count() . ' employee' . ($employees->count() === 1 ? '' : 's') . ' listed',
+    ])
+
+    <table class="report">
         <thead>
-            <tr><th>Employee No.</th><th>Name</th><th>College/Office</th><th>VL Balance</th><th>SL Balance</th></tr>
+            <tr>
+                <th style="width: 12%;">Employee No.</th>
+                <th style="width: 28%;">Name</th>
+                <th style="width: 25%;">College / Office</th>
+                <th class="center" style="width: 17.5%;">VL Balance</th>
+                <th class="center" style="width: 17.5%;">SL Balance</th>
+            </tr>
         </thead>
         <tbody>
-            @foreach ($employees as $employee)
+            @forelse ($employees as $employee)
+                @php
+                    $vl = $employee->leaveBalance->vl_balance ?? 0;
+                    $sl = $employee->leaveBalance->sl_balance ?? 0;
+                @endphp
                 <tr>
-                    <td>{{ $employee->employee_number }}</td>
-                    <td>{{ $employee->name }}</td>
-                    <td>{{ $employee->department }}</td>
-                    <td>{{ number_format($employee->leaveBalance->vl_balance ?? 0, 3) }}</td>
-                    <td>{{ number_format($employee->leaveBalance->sl_balance ?? 0, 3) }}</td>
+                    <td class="left">{{ $employee->employee_number }}</td>
+                    <td class="left name">{{ $employee->name }}</td>
+                    <td class="left">{{ $employee->department ?: '—' }}</td>
+                    <td class="center balance-cell" style="{{ $vl < 5 ? 'color: #b91c1c;' : '' }}">
+                        {{ number_format($vl, 3) }}
+                        @if ($vl < 5)
+                           
+                        @endif
+                    </td>
+                    <td class="center balance-cell" style="{{ $sl < 5 ? 'color: #b91c1c;' : '' }}">
+                        {{ number_format($sl, 3) }}
+                        @if ($sl < 5)
+                            
+                        @endif
+                    </td>
                 </tr>
-            @endforeach
+            @empty
+                <tr class="empty-row"><td colspan="5">No employees found.</td></tr>
+            @endforelse
         </tbody>
     </table>
+
+    @include('admin.pdf.partials.footer')
+
 </body>
 </html>

@@ -201,6 +201,7 @@ public function exportLedgerPdf(User $employee)
         'ledger' => $ledger,
         'balance' => $balance,
         'generatedAt' => now(),
+        'generatedBy' => auth()->user()->name ?? 'Admin',
     ])->setPaper('legal', 'landscape');
 
     $filename = 'Leave_Ledger_' . preg_replace('/[^A-Za-z0-9_]/', '_', $employee->name) . '_' . now()->format('Ymd') . '.pdf';
@@ -281,6 +282,7 @@ public function exportMonthPdf(Request $request)
         'end' => $end,
         'month' => $month,
         'generatedAt' => now(),
+        'generatedBy' => auth()->user()->name ?? 'Admin',
     ])->setPaper('legal', 'landscape');
 
     $filename = 'Leave_Calendar_' . $start->format('F_Y') . '.pdf';
@@ -292,7 +294,11 @@ public function exportAllPdf()
 {
     $employees = User::where('role', 'employee')->with('leaveBalance')->orderBy('name')->get();
 
-    $pdf = Pdf::loadView('admin.leave.all-balances-pdf', compact('employees'))->setPaper('legal', 'portrait');
+    $pdf = Pdf::loadView('admin.leave.all-balances-pdf', [
+        'employees' => $employees,
+        'generatedAt' => now(),
+        'generatedBy' => auth()->user()->name ?? 'Admin',
+    ])->setPaper('legal', 'portrait');
 
     return $pdf->stream('Leave_Balances_' . now()->format('Ymd') . '.pdf');
 }
