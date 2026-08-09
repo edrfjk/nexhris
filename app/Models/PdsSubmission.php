@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -6,8 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class PdsSubmission extends Model
 {
     protected $table = 'pds_submissions';
+
     protected $guarded = ['id'];
-    protected $casts = ['submitted_at' => 'datetime', 'reviewed_at' => 'datetime'];
+
+    protected $casts = [
+        'submitted_at' => 'datetime',
+        'reviewed_at' => 'datetime',
+    ];
 
     public function user()
     {
@@ -19,10 +25,8 @@ class PdsSubmission extends Model
         return $this->belongsTo(User::class, 'reviewed_by');
     }
 
-    protected $fillable = [...$this->fillable ?? [], 'pds_template_id', 'file_path']; // merge into existing $fillable array
-
-public function template()
-{
-    return $this->belongsTo(PdsTemplate::class, 'pds_template_id');
-}
+    public function template()
+    {
+        return $this->belongsTo(PdsTemplate::class, 'pds_template_id');
+    }
 }

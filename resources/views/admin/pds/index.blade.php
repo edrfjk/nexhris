@@ -44,6 +44,114 @@
     @endforeach
 </div>
 
+<!-- PDS form template -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-maroon-50 text-maroon-800 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+            <div>
+                @if ($activeTemplate)
+                    <div class="flex items-center gap-2">
+                        <p class="font-medium text-gray-800">{{ $activeTemplate->label }}</p>
+                        <x-badge color="green">Active</x-badge>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-0.5">
+                        {{ $activeTemplate->original_filename }} · uploaded by {{ $activeTemplate->uploader->name ?? '—' }}
+                    </p>
+                @else
+                    <p class="font-medium text-gray-800">No active PDS template</p>
+                    <p class="text-xs text-red-500 mt-0.5">Employees can't open the PDS editor until one is uploaded and activated.</p>
+                @endif
+            </div>
+        </div>
+
+        <button type="button" onclick="document.getElementById('template-panel').classList.toggle('hidden')"
+                class="inline-flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50 transition whitespace-nowrap flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            Manage Templates
+        </button>
+    </div>
+
+    <div id="template-panel" class="hidden mt-4 pt-4 border-t border-gray-100">
+
+        <form method="POST" action="{{ route('admin.pds.templates.store') }}" enctype="multipart/form-data"
+              class="flex flex-col sm:flex-row sm:items-end gap-3 mb-4">
+            @csrf
+            <div class="flex-1">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Label</label>
+                <input type="text" name="label" placeholder="e.g. CS Form 212 (Revised 2027)"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-maroon-700 focus:border-transparent" required>
+            </div>
+            <div class="flex-1">
+                <label class="block text-xs font-medium text-gray-500 mb-1">File (.xlsx)</label>
+                <input type="file" name="file" accept=".xlsx" class="text-sm w-full" required>
+            </div>
+            <button class="bg-maroon-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-maroon-900 transition whitespace-nowrap">
+                Upload
+            </button>
+        </form>
+
+        <div class="space-y-2">
+            @forelse ($templates as $template)
+                <div class="flex items-center justify-between text-sm py-2.5 px-2 rounded-lg hover:bg-gray-50 transition {{ !$loop->last ? 'border-b border-gray-100' : '' }}">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <x-badge :color="$template->is_active ? 'green' : 'gray'">
+                            {{ $template->is_active ? 'Active' : 'Inactive' }}
+                        </x-badge>
+                        <div class="min-w-0">
+                            <p class="font-medium text-gray-700 truncate">{{ $template->label }}</p>
+                            <p class="text-xs text-gray-400 truncate">
+                                {{ $template->original_filename }} · {{ $template->created_at->format('M d, Y') }} · by {{ $template->uploader->name ?? '—' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-shrink-0 ml-3">
+                        <a href="{{ asset('storage/' . $template->file_path) }}" target="_blank"
+                           class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+                           title="Download this file">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                        </a>
+
+                        @if ($template->is_active)
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 px-2.5 py-1.5 rounded-lg">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                                In Use
+                            </span>
+                        @else
+                            <form action="{{ route('admin.pds.templates.activate', $template) }}" method="POST">
+                                @csrf
+                                <button class="inline-flex items-center gap-1 text-xs font-medium text-blue-700 border border-blue-200 bg-blue-50 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 transition">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                                    Activate
+                                </button>
+                            </form>
+                        @endif
+
+                        <form action="{{ route('admin.pds.templates.destroy', $template) }}" method="POST"
+                              onsubmit="return confirm({{ $template->is_active
+                                    ? Js::from('This is the ACTIVE template. Deleting it will stop employees from opening the PDS editor until you activate another one. Delete anyway?')
+                                    : Js::from('Delete this template? This cannot be undone.') }})">
+                            @csrf @method('DELETE')
+                            <button type="submit"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-red-700 hover:bg-red-50 transition"
+                                    title="Delete this template">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @empty
+                <x-empty-state message="No templates uploaded yet." />
+            @endforelse
+        </div>
+    </div>
+</div>
+
 <!-- Filter toolbar -->
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
     <form method="GET" class="flex flex-col sm:flex-row sm:items-end gap-3">

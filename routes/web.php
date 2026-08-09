@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\LeaveLedgerController;
 use App\Http\Controllers\Admin\PdsReviewController;
+use App\Http\Controllers\Admin\PdsTemplateController;
 use App\Http\Controllers\Admin\HrPolicyController;
 
 
@@ -196,6 +197,23 @@ Route::middleware('auth')->group(function () {
             [PdsReviewController::class, 'download'])
             ->name('pds.download');
 
+
+        // ----------------------------------------------------
+        // PDS TEMPLATES
+        // Managed inside the PDS Requests page
+        // ----------------------------------------------------
+
+        Route::post('/pds-templates',
+            [PdsTemplateController::class, 'store'])
+            ->name('pds.templates.store');
+
+        Route::post('/pds-templates/{template}/activate',
+            [PdsTemplateController::class, 'activate'])
+            ->name('pds.templates.activate');
+
+        Route::delete('/pds-templates/{template}',
+            [PdsTemplateController::class, 'destroy'])
+            ->name('pds.templates.destroy');
 
         // ----------------------------------------------------
         // HR POLICIES / ADMIN

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PdsSubmission;
+use App\Models\PdsTemplate;
 use App\Models\User;
 use App\Services\PdsPdfExportService;
 use Illuminate\Http\Request;
@@ -49,7 +50,14 @@ class PdsReviewController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        return view('admin.pds.index', compact('employees', 'year', 'years', 'counts', 'totalEmployees'));
+        // Template management data — surfaced inside this same page instead of
+        // a separate "PDS Templates" screen.
+        $templates = PdsTemplate::with('uploader')->latest()->get();
+        $activeTemplate = $templates->firstWhere('is_active', true);
+
+        return view('admin.pds.index', compact(
+            'employees', 'year', 'years', 'counts', 'totalEmployees', 'templates', 'activeTemplate'
+        ));
     }
 
 
