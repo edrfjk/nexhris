@@ -67,6 +67,7 @@
                         HR Policies
                     </a>
                 </div>
+
             @else
                 <div>
                     <p class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Menu</p>
@@ -85,7 +86,8 @@
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         My Leave
                     </a>
-                    <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-maroon-800 transition">
+                    <a href="{{ route('policies.index') }}"
+                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-maroon-800 transition {{ request()->routeIs('policies.*') ? 'bg-maroon-800' : '' }}">
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
                         HR Policies
                     </a>

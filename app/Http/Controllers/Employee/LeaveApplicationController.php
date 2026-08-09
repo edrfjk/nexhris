@@ -1,19 +1,37 @@
 <?php
+
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\LeaveApplication;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LeaveApplicationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $applications = Auth::user()->leaveApplications()->latest()->paginate(10);
+        $applications = Auth::user()->leaveApplications()
+            ->when($request->status, fn ($q, $status) => $q->where('status', $status))
+            ->when($request->type, fn ($q, $type) => $q->where('leave_type', $type))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
         $balance = Auth::user()->leaveBalance;
 
-        return view('employee.leave.index', compact('applications', 'balance'));
+        $pendingCount = Auth::user()->leaveApplications()->where('status', 'pending')->count();
+        $approvedThisYear = Auth::user()->leaveApplications()
+            ->where('status', 'approved')
+            ->whereYear('date_from', now()->year)
+            ->sum('days');
+
+        $ledger = Auth::user()->leaveLedgerEntries()->orderBy('period_from')->take(6)->get()->reverse();
+
+        return view('employee.leave.index', compact(
+            'applications', 'balance', 'pendingCount', 'approvedThisYear', 'ledger'
+        ));
     }
 
     public function store(Request $request)
@@ -32,7 +50,7 @@ class LeaveApplicationController extends Controller
         $available = $data['leave_type'] === 'VL' ? ($balance->vl_balance ?? 0) : ($balance->sl_balance ?? 0);
 
         if ($days > $available) {
-            return back()->withErrors(['date_to' => 'Insufficient leave credits for this request.']);
+            return back()->withErrors(['date_to' => "You only have {$available} day(s) of " . ($data['leave_type'] === 'VL' ? 'Vacation' : 'Sick') . " Leave available."])->withInput();
         }
 
         LeaveApplication::create([
@@ -42,6 +60,24 @@ class LeaveApplicationController extends Controller
             'status' => 'pending',
         ]);
 
-        return back()->with('success', 'Leave application submitted for HR review.');
+        return back()->with('success', "Leave application submitted for HR review ({$days} day(s)).");
+    }
+
+    public function exportLedgerPdf()
+    {
+        $employee = Auth::user();
+        $ledger = $employee->leaveLedgerEntries()->orderBy('period_from')->get();
+        $balance = $employee->leaveBalance;
+
+        $pdf = Pdf::loadView('employee.leave.ledger-pdf', [
+            'employee' => $employee,
+            'ledger' => $ledger,
+            'balance' => $balance,
+            'generatedAt' => now(),
+        ])->setPaper('legal', 'landscape');
+
+        $filename = 'My_Leave_Ledger_' . now()->format('Ymd') . '.pdf';
+
+        return $pdf->stream($filename);
     }
 }
