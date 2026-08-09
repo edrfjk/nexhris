@@ -18,4 +18,11 @@ class PdsSubmission extends Model
     {
         return $this->belongsTo(User::class, 'reviewed_by');
     }
+
+    protected $fillable = [...$this->fillable ?? [], 'pds_template_id', 'file_path']; // merge into existing $fillable array
+
+public function template()
+{
+    return $this->belongsTo(PdsTemplate::class, 'pds_template_id');
+}
 }
