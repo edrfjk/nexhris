@@ -35,8 +35,8 @@ return [
         ],
     ],
 
-    'soffice' => [
-    'path' => env('SOFFICE_PATH', 'soffice'),
+'soffice' => [
+    'path' => env('SOFFICE_PATH', '/usr/bin/soffice'),
 ],
 
 ];
