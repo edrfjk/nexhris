@@ -37,7 +37,7 @@
                     <div>
                         <p class="font-medium text-gray-800">{{ $submission->file_original_name ?? 'My PDS.xlsx' }}</p>
                         <p class="text-xs text-gray-400">
-                            Uploaded {{ $submission->uploaded_at?->format('M d, Y g:i A') }}
+                            Uploaded {{ optional($submission->uploaded_at)->format('M d, Y g:i A') ?? '—' }}
                         </p>
                     </div>
                 </div>
