@@ -6,24 +6,24 @@
 
 <div x-data>
 
-    <!-- Profile banner (unchanged) -->
+    <!-- Profile header banner -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-        <div class="h-20 bg-gradient-to-r from-maroon-900 via-maroon-800 to-maroon-900"></div>
-        <div class="px-6 pb-5">
-            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-10">
+        <div class="h-24 bg-gradient-to-r from-maroon-900 via-maroon-800 to-maroon-900"></div>
+        <div class="px-6 pb-6">
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12">
                 <div class="flex items-end gap-4">
-                    <div class="w-20 h-20 rounded-full border-4 border-white bg-gray-100 overflow-hidden shadow-md flex-shrink-0">
+                    <div class="w-24 h-24 rounded-full border-4 border-white bg-gray-100 overflow-hidden shadow-md flex-shrink-0">
                         @if ($employee->profile_photo_path)
                             <img src="{{ asset('storage/' . $employee->profile_photo_path) }}" class="w-full h-full object-cover">
                         @else
-                            <div class="w-full h-full flex items-center justify-center text-xl font-bold text-gray-400">
+                            <div class="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
                                 {{ strtoupper(substr($employee->name, 0, 1)) }}
                             </div>
                         @endif
                     </div>
                     <div class="pb-1">
                         <h2 class="text-lg font-bold text-gray-800">{{ $employee->name }}</h2>
-                        <p class="text-sm text-gray-500">{{ $employee->employee_number }} · {{ $employee->department ?: 'No department set' }}</p>
+                        <p class="text-sm text-gray-500">{{ $employee->position ?: 'Employee' }} · {{ $employee->department ?: 'No department' }}</p>
                     </div>
                 </div>
 

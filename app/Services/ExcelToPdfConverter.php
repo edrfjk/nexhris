@@ -32,7 +32,7 @@ class ExcelToPdfConverter
             '--headless',
             '--norestore',
             "-env:UserInstallation={$profileUrl}",
-            '--convert-to=pdf',
+            '--convert-to', 'pdf',
             '--outdir', $outDir,
             $xlsxAbsolutePath,
         ]);
