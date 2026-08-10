@@ -4,16 +4,6 @@
 @section('content')
 <x-page-header title="Personal Data Sheet" subtitle="Download the official template, fill it out, then upload it back here." />
 
-@if (session('success'))
-    <div class="mb-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-        {{ session('success') }}
-    </div>
-@endif
-@if (session('error'))
-    <div class="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        {{ session('error') }}
-    </div>
-@endif
 @if ($errors->any())
     <div class="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
         {{ $errors->first() }}
@@ -26,19 +16,52 @@
     </div>
 @else
 
-    @if ($submission->status)
-        <div class="mb-6">
-            <x-badge :color="match($submission->status) {
-                'approved' => 'green', 'submitted' => 'yellow', 'returned' => 'red', 'draft' => 'blue', default => 'gray',
-            }">
-                {{ ucfirst(str_replace('_', ' ', $submission->status)) }}
-            </x-badge>
+    @if ($submission->status === 'returned')
+        <div class="mb-6 bg-red-50 border border-red-200 text-red-800 text-sm rounded-lg px-4 py-3">
+            <span class="font-medium">HR returned your PDS for revision:</span> {{ $submission->return_remarks }}
+        </div>
+    @elseif ($submission->status === 'approved')
+        <div class="mb-6 bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg px-4 py-3">
+            Your PDS for {{ now()->year }} has been reviewed and approved by HR.
         </div>
     @endif
 
-    @if ($submission->status === 'returned')
-        <div class="mb-6 bg-red-50 border border-red-200 text-red-800 text-sm rounded-lg px-4 py-3">
-            HR returned your PDS for revision: {{ $submission->return_remarks }}
+    <!-- My Submission summary -->
+    @if ($submission->file_path)
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6">
+            <div class="flex items-start justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-lg bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-800">{{ $submission->file_original_name ?? 'My PDS.xlsx' }}</p>
+                        <p class="text-xs text-gray-400">
+                            Uploaded {{ $submission->uploaded_at?->format('M d, Y g:i A') }}
+                        </p>
+                    </div>
+                </div>
+                <x-badge :color="match($submission->status) {
+                    'approved' => 'green', 'submitted' => 'yellow', 'returned' => 'red', 'draft' => 'blue', default => 'gray',
+                }">
+                    {{ ucfirst(str_replace('_', ' ', $submission->status)) }}
+                </x-badge>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap mt-4 pt-4 border-t border-gray-100">
+                <a href="{{ route('pds.export') }}" target="_blank"
+                   class="inline-flex items-center gap-1.5 bg-gray-700 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-800 transition">
+                    View as PDF
+                </a>
+                <a href="{{ asset('storage/' . $submission->file_path) }}" download
+                   class="inline-flex items-center gap-1.5 border border-gray-300 text-gray-600 px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-50 transition">
+                    Download My Excel File
+                </a>
+                <button type="button" onclick="document.getElementById('replace-panel').classList.toggle('hidden')"
+                        class="inline-flex items-center gap-1.5 border border-gray-300 text-gray-600 px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-50 transition">
+                    Upload a Different Version
+                </button>
+            </div>
         </div>
     @endif
 
@@ -63,35 +86,33 @@
             </a>
         </x-card>
 
-        <x-card title="Step 2 — Upload Your Completed PDS">
-            <form method="POST" action="{{ route('pds.upload') }}" enctype="multipart/form-data" class="space-y-3">
-                @csrf
-                <input type="file" name="file" accept=".xlsx" required class="text-sm w-full">
-                <p class="text-xs text-gray-400">Only .xlsx files based on the official template are accepted. Max 10MB.</p>
-                <button class="bg-maroon-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-maroon-900 transition">
-                    Upload Completed PDS
-                </button>
-            </form>
-
+        <x-card title="Step 2 — Upload Your Completed PDS" id="upload-card">
             @if ($submission->file_path)
-                <div class="mt-5 pt-4 border-t border-gray-100">
-                    <p class="text-xs text-gray-400 mb-2">Your uploaded file</p>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <a href="{{ route('pds.export') }}" target="_blank"
-                           class="inline-flex items-center gap-1.5 bg-gray-700 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-800 transition">
-                            View as PDF
-                        </a>
-                        <a href="{{ asset('storage/' . $submission->file_path) }}" download
-                           class="inline-flex items-center gap-1.5 border border-gray-300 text-gray-600 px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-50 transition">
-                            Download My Excel File
-                        </a>
-                    </div>
+                <div id="replace-panel" class="hidden">
+                    <p class="text-xs text-gray-400 mb-3">Uploading a new file will replace your current submission.</p>
+                    <form method="POST" action="{{ route('pds.upload') }}" enctype="multipart/form-data" class="space-y-3">
+                        @csrf
+                        <input type="file" name="file" accept=".xlsx" required class="text-sm w-full">
+                        <button class="bg-maroon-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-maroon-900 transition">
+                            Replace File
+                        </button>
+                    </form>
                 </div>
+                <p class="text-sm text-gray-400">Your PDS is already uploaded — see the summary above. Click "Upload a Different Version" if you need to make changes.</p>
+            @else
+                <form method="POST" action="{{ route('pds.upload') }}" enctype="multipart/form-data" class="space-y-3">
+                    @csrf
+                    <input type="file" name="file" accept=".xlsx" required class="text-sm w-full">
+                    <p class="text-xs text-gray-400">Only .xlsx files based on the official template are accepted. Max 10MB.</p>
+                    <button class="bg-maroon-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-maroon-900 transition">
+                        Upload Completed PDS
+                    </button>
+                </form>
             @endif
         </x-card>
     </div>
 
-    @if ($submission->file_path && $submission->status !== 'approved')
+    @if ($submission->file_path && $submission->status !== 'approved' && $submission->status !== 'submitted')
         <div class="mt-6">
             <form method="POST" action="{{ route('pds.submit') }}"
                   onsubmit="return confirm('Submit your PDS to HR for review? Make sure you have filled it out completely and checked the PDF preview.')">
@@ -101,13 +122,11 @@
                 </button>
             </form>
         </div>
-    @elseif ($submission->status === 'approved')
-        <div class="mt-6 bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg px-4 py-3">
-            Your PDS for {{ now()->year }} has been reviewed and approved by HR.
+    @elseif ($submission->status === 'submitted')
+        <div class="mt-6 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg px-4 py-3">
+            Your PDS is awaiting HR review.
         </div>
     @endif
 
 @endif
 @endsection
-
-{{-- i tried to upload my own pds but when i click the view as pdf, it cant turn it into pdf also dont iclude the success action part wherein it has a pop-up because i already put that in the app layout so no need to put in the pds blade.  also since i can see the design for now, it has a lot of missing parts because after i uploaded the pds file, i cant see or theres nothing i can see that i has already uploaded something so itll be bad ui and ux. the employee should see their uploaded file there listed together with the remarks if it was passed to the admin or etc just improve it more. and i have another concern, since we remove the old steps wizards in pds part, then what will be update in the admin side about the pds part because if you can remember when the admin view the employee it shows there the Personal InfoEducationWork Experience so i think the pds view part for admin will be change but dont remove the header type that displays the picture, name, and quicklinks for employee details and admin ledger --}}

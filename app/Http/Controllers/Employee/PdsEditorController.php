@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Models\PdsSubmission;
 use App\Models\PdsTemplate;
+use App\Services\ExcelToPdfConverter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use Symfony\Component\Process\Process;
 
 class PdsEditorController extends Controller
 {
@@ -33,8 +33,6 @@ class PdsEditorController extends Controller
             'file' => ['required', 'file', 'mimes:xlsx', 'max:10240'],
         ]);
 
-        // Sanity check: confirm the uploaded file's sheet structure matches
-        // the official template, so employees can't upload an unrelated file.
         try {
             $uploaded = IOFactory::load($request->file('file')->getPathname());
             $official = IOFactory::load(Storage::disk('public')->path($template->file_path));
@@ -62,10 +60,13 @@ class PdsEditorController extends Controller
             Storage::disk('public')->delete($submission->file_path);
         }
 
+        $originalName = $request->file('file')->getClientOriginalName();
         $path = $request->file('file')->storeAs('pds-working', Auth::id() . '_' . now()->year . '.xlsx', 'public');
 
         $submission->update([
             'file_path' => $path,
+            'file_original_name' => $originalName,
+            'uploaded_at' => now(),
             'pds_template_id' => $template->id,
             'status' => $submission->status === 'not_started' ? 'draft' : $submission->status,
         ]);
@@ -84,36 +85,17 @@ class PdsEditorController extends Controller
         return redirect()->route('pds.editor')->with('success', 'PDS submitted to HR for review.');
     }
 
-    public function exportPdf()
+    public function exportPdf(ExcelToPdfConverter $converter)
     {
         $submission = PdsSubmission::where('user_id', Auth::id())->where('applicable_year', now()->year)->firstOrFail();
         abort_unless($submission->file_path, 422, 'Please upload your completed PDS before exporting.');
 
-        $xlsxPath = Storage::disk('public')->path($submission->file_path);
-        $outDir = dirname($xlsxPath);
-        $pdfPath = preg_replace('/\.xlsx$/', '.pdf', $xlsxPath);
+        try {
+            $pdfPath = $converter->convert(Storage::disk('public')->path($submission->file_path));
 
-        $profileDir = storage_path('app/temp/lo_profile');
-        if (!is_dir($profileDir)) {
-            mkdir($profileDir, 0755, true);
+            return response()->file($pdfPath, ['Content-Disposition' => 'inline; filename="My_PDS.pdf"']);
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
         }
-        $profileUrl = 'file:///' . str_replace('\\', '/', $profileDir);
-
-        $process = new Process([
-            config('services.soffice.path'),
-            '--headless', '--norestore',
-            "-env:UserInstallation={$profileUrl}",
-            '--convert-to=pdf',
-            '--outdir', $outDir,
-            $xlsxPath,
-        ]);
-        $process->setTimeout(90);
-        $process->run();
-
-        if (!$process->isSuccessful() || !file_exists($pdfPath)) {
-            return back()->with('error', 'PDF conversion failed. You can still download your saved Excel file.');
-        }
-
-        return response()->file($pdfPath, ['Content-Disposition' => 'inline; filename="My_PDS.pdf"']);
     }
 }
