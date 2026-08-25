@@ -6,26 +6,39 @@ use App\Http\Controllers\Controller;
 use App\Models\PdsSubmission;
 use App\Models\PdsTemplate;
 use App\Models\User;
-use App\Services\ExcelToPdfConverter;
+use App\Services\PdsSubmissionService;
+use App\Services\XlsxToPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class PdsReviewController extends Controller
 {
+    public function __construct(private PdsSubmissionService $pds)
+    {
+    }
+
     public function index(Request $request)
     {
         $year = $request->input('year', now()->year);
         $years = collect(range(now()->year, now()->year - 2))->values();
 
-        $employees = User::where('role', 'employee')
-            ->with(['pdsSubmissions' => fn ($q) => $q->where('applicable_year', $year)])
+        $employees = User::whereIn('role', ['employee', 'dean', 'campus_director'])
+            ->with([
+                'pdsSubmissions' => fn ($q) => $q->where('applicable_year', $year),
+                'college',
+                'departmentRecord',
+            ])
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                       ->orWhere('employee_number', 'like', "%{$search}%");
                 });
             })
+            // Chasing compliance is done college by college, so both filters
+            // are scoped server-side rather than hidden in the browser.
+            ->when($request->college, fn ($q, $id) => $q->where('college_id', $id))
+            ->when($request->department, fn ($q, $id) => $q->where('department_id', $id))
             ->when($request->status, function ($query, $status) use ($year) {
                 if ($status === 'not_started') {
                     $query->where(function ($q) use ($year) {
@@ -40,25 +53,35 @@ class PdsReviewController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $totalEmployees = User::where('role', 'employee')->count();
+        // The stat cards count the same population the table is filtered to,
+        // so "12 approved" can never sit above a list of three.
+        $scope = fn () => User::whereIn('role', ['employee', 'dean', 'campus_director'])
+            ->when($request->college, fn ($q, $id) => $q->where('college_id', $id))
+            ->when($request->department, fn ($q, $id) => $q->where('department_id', $id));
+
+        $totalEmployees = $scope()->count();
 
         $counts = PdsSubmission::where('applicable_year', $year)
+            ->whereIn('user_id', $scope()->select('users.id'))
             ->selectRaw('status, count(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        $templates = PdsTemplate::with('uploader')->latest()->get();
+        $templates = PdsTemplate::with('uploader')->orderByDesc('version')->get();
         $activeTemplate = $templates->firstWhere('is_active', true);
+        $colleges = \App\Models\College::active()->with('activeDepartments')->orderBy('name')->get();
 
         return view('admin.pds.index', compact(
-            'employees', 'year', 'years', 'counts', 'totalEmployees', 'templates', 'activeTemplate'
+            'employees', 'year', 'years', 'counts', 'totalEmployees',
+            'templates', 'activeTemplate', 'colleges'
         ));
     }
 
     public function show(User $employee)
     {
-        $submission = PdsSubmission::where('user_id', $employee->id)
-            ->where('applicable_year', now()->year)
+        $submission = PdsSubmission::with(['revisions.reviewer', 'template', 'reviewer'])
+            ->where('user_id', $employee->id)
+            ->where('applicable_year', request('year', now()->year))
             ->first();
 
         return view('admin.pds.show', compact('employee', 'submission'));
@@ -66,58 +89,96 @@ class PdsReviewController extends Controller
 
     public function approve(Request $request, User $employee)
     {
-        $submission = PdsSubmission::where('user_id', $employee->id)
-            ->where('applicable_year', now()->year)
-            ->firstOrFail();
+        abort_unless($request->user()->isAdmin(), 403, 'Only HR reviews the PDS.');
 
-        $submission->update([
-            'status' => 'approved',
-            'reviewed_by' => Auth::id(),
-            'reviewed_at' => now(),
-            'return_remarks' => null,
-        ]);
+        $submission = $this->submissionFor($employee, $request);
 
-        return redirect()->route('admin.pds.index')->with('success', "{$employee->name}'s PDS has been approved.");
+        abort_unless($submission->isSubmitted(), 422,
+            'Only a submitted PDS can be approved.');
+
+        $this->pds->approve($submission, $request->user());
+
+        return redirect()->route('admin.pds.index')
+            ->with('success', "{$employee->name}'s PDS has been approved.");
     }
 
     public function returnForRevision(Request $request, User $employee)
     {
+        abort_unless($request->user()->isAdmin(), 403, 'Only HR reviews the PDS.');
+
         $data = $request->validate([
             'return_remarks' => ['required', 'string', 'max:1000'],
+        ], [
+            'return_remarks.required' => 'Tell the employee what needs correcting.',
         ]);
 
-        $submission = PdsSubmission::where('user_id', $employee->id)
-            ->where('applicable_year', now()->year)
-            ->firstOrFail();
+        $submission = $this->submissionFor($employee, $request);
 
-        $submission->update([
-            'status' => 'returned',
-            'reviewed_by' => Auth::id(),
-            'reviewed_at' => now(),
-            'return_remarks' => $data['return_remarks'],
-        ]);
+        abort_unless($submission->isSubmitted(), 422,
+            'Only a submitted PDS can be returned.');
 
-        return redirect()->route('admin.pds.index')->with('success', "{$employee->name}'s PDS was returned for revision.");
+        $this->pds->returnForRevision($submission, $request->user(), $data['return_remarks']);
+
+        return redirect()->route('admin.pds.index')
+            ->with('success', "{$employee->name}'s PDS was returned for correction.");
     }
 
-    public function download(User $employee, ExcelToPdfConverter $converter)
+    /**
+     * Previews the submitted PDS. The stored conversion is served when it
+     * exists; otherwise the workbook is converted on demand, so a failure at
+     * upload time does not block review.
+     */
+    public function download(Request $request, User $employee, XlsxToPdfService $converter)
     {
+        abort_unless($request->user()->isReviewer(), 403);
+
         $submission = PdsSubmission::where('user_id', $employee->id)
-            ->where('applicable_year', now()->year)
+            ->where('applicable_year', $request->input('year', now()->year))
             ->first();
 
-        if (!$submission || !$submission->file_path) {
-            return back()->with('error', "{$employee->name} hasn't uploaded a PDS yet.");
+        if (! $submission || ! $submission->workbookExists()) {
+            return back()->with('error', "{$employee->name} has not uploaded a PDS yet.");
+        }
+
+        $filename = 'PDS_' . preg_replace('/[^A-Za-z0-9_]/', '_', $employee->name)
+            . '_' . $submission->applicable_year . '.pdf';
+
+        if ($submission->pdfExists()) {
+            return response()->file($submission->pdfPath(), [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            ]);
         }
 
         try {
-            $pdfPath = $converter->convert(Storage::disk('public')->path($submission->file_path));
-
-            return response()->file($pdfPath, [
-                'Content-Disposition' => 'inline; filename="PDS_' . preg_replace('/[^A-Za-z0-9_]/', '_', $employee->name) . '.pdf"',
-            ]);
+            return $converter->stream($submission->workbookPath(), $filename);
         } catch (\Throwable $e) {
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    /** Downloads the original workbook, for when the PDF is not enough. */
+    public function downloadWorkbook(Request $request, User $employee)
+    {
+        abort_unless($request->user()->isReviewer(), 403);
+
+        $submission = PdsSubmission::where('user_id', $employee->id)
+            ->where('applicable_year', $request->input('year', now()->year))
+            ->first();
+
+        abort_unless($submission && $submission->workbookExists(), 404,
+            "{$employee->name} has not uploaded a PDS yet.");
+
+        return Storage::disk('public')->download(
+            $submission->file_path,
+            $submission->file_original_name ?: 'PDS.xlsx'
+        );
+    }
+
+    private function submissionFor(User $employee, Request $request): PdsSubmission
+    {
+        return PdsSubmission::where('user_id', $employee->id)
+            ->where('applicable_year', $request->input('year', now()->year))
+            ->firstOrFail();
     }
 }

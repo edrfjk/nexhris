@@ -2,18 +2,26 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\IsVersionedTemplate;
 use Illuminate\Database\Eloquent\Model;
 
+/** The blank PDS workbook (CS Form 212) employees download and fill offline. */
 class PdsTemplate extends Model
 {
-    protected $fillable = ['label', 'file_path', 'original_filename', 'is_active', 'uploaded_by'];
+    use IsVersionedTemplate;
+
+    protected $fillable = [
+        'label', 'version', 'file_path', 'original_filename',
+        'checksum', 'is_active', 'superseded_at', 'notes', 'uploaded_by',
+    ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'superseded_at' => 'datetime',
     ];
 
-    public function uploader()
+    public function submissions()
     {
-        return $this->belongsTo(User::class, 'uploaded_by');
+        return $this->hasMany(PdsSubmission::class);
     }
 }

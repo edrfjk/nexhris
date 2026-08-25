@@ -1,3 +1,375 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ==========================================================================
+   NexHRIS design system — ISPSC Tagudin Campus
+
+   The palette is sampled from the official seal: maroon #780000 (34% of the
+   mark), gold #F0DC00 (18%), forest #145000 (14%) and cream #F0F0DC. Neutrals
+   use the warm "sand" ramp built from that cream, so nothing on screen carries
+   a cold blue cast next to the maroon.
+
+   Surfaces are soft: generous radii, layered shadows instead of hard rules,
+   and tinted fills rather than saturated blocks.
+   ========================================================================== */
+
+@layer base {
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+        @apply bg-sand-100 text-sand-800 antialiased text-sm;
+    }
+
+    :focus-visible {
+        @apply outline-none ring-2 ring-maroon-500/50 ring-offset-2 ring-offset-white;
+    }
+
+    svg { @apply shrink-0; }
+
+    ::selection { @apply bg-maroon-100 text-maroon-900; }
+}
+
+@layer components {
+
+    /* ---------------------------------------------------------------
+       Buttons — soft corners, gentle depth
+       --------------------------------------------------------------- */
+
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg
+               font-medium whitespace-nowrap border border-transparent
+               transition-all duration-200 ease-smooth
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+               disabled:opacity-50 disabled:pointer-events-none;
+    }
+
+    .btn-xs { @apply px-2.5 py-1.5 text-xs gap-1.5 rounded-md; }
+    .btn-sm { @apply px-3 py-1.5 text-[13px]; }
+    .btn-md { @apply px-4 py-2.5 text-sm; }
+    .btn-lg { @apply px-5 py-3 text-[15px] rounded-xl; }
+
+    .btn svg { @apply w-4 h-4; }
+    .btn-xs svg, .btn-sm svg { @apply w-3.5 h-3.5; }
+
+    .btn-primary {
+        @apply bg-maroon-800 text-white shadow-soft
+               hover:bg-maroon-900 hover:shadow-lift
+               active:scale-[0.98] focus-visible:ring-maroon-500;
+    }
+
+    .btn-secondary {
+        @apply bg-white text-sand-700 border-sand-300 shadow-soft
+               hover:bg-sand-50 hover:border-sand-400 hover:text-sand-900
+               active:scale-[0.98] focus-visible:ring-sand-400;
+    }
+
+    .btn-ghost {
+        @apply bg-transparent text-sand-600
+               hover:bg-sand-200/70 hover:text-sand-900
+               active:scale-[0.98] focus-visible:ring-sand-400;
+    }
+
+    .btn-success {
+        @apply bg-forest-800 text-white shadow-soft
+               hover:bg-forest-900 hover:shadow-lift
+               active:scale-[0.98] focus-visible:ring-forest-500;
+    }
+
+    .btn-danger {
+        @apply bg-red-600 text-white shadow-soft
+               hover:bg-red-700 hover:shadow-lift
+               active:scale-[0.98] focus-visible:ring-red-400;
+    }
+
+    .btn-danger-soft {
+        @apply bg-red-50 text-red-700 border-red-200 shadow-soft
+               hover:bg-red-100 hover:border-red-300
+               active:scale-[0.98] focus-visible:ring-red-400;
+    }
+
+    /* ---------------------------------------------------------------
+       Form controls
+       --------------------------------------------------------------- */
+
+    .input,
+    .select,
+    .textarea {
+        @apply block w-full rounded-lg border-sand-300 bg-white
+               text-sm text-sand-900 placeholder:text-sand-400
+               shadow-inset transition-all duration-200 ease-smooth
+               focus:border-maroon-500 focus:ring-4 focus:ring-maroon-500/10
+               disabled:bg-sand-100 disabled:text-sand-500;
+    }
+
+    .input { @apply px-3.5 py-2.5; }
+    .select { @apply px-3.5 py-2.5 pr-10; }
+    .textarea { @apply px-3.5 py-2.5 leading-relaxed; }
+
+    .input-sm, .select-sm { @apply py-1.5 text-[13px]; }
+    .input-error { @apply border-red-300 focus:border-red-500 focus:ring-red-500/10; }
+
+    .label { @apply block text-[13px] font-medium text-sand-700 mb-1.5; }
+    .label-required::after { content: "*"; @apply text-red-500 ml-0.5; }
+
+    .hint { @apply mt-1.5 block text-xs text-sand-500; }
+    .error-text { @apply mt-1.5 block text-xs font-medium text-red-600; }
+
+    .file-input {
+        @apply block w-full text-sm text-sand-600
+               file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
+               file:text-[13px] file:font-medium file:cursor-pointer
+               file:bg-maroon-50 file:text-maroon-800
+               hover:file:bg-maroon-100 file:transition-colors;
+    }
+
+    /* ---------------------------------------------------------------
+       Panels
+       --------------------------------------------------------------- */
+
+    .card {
+        @apply bg-white rounded-xl border border-sand-200 shadow-soft;
+    }
+
+    .card-interactive {
+        @apply transition-all duration-200 ease-smooth
+               hover:shadow-lift hover:border-sand-300 hover:-translate-y-px;
+    }
+
+    .card-header {
+        @apply px-5 py-4 flex items-center justify-between gap-3
+               border-b border-sand-200;
+    }
+
+    .card-title {
+        @apply text-[15px] font-semibold text-sand-900 flex items-center gap-2;
+    }
+
+    .card-title svg { @apply w-[18px] h-[18px] text-maroon-700; }
+
+    .card-body { @apply p-5; }
+    .card-footer { @apply px-5 py-3.5 border-t border-sand-200 bg-sand-50 rounded-b-xl; }
+
+    /* ---------------------------------------------------------------
+       Tables — tinted header, roomy rows
+       --------------------------------------------------------------- */
+
+    .table-wrap { @apply overflow-x-auto rounded-xl; }
+
+    .table { @apply w-full text-sm border-collapse; }
+
+    .table thead th {
+        @apply px-5 py-3 text-left align-middle bg-sand-100
+               text-xs font-semibold uppercase tracking-wide text-sand-600
+               border-b border-sand-200 whitespace-nowrap;
+    }
+
+    .table tbody tr {
+        @apply border-b border-sand-100 transition-colors duration-150
+               hover:bg-maroon-50/40;
+    }
+
+    .table tbody tr:last-child { @apply border-b-0; }
+    .table tbody td { @apply px-5 py-3.5 align-middle text-sand-700; }
+
+    .table .num { @apply text-right tabular-nums font-medium text-sand-900; }
+
+    /* ---------------------------------------------------------------
+       Status badges — soft tinted pills
+       --------------------------------------------------------------- */
+
+    .badge {
+        @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+               text-xs font-medium whitespace-nowrap;
+    }
+
+    .badge svg { @apply w-3.5 h-3.5; }
+
+    .badge-slate   { @apply bg-sand-200 text-sand-700; }
+    .badge-maroon  { @apply bg-maroon-100 text-maroon-800; }
+    .badge-green   { @apply bg-forest-100 text-forest-800; }
+    .badge-amber   { @apply bg-gold-100 text-gold-900; }
+    .badge-red     { @apply bg-red-100 text-red-700; }
+    .badge-blue    { @apply bg-sky-100 text-sky-800; }
+    .badge-violet  { @apply bg-violet-100 text-violet-800; }
+
+    /* ---------------------------------------------------------------
+       Structure
+       --------------------------------------------------------------- */
+
+    .section-label {
+        @apply text-xs font-semibold uppercase tracking-wide text-sand-500;
+    }
+
+    .page-title { @apply text-xl font-semibold text-sand-900 tracking-tight leading-snug; }
+
+    .crumbs { @apply flex items-center gap-1.5 text-xs text-sand-500; }
+    .crumbs a { @apply hover:text-maroon-700 transition-colors; }
+    .crumbs svg { @apply w-3.5 h-3.5 text-sand-300; }
+
+    .toolbar {
+        @apply flex flex-wrap items-center gap-2 px-4 py-3
+               bg-white border border-sand-200 rounded-xl shadow-soft;
+    }
+
+    /* ---------------------------------------------------------------
+       Filter bar — one design for every list screen
+       --------------------------------------------------------------- */
+    .filter-bar {
+        @apply bg-white border border-sand-200 rounded-xl shadow-soft overflow-hidden;
+    }
+
+    /* A grid, not a wrapping flex row: controls line up in columns at every
+       width instead of forming ragged rows of mismatched boxes. */
+    .filter-grid {
+        @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3 p-4;
+    }
+
+    .filter-actions {
+        @apply flex flex-col md:flex-row md:items-center md:justify-between gap-3
+               px-4 py-3 border-t border-sand-200 bg-sand-50;
+    }
+
+    /* A floating panel — a dropdown or a menu — on the same surface as a
+       card so it does not read as a different material. */
+    .popover {
+        @apply bg-white rounded-xl border border-sand-200 shadow-soft p-2 space-y-1;
+    }
+
+    /* ---------------------------------------------------------------
+       Rich text — the body of a policy or announcement, which arrives as
+       HTML from the editor and would otherwise render unstyled
+       --------------------------------------------------------------- */
+    .rich-text { @apply text-sand-700 leading-relaxed; }
+
+    .rich-text > * + * { @apply mt-3; }
+
+    .rich-text h1 { @apply text-lg font-bold text-sand-900 mt-6 mb-2; }
+    .rich-text h2 { @apply text-base font-bold text-sand-900 mt-5 mb-2; }
+    .rich-text h3 { @apply text-sm font-semibold text-sand-900 mt-4 mb-1.5; }
+    .rich-text h4 { @apply text-sm font-semibold text-sand-800 mt-3 mb-1; }
+
+    .rich-text p { @apply text-sand-700; }
+
+    .rich-text ul { @apply list-disc pl-5 space-y-1 marker:text-sand-400; }
+    .rich-text ol { @apply list-decimal pl-5 space-y-1 marker:text-sand-400; }
+    .rich-text li { @apply text-sand-700; }
+
+    .rich-text a {
+        @apply text-maroon-800 underline underline-offset-2
+               hover:text-maroon-900;
+    }
+
+    .rich-text strong { @apply font-semibold text-sand-900; }
+    .rich-text em { @apply italic; }
+
+    .rich-text blockquote {
+        @apply border-l-2 border-maroon-200 pl-3 text-sand-600 italic;
+    }
+
+    .rich-text code {
+        @apply rounded bg-sand-100 px-1 py-0.5 text-[0.9em] text-sand-800;
+    }
+
+    .rich-text pre {
+        @apply rounded-lg bg-sand-100 p-3 overflow-x-auto text-xs;
+    }
+
+    .rich-text hr { @apply border-sand-200 my-5; }
+
+    .rich-text table { @apply w-full border-collapse text-sm; }
+    .rich-text th,
+    .rich-text td { @apply border border-sand-200 px-2.5 py-1.5 text-left; }
+    .rich-text th { @apply bg-sand-50 font-semibold text-sand-800; }
+
+    .rich-text img { @apply max-w-full rounded-lg; }
+
+    /* ---------------------------------------------------------------
+       Chips — a small labelled pill, used for applied filters and tags
+       --------------------------------------------------------------- */
+    .chip {
+        @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1
+               text-xs font-medium;
+    }
+
+    .chip svg { @apply w-3.5 h-3.5; }
+
+    .chip-maroon { @apply bg-maroon-50 text-maroon-800; }
+    .chip-sand   { @apply bg-sand-100 text-sand-700; }
+
+    /* On a maroon banner, where a tinted fill would disappear. */
+    .chip-onbrand { @apply bg-white/15 backdrop-blur text-white font-semibold; }
+
+    /* ---------------------------------------------------------------
+       Icon buttons — a bare action in a table row or a card header
+       --------------------------------------------------------------- */
+    .icon-btn {
+        @apply inline-flex items-center justify-center w-9 h-9 rounded-lg
+               text-sand-500 transition-colors
+               hover:text-maroon-800 hover:bg-maroon-50
+               focus-visible:text-maroon-800 focus-visible:bg-maroon-50;
+    }
+
+    .icon-btn svg { @apply w-[18px] h-[18px]; }
+
+    .icon-btn-success { @apply hover:text-forest-700 hover:bg-forest-50; }
+    .icon-btn-info    { @apply hover:text-sky-700 hover:bg-sky-50; }
+    .icon-btn-danger  { @apply hover:text-red-700 hover:bg-red-50; }
+
+    /* Already on, as a pinned policy is. */
+    .icon-btn-on { @apply text-maroon-700 bg-maroon-50; }
+
+    .icon-btn-round {
+        @apply w-10 h-10 rounded-full border border-sand-200 hover:bg-sand-50;
+    }
+
+    .filter-chip {
+        @apply inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full
+               bg-white text-sand-700 border border-sand-200
+               hover:border-maroon-300 hover:text-maroon-800 transition-colors;
+    }
+
+    /* ---------------------------------------------------------------
+       Alerts — tinted, no hard edges
+       --------------------------------------------------------------- */
+
+    .alert {
+        @apply flex items-start gap-3 rounded-xl px-4 py-3.5 text-sm border;
+    }
+
+    .alert svg { @apply w-[18px] h-[18px] mt-px shrink-0; }
+
+    .alert-success { @apply bg-forest-50 border-forest-200 text-forest-900; }
+    .alert-error   { @apply bg-red-50 border-red-200 text-red-900; }
+    .alert-warning { @apply bg-gold-50 border-gold-200 text-gold-900; }
+    .alert-info    { @apply bg-sky-50 border-sky-200 text-sky-900; }
+
+    /* ---------------------------------------------------------------
+       Sidebar navigation
+       --------------------------------------------------------------- */
+
+    .nav-link {
+        @apply relative flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg
+               text-[13px] transition-all duration-200 ease-smooth
+               text-white/70 hover:bg-white/10 hover:text-white;
+    }
+
+    .nav-link svg { @apply w-[18px] h-[18px] text-white/50 transition-colors; }
+    .nav-link:hover svg { @apply text-white/80; }
+
+    .nav-link-active {
+        @apply bg-white/[0.14] text-white font-medium;
+    }
+
+    .nav-link-active svg { @apply text-gold-400; }
+}
+
+@layer utilities {
+    .nav-scroll::-webkit-scrollbar { width: 6px; }
+    .nav-scroll::-webkit-scrollbar-thumb { background: rgb(255 255 255 / 0.16); border-radius: 99px; }
+    .nav-scroll::-webkit-scrollbar-track { background: transparent; }
+
+    [x-cloak] { display: none !important; }
+
+    .tabular { font-variant-numeric: tabular-nums; }
+}

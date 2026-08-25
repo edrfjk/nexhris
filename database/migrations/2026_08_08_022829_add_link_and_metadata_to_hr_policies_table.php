@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,8 +12,16 @@ return new class extends Migration
      */
     public function up(): void
 {
-    // MySQL enum columns need a raw statement to add a new value.
-    DB::statement("ALTER TABLE hr_policies MODIFY type ENUM('text', 'file', 'link') NOT NULL");
+    // MySQL enum columns need a raw statement to add a new value. Other
+    // drivers express an enum as a CHECK constraint that cannot be altered
+    // in place, so there the column becomes a plain string instead.
+    if (DB::getDriverName() === 'mysql') {
+        DB::statement("ALTER TABLE hr_policies MODIFY type ENUM('text', 'file', 'link') NOT NULL");
+    } else {
+        Schema::table('hr_policies', function (Blueprint $table) {
+            $table->string('type')->change();
+        });
+    }
 
     Schema::table('hr_policies', function (Blueprint $table) {
         $table->string('link_url')->nullable()->after('file_original_name');
@@ -29,6 +38,8 @@ public function down(): void
         $table->dropColumn(['link_url', 'is_pinned', 'effective_date', 'expiry_date', 'requires_acknowledgment']);
     });
 
-    DB::statement("ALTER TABLE hr_policies MODIFY type ENUM('text', 'file') NOT NULL");
+    if (DB::getDriverName() === 'mysql') {
+        DB::statement("ALTER TABLE hr_policies MODIFY type ENUM('text', 'file') NOT NULL");
+    }
 }
 };

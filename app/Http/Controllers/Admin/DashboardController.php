@@ -3,59 +3,41 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\HrPolicy;
-use App\Models\LeaveApplication;
-use App\Models\PdsSubmission;
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use App\Services\DashboardService;
+use Illuminate\Http\Request;
 
+/**
+ * Routes each privileged role to its own dashboard. They share a URL because
+ * the sidebar and the post-login redirect both point here, but the figures and
+ * the view differ per role.
+ */
 class DashboardController extends Controller
 {
-    public function index()
+    public function __construct(private DashboardService $dashboard)
     {
-        $totalEmployees = User::where('role', 'employee')->count();
-        $activeEmployees = User::where('role', 'employee')->where('status', 'active')->count();
+    }
 
-        $pendingLeave = LeaveApplication::where('status', 'pending')->count();
-        $approvedThisMonth = LeaveApplication::where('status', 'approved')
-            ->whereMonth('reviewed_at', now()->month)
-            ->whereYear('reviewed_at', now()->year)
-            ->count();
+    public function index(Request $request)
+    {
+        $viewer = $request->user();
 
-        $year = now()->year;
-        $pdsCounts = PdsSubmission::where('applicable_year', $year)
-            ->selectRaw('status, count(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+        if ($viewer->isDean()) {
+            return view('admin.dashboards.dean', [
+                'data' => $this->dashboard->forDean($viewer),
+            ]);
+        }
 
-        $pdsSubmittedCount = $pdsCounts->except('not_started')->sum();
-        $pdsNotStartedCount = $totalEmployees - $pdsSubmittedCount;
+        if ($viewer->isCampusDirector()) {
+            return view('admin.dashboards.director', [
+                'data' => $this->dashboard->forDirector($viewer),
+            ]);
+        }
 
-        $publishedPolicies = HrPolicy::where('is_published', true)->count();
+        abort_unless($viewer->isAdmin(), 403);
 
-        $recentApplications = LeaveApplication::with('user')
-            ->latest()
-            ->take(5)
-            ->get();
-
-        $recentPdsActivity = PdsSubmission::with('user')
-            ->whereIn('status', ['submitted', 'approved', 'returned'])
-            ->latest('updated_at')
-            ->take(5)
-            ->get();
-
-        return view('admin.dashboard', compact(
-            'totalEmployees',
-            'activeEmployees',
-            'pendingLeave',
-            'approvedThisMonth',
-            'pdsCounts',
-            'pdsSubmittedCount',
-            'pdsNotStartedCount',
-            'publishedPolicies',
-            'recentApplications',
-            'recentPdsActivity',
-            'year',
-        ));
+        return view('admin.dashboards.hr', [
+            'data' => $this->dashboard->forHr($viewer),
+            'year' => now()->year,
+        ]);
     }
 }

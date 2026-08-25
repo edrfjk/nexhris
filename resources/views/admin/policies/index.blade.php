@@ -4,74 +4,57 @@
 
 @section('content')
 
-<div class="space-y-6">
-
-    {{-- Page Header --}}
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-xl font-semibold text-gray-800">HR Policies</h1>
-            <p class="text-sm text-gray-500 mt-1">
-                Manage HR policies, guidelines, and employee acknowledgments.
-            </p>
-        </div>
-
-        <a href="{{ route('admin.policies.create') }}"
-           class="inline-flex items-center gap-1.5 bg-maroon-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-maroon-900 transition">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 4.5v15m7.5-7.5h-15"/>
-            </svg>
+<x-page-header
+    title="HR Policies"
+    subtitle="Manage HR policies, guidelines and employee acknowledgments.">
+    <x-slot:actions>
+        <a href="{{ route('admin.policies.create') }}" class="btn btn-md btn-primary">
+            <x-heroicon-o-plus />
             Add Policy
         </a>
-    </div>
+    </x-slot:actions>
+</x-page-header>
 
+<div class="space-y-6">
 
     {{-- Statistics --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
         {{-- Published --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 ring-1 ring-green-100 p-4">
-            <div class="w-9 h-9 rounded-lg bg-green-50 text-green-600 flex items-center justify-center mb-3">
-                <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24"
-                     stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M4.5 12.75l6 6 9-13.5"/>
-                </svg>
+        <div class="card ring-1 ring-forest-100 p-4">
+            <div class="w-9 h-9 rounded-lg bg-forest-50 text-forest-600 flex items-center justify-center mb-3">
+                <x-heroicon-o-check class="w-4.5 h-4.5" />
             </div>
 
-            <p class="text-2xl font-bold text-gray-800 leading-none">
+            <p class="text-2xl font-bold text-sand-800 leading-none">
                 {{ $publishedCount }}
             </p>
 
-            <p class="text-xs text-gray-500 mt-1.5">
+            <p class="text-xs text-sand-500 mt-1.5">
                 Published
             </p>
         </div>
 
 
         {{-- Drafts --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 ring-1 ring-gray-100 p-4">
-            <div class="w-9 h-9 rounded-lg bg-gray-50 text-gray-600 flex items-center justify-center mb-3">
-                <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24"
-                     stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
-                </svg>
+        <div class="card ring-1 ring-sand-100 p-4">
+            <div class="w-9 h-9 rounded-lg bg-sand-50 text-sand-600 flex items-center justify-center mb-3">
+                <x-heroicon-o-pencil-square class="w-4.5 h-4.5" />
             </div>
 
-            <p class="text-2xl font-bold text-gray-800 leading-none">
+            <p class="text-2xl font-bold text-sand-800 leading-none">
                 {{ $draftCount }}
             </p>
 
-            <p class="text-xs text-gray-500 mt-1.5">
+            <p class="text-xs text-sand-500 mt-1.5">
                 Drafts
             </p>
         </div>
 
 
         {{-- Uploaded Files --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 ring-1 ring-blue-100 p-4">
-            <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
+        <div class="card ring-1 ring-sky-100 p-4">
+            <div class="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center mb-3">
                 <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24"
                      stroke="currentColor" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -79,11 +62,11 @@
                 </svg>
             </div>
 
-            <p class="text-2xl font-bold text-gray-800 leading-none">
+            <p class="text-2xl font-bold text-sand-800 leading-none">
                 {{ $fileCount }}
             </p>
 
-            <p class="text-xs text-gray-500 mt-1.5">
+            <p class="text-xs text-sand-500 mt-1.5">
                 Uploaded Files
             </p>
         </div>
@@ -92,7 +75,7 @@
 
 
     {{-- Filters --}}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+    <div class="card p-4">
 
         <form method="GET"
               action="{{ route('admin.policies.index') }}"
@@ -100,7 +83,7 @@
 
             {{-- Search --}}
             <div class="flex-1 min-w-[220px]">
-                <label class="block text-xs font-medium text-gray-500 mb-1.5">
+                <label class="label">
                     Search
                 </label>
 
@@ -109,19 +92,19 @@
                     name="search"
                     value="{{ request('search') }}"
                     placeholder="Search policies..."
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
+                    class="input">
             </div>
 
 
             {{-- Category --}}
             <div class="w-full sm:w-48">
-                <label class="block text-xs font-medium text-gray-500 mb-1.5">
+                <label class="label">
                     Category
                 </label>
 
                 <select
                     name="category"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
+                    class="select">
 
                     <option value="">All Categories</option>
 
@@ -138,13 +121,13 @@
 
             {{-- Type --}}
             <div class="w-full sm:w-36">
-                <label class="block text-xs font-medium text-gray-500 mb-1.5">
+                <label class="label">
                     Type
                 </label>
 
                 <select
                     name="type"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
+                    class="select">
 
                     <option value="">All Types</option>
 
@@ -169,13 +152,13 @@
 
             {{-- Status --}}
             <div class="w-full sm:w-36">
-                <label class="block text-xs font-medium text-gray-500 mb-1.5">
+                <label class="label">
                     Status
                 </label>
 
                 <select
                     name="status"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
+                    class="select">
 
                     <option value="">All</option>
 
@@ -198,7 +181,7 @@
 
                 <button
                     type="submit"
-                    class="inline-flex items-center gap-1.5 bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-900 transition whitespace-nowrap">
+                    class="btn btn-md btn-primary whitespace-nowrap">
 
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
                          stroke="currentColor">
@@ -215,14 +198,9 @@
 
                     <a
                         href="{{ route('admin.policies.index') }}"
-                        class="inline-flex items-center gap-1.5 text-gray-500 border border-gray-300 px-3 py-2 rounded-lg text-sm hover:bg-gray-50 transition whitespace-nowrap">
+                        class="btn btn-md btn-secondary">
 
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
-                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
+                        <x-heroicon-o-x-mark class="w-4 h-4" />
 
                         Clear
                     </a>
@@ -237,28 +215,28 @@
         {{-- Active Filters --}}
         @if (request()->hasAny(['search', 'category', 'type', 'status']))
 
-            <div class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
+            <div class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-sand-100">
 
                 @if (request('search'))
-                    <span class="inline-flex items-center gap-1 bg-maroon-50 text-maroon-800 text-xs font-medium px-2.5 py-1 rounded-full">
+                    <span class="chip chip-maroon">
                         Search: "{{ request('search') }}"
                     </span>
                 @endif
 
                 @if (request('category'))
-                    <span class="inline-flex items-center gap-1 bg-maroon-50 text-maroon-800 text-xs font-medium px-2.5 py-1 rounded-full">
+                    <span class="chip chip-maroon">
                         Category: {{ request('category') }}
                     </span>
                 @endif
 
                 @if (request('type'))
-                    <span class="inline-flex items-center gap-1 bg-maroon-50 text-maroon-800 text-xs font-medium px-2.5 py-1 rounded-full">
+                    <span class="chip chip-maroon">
                         Type: {{ ucfirst(request('type')) }}
                     </span>
                 @endif
 
                 @if (request('status'))
-                    <span class="inline-flex items-center gap-1 bg-maroon-50 text-maroon-800 text-xs font-medium px-2.5 py-1 rounded-full">
+                    <span class="chip chip-maroon">
                         Status: {{ ucfirst(request('status')) }}
                     </span>
                 @endif
@@ -271,38 +249,38 @@
 
 
     {{-- Policies Table --}}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="card overflow-hidden">
 
         <div class="overflow-x-auto">
 
-            <table class="w-full text-sm">
+            <table class="table">
 
-                <thead class="bg-gray-50 border-b border-gray-100">
+                <thead>
 
                     <tr>
 
-                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="text-left">
                             Policy
                         </th>
 
-                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="text-left">
                             Category
                         </th>
 
-                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="text-left">
                             Type
                         </th>
 
                         {{-- NEW STATUS COLUMN --}}
-                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="text-left">
                             Status
                         </th>
 
-                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="text-left">
                             Published
                         </th>
 
-                        <th class="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th class="text-right">
                             Actions
                         </th>
 
@@ -311,16 +289,16 @@
                 </thead>
 
 
-                <tbody class="divide-y divide-gray-100">
+                <tbody>
 
                     @forelse ($policies as $policy)
 
                         <tr
                             x-data="{ preview: false }"
-                            class="hover:bg-gray-50 transition">
+                            class="hover:bg-sand-50 transition">
 
                             {{-- Policy Name --}}
-                            <td class="px-5 py-3">
+                            <td>
 
                                 <div class="flex items-center gap-3">
 
@@ -351,7 +329,7 @@
                                     <div>
 
                                         {{-- PIN INDICATOR --}}
-                                        <p class="font-medium text-gray-800 flex items-center gap-1.5">
+                                        <p class="font-medium text-sand-800 flex items-center gap-1.5">
 
                                             @if ($policy->is_pinned)
 
@@ -370,7 +348,7 @@
 
                                         </p>
 
-                                        <p class="text-xs text-gray-400">
+                                        <p class="text-xs text-sand-400">
                                             {{ $policy->created_at->format('M d, Y') }}
                                         </p>
 
@@ -382,9 +360,9 @@
 
 
                             {{-- Category --}}
-                            <td class="px-5 py-3">
+                            <td>
 
-                                <span class="text-sm text-gray-600">
+                                <span class="text-sm text-sand-600">
                                     {{ $policy->category ?: 'Uncategorized' }}
                                 </span>
 
@@ -392,7 +370,7 @@
 
 
                             {{-- Type --}}
-                            <td class="px-5 py-3">
+                            <td>
 
                                 <x-badge
                                     :color="match($policy->type) {
@@ -410,7 +388,7 @@
 
 
                             {{-- NEW STATUS COLUMN --}}
-                            <td class="px-5 py-3">
+                            <td>
 
                                 @php
                                     $status = $policy->statusLabel();
@@ -431,7 +409,7 @@
 
 
                             {{-- Published --}}
-                            <td class="px-5 py-3">
+                            <td>
 
                                 @if ($policy->is_published)
 
@@ -451,7 +429,7 @@
 
 
                             {{-- Actions --}}
-                            <td class="px-5 py-3">
+                            <td>
 
                                 <div class="flex justify-end items-center gap-1">
 
@@ -461,7 +439,7 @@
                                         type="button"
                                         @click="preview = true"
                                         title="Preview"
-                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-maroon-700 hover:bg-maroon-50 transition">
+                                        class="icon-btn">
 
                                         <svg
                                             class="w-5 h-5"
@@ -495,10 +473,7 @@
                                         <button
                                             type="submit"
                                             title="{{ $policy->is_pinned ? 'Unpin' : 'Pin' }}"
-                                            class="inline-flex items-center justify-center w-9 h-9 rounded-lg transition
-                                            {{ $policy->is_pinned
-                                                ? 'text-maroon-700 bg-maroon-50'
-                                                : 'text-gray-400 hover:bg-gray-50' }}">
+                                            class="icon-btn {{ $policy->is_pinned ? 'icon-btn-on' : '' }}">
 
                                             <svg
                                                 class="w-5 h-5"
@@ -525,21 +500,9 @@
                                         <a
                                             href="{{ route('admin.policies.compliance', $policy) }}"
                                             title="Compliance"
-                                            class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-green-700 hover:bg-green-50 transition">
+                                            class="icon-btn icon-btn-success">
 
-                                            <svg
-                                                class="w-5 h-5"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                                stroke-width="1.5">
-
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-
-                                            </svg>
+                                            <x-heroicon-o-check-circle class="w-5 h-5" />
 
                                         </a>
 
@@ -550,27 +513,9 @@
                                     <a
                                         href="{{ route('admin.policies.edit', $policy) }}"
                                         title="Edit"
-                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition">
+                                        class="icon-btn icon-btn-info">
 
-                                        <svg
-                                            class="w-5 h-5"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor">
-
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="1.5"
-                                                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
-
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="1.5"
-                                                d="M19.5 7.125L16.875 4.5"/>
-
-                                        </svg>
+                                        <x-heroicon-o-pencil-square class="w-5 h-5" />
 
                                     </a>
 
@@ -587,7 +532,7 @@
                                         <button
                                             type="submit"
                                             title="Delete"
-                                            class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition">
+                                            class="icon-btn icon-btn-danger">
 
                                             <svg
                                                 class="w-5 h-5"
@@ -638,19 +583,19 @@
                                         @click.self="preview = false">
 
                                         <div
-                                            class="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+                                            class="card max-w-2xl w-full max-h-[80vh] overflow-y-auto"
                                             @click.stop>
 
                                             {{-- Modal Header --}}
-                                            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-start sticky top-0 bg-white">
+                                            <div class="px-6 py-4 border-b border-sand-100 flex justify-between items-start sticky top-0 bg-white">
 
                                                 <div>
 
-                                                    <p class="font-semibold text-gray-800">
+                                                    <p class="font-semibold text-sand-800">
                                                         {{ $policy->title }}
                                                     </p>
 
-                                                    <p class="text-xs text-gray-400 mt-0.5">
+                                                    <p class="text-xs text-sand-400 mt-0.5">
                                                         {{ $policy->category ?: 'Uncategorized' }}
                                                         ·
                                                         {{ $policy->is_published ? 'Published' : 'Draft' }}
@@ -660,21 +605,9 @@
 
                                                 <button
                                                     @click="preview = false"
-                                                    class="text-gray-400 hover:text-gray-600">
+                                                    class="text-sand-400 hover:text-sand-600">
 
-                                                    <svg
-                                                        class="w-5 h-5"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor">
-
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="1.5"
-                                                            d="M6 18L18 6M6 6l12 12"/>
-
-                                                    </svg>
+                                                    <x-heroicon-o-x-mark class="w-5 h-5" />
 
                                                 </button>
 
@@ -687,7 +620,7 @@
                                                 {{-- TEXT --}}
                                                 @if ($policy->type === 'text')
 
-                                                    <div class="prose prose-sm max-w-none">
+                                                    <div class="rich-text">
                                                         {!! $policy->body !!}
                                                     </div>
 
@@ -698,7 +631,7 @@
                                                     <div class="text-center py-8">
 
                                                         <svg
-                                                            class="w-12 h-12 mx-auto text-gray-300 mb-3"
+                                                            class="w-12 h-12 mx-auto text-sand-300 mb-3"
                                                             fill="none"
                                                             viewBox="0 0 24 24"
                                                             stroke="currentColor"
@@ -711,7 +644,7 @@
 
                                                         </svg>
 
-                                                        <p class="text-sm text-gray-500 mb-3">
+                                                        <p class="text-sm text-sand-500 mb-3">
                                                             {{ $policy->file_original_name }}
                                                         </p>
 
@@ -720,7 +653,7 @@
                                                             <a
                                                                 href="{{ asset('storage/' . $policy->file_path) }}"
                                                                 target="_blank"
-                                                                class="inline-flex items-center gap-1.5 bg-maroon-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-maroon-900 transition">
+                                                                class="btn btn-md btn-primary">
 
                                                                 Open File
 
@@ -737,7 +670,7 @@
                                                     <div class="text-center py-8">
 
                                                         <svg
-                                                            class="w-12 h-12 mx-auto text-gray-300 mb-3"
+                                                            class="w-12 h-12 mx-auto text-sand-300 mb-3"
                                                             fill="none"
                                                             viewBox="0 0 24 24"
                                                             stroke="currentColor"
@@ -750,7 +683,7 @@
 
                                                         </svg>
 
-                                                        <p class="text-sm text-gray-500 mb-4">
+                                                        <p class="text-sm text-sand-500 mb-4">
                                                             External Link
                                                         </p>
 
@@ -760,7 +693,7 @@
                                                                 href="{{ $policy->link_url }}"
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
-                                                                class="inline-flex items-center gap-1.5 bg-maroon-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-maroon-900 transition">
+                                                                class="btn btn-md btn-primary">
 
                                                                 Open Link
 
@@ -804,7 +737,7 @@
         {{-- Pagination --}}
         @if ($policies->hasPages())
 
-            <div class="px-5 py-4 border-t border-gray-100">
+            <div class="px-5 py-4 border-t border-sand-100">
                 {{ $policies->links() }}
             </div>
 

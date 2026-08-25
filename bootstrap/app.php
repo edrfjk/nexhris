@@ -13,6 +13,14 @@ return Application::configure(basePath: dirname(__DIR__))
 ->withMiddleware(function (Middleware $middleware) {
     $middleware->alias([
         'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+        'role' => \App\Http\Middleware\EnsureUserHasRole::class,
+        '2fa' => \App\Http\Middleware\EnsureTwoFactorVerified::class,
+    ]);
+
+    // Every authenticated web request passes the two-factor gate, so a
+    // half-verified session cannot reach any page by typing its URL.
+    $middleware->web(append: [
+        \App\Http\Middleware\EnsureTwoFactorVerified::class,
     ]);
 })
     ->withExceptions(function (Exceptions $exceptions): void {

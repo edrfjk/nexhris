@@ -5,13 +5,13 @@
 <x-page-header title="Employee Accounts" subtitle="Manage HR-created employee accounts.">
     <x-slot:actions>
         <a href="{{ route('admin.employees.export.pdf', request()->query()) }}" target="_blank"
-           class="inline-flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50 transition">
+           class="btn btn-md btn-secondary">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
             Export PDF
         </a>
         <a href="{{ route('admin.employees.create') }}"
-           class="inline-flex items-center gap-1.5 bg-maroon-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-maroon-900 transition">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+           class="btn btn-md btn-primary">
+            <x-heroicon-o-plus class="w-4 h-4" />
             Add Employee
         </a>
     </x-slot:actions>
@@ -27,137 +27,124 @@
 @endphp
 
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 ring-1 ring-gray-100 p-4">
-        <div class="w-9 h-9 rounded-lg bg-gray-50 text-gray-600 flex items-center justify-center mb-3">
-            <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+    <div class="card ring-1 ring-sand-100 p-4">
+        <div class="w-9 h-9 rounded-lg bg-sand-50 text-sand-600 flex items-center justify-center mb-3">
+            <x-heroicon-o-users class="w-4.5 h-4.5" />
         </div>
-        <p class="text-2xl font-bold text-gray-800 leading-none">{{ $employees->total() }}</p>
-        <p class="text-xs text-gray-500 mt-1.5">Total Employees</p>
+        <p class="text-2xl font-bold text-sand-800 leading-none">{{ $employees->total() }}</p>
+        <p class="text-xs text-sand-500 mt-1.5">Total Employees</p>
     </div>
 
     <a href="{{ request()->fullUrlWithQuery(['status' => 'active']) }}"
-       class="bg-white rounded-xl shadow-sm border border-gray-100 ring-1 ring-green-100 p-4 hover:shadow-md hover:-translate-y-0.5 transition">
-        <div class="w-9 h-9 rounded-lg bg-green-50 text-green-600 flex items-center justify-center mb-3">
-            <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+       class="card ring-1 ring-forest-100 p-4 hover:shadow-soft transition">
+        <div class="w-9 h-9 rounded-lg bg-forest-50 text-forest-600 flex items-center justify-center mb-3">
+            <x-heroicon-o-check-circle class="w-4.5 h-4.5" />
         </div>
-        <p class="text-2xl font-bold text-gray-800 leading-none">{{ $activeCountVal }}</p>
-        <p class="text-xs text-gray-500 mt-1.5">Active {{ $isGlobal ? '' : '(page)' }}</p>
+        <p class="text-2xl font-bold text-sand-800 leading-none">{{ $activeCountVal }}</p>
+        <p class="text-xs text-sand-500 mt-1.5">Active {{ $isGlobal ? '' : '(page)' }}</p>
     </a>
 
     <a href="{{ request()->fullUrlWithQuery(['status' => 'inactive']) }}"
-       class="bg-white rounded-xl shadow-sm border border-gray-100 ring-1 ring-gray-100 p-4 hover:shadow-md hover:-translate-y-0.5 transition">
-        <div class="w-9 h-9 rounded-lg bg-gray-50 text-gray-500 flex items-center justify-center mb-3">
+       class="card ring-1 ring-sand-100 p-4 hover:shadow-soft transition">
+        <div class="w-9 h-9 rounded-lg bg-sand-50 text-sand-500 flex items-center justify-center mb-3">
             <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
         </div>
-        <p class="text-2xl font-bold text-gray-800 leading-none">{{ $inactiveCountVal }}</p>
-        <p class="text-xs text-gray-500 mt-1.5">Inactive {{ $isGlobal ? '' : '(page)' }}</p>
+        <p class="text-2xl font-bold text-sand-800 leading-none">{{ $inactiveCountVal }}</p>
+        <p class="text-xs text-sand-500 mt-1.5">Inactive {{ $isGlobal ? '' : '(page)' }}</p>
     </a>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 ring-1 ring-blue-100 p-4">
-        <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
-            <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+    <div class="card ring-1 ring-sky-100 p-4">
+        <div class="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center mb-3">
+            <x-heroicon-o-plus class="w-4.5 h-4.5" />
         </div>
-        <p class="text-2xl font-bold text-gray-800 leading-none">{{ $newCountVal }}</p>
-        <p class="text-xs text-gray-500 mt-1.5">New This Month {{ $isGlobal ? '' : '(page)' }}</p>
+        <p class="text-2xl font-bold text-sand-800 leading-none">{{ $newCountVal }}</p>
+        <p class="text-xs text-sand-500 mt-1.5">New This Month {{ $isGlobal ? '' : '(page)' }}</p>
     </div>
 </div>
 
-<!-- Filter toolbar -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-    <form method="GET" class="flex flex-col sm:flex-row sm:items-end gap-3">
-        <div class="flex-1 min-w-[220px]">
-            <label class="block text-xs font-medium text-gray-500 mb-1.5">Search</label>
-            <div class="relative">
-                <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
-                </svg>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name, employee no., or email"
-                       class="border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm w-full focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
-            </div>
-        </div>
+@php
+    $allDepartments = $colleges->pluck('activeDepartments')->flatten();
 
-        <div class="w-full sm:w-64">
-            <label class="block text-xs font-medium text-gray-500 mb-1.5">College / Office</label>
-            <select name="college"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
-                <option value="">All Colleges/Offices</option>
-                @foreach ($colleges as $code => $college)
-                    <option value="{{ $code }}" @selected(request('college') === $code)>{{ $code }} — {{ $college['name'] }}</option>
-                @endforeach
-            </select>
-        </div>
+    $sortLabels = [
+        'newest' => 'Newest first',
+        'oldest' => 'Oldest first',
+        'employee_number' => 'Employee no.',
+    ];
 
-        <div class="w-full sm:w-40">
-            <label class="block text-xs font-medium text-gray-500 mb-1.5">Status</label>
-            <select name="status"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
-                <option value="">All</option>
-                <option value="active" @selected(request('status') === 'active')>Active</option>
-                <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
-            </select>
-        </div>
+    $chips = [
+        ['key' => 'search', 'label' => 'Search', 'value' => request('search')],
+        // This printed the raw college id before — "College: 3".
+        ['key' => 'college', 'label' => 'College',
+         'value' => $colleges->firstWhere('id', (int) request('college'))?->name],
+        ['key' => 'department', 'label' => 'Department',
+         'value' => $allDepartments->firstWhere('id', (int) request('department'))?->name],
+        ['key' => 'status', 'label' => 'Status',
+         'value' => request('status') ? ucfirst(request('status')) : null],
+        ['key' => 'sort', 'label' => 'Sorted', 'value' => $sortLabels[request('sort')] ?? null],
+    ];
+@endphp
 
-        <div class="w-full sm:w-48">
-            <label class="block text-xs font-medium text-gray-500 mb-1.5">Sort By</label>
-            <select name="sort"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
-                <option value="" @selected(!request('sort'))>Name (A-Z)</option>
-                <option value="newest" @selected(request('sort') === 'newest')>Newest First</option>
-                <option value="oldest" @selected(request('sort') === 'oldest')>Oldest First</option>
-                <option value="employee_number" @selected(request('sort') === 'employee_number')>Employee No.</option>
-            </select>
-        </div>
+<x-filter-bar :chips="$chips" :clear="route('admin.employees.index')">
 
-        <div class="flex gap-2">
-            <button type="submit"
-                    class="inline-flex items-center gap-1.5 bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-900 transition whitespace-nowrap">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
-                Apply Filters
-            </button>
+    <x-filter-field label="Search" :span="2">
+        <x-filter-search placeholder="Name, employee no. or email" />
+    </x-filter-field>
 
-            @if (request()->hasAny(['search', 'college', 'status', 'sort']))
-                <a href="{{ route('admin.employees.index') }}"
-                   class="inline-flex items-center gap-1.5 text-gray-500 border border-gray-300 px-3 py-2 rounded-lg text-sm hover:bg-gray-50 transition whitespace-nowrap">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    Clear
-                </a>
-            @endif
-        </div>
-    </form>
+    <x-filter-field label="College / Office">
+        <select name="college" id="filter-college" class="select">
+            <option value="">All colleges / offices</option>
+            @foreach ($colleges as $college)
+                <option value="{{ $college->id }}" @selected((string) request('college') === (string) $college->id)>
+                    {{ $college->code }} — {{ $college->name }}
+                </option>
+            @endforeach
+        </select>
+    </x-filter-field>
 
-    <!-- Active filter chips -->
-    @if (request()->hasAny(['search', 'college', 'status']))
-        <div class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
-            @if (request('search'))
-                <span class="inline-flex items-center gap-1.5 bg-maroon-50 text-maroon-800 text-xs font-medium px-2.5 py-1 rounded-full">
-                    Search: "{{ request('search') }}"
-                    <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}" class="hover:text-maroon-950" aria-label="Remove search filter">&times;</a>
-                </span>
-            @endif
-            @if (request('college'))
-                <span class="inline-flex items-center gap-1.5 bg-maroon-50 text-maroon-800 text-xs font-medium px-2.5 py-1 rounded-full">
-                    College: {{ request('college') }}
-                    <a href="{{ request()->fullUrlWithQuery(['college' => null]) }}" class="hover:text-maroon-950" aria-label="Remove college filter">&times;</a>
-                </span>
-            @endif
-            @if (request('status'))
-                <span class="inline-flex items-center gap-1.5 bg-maroon-50 text-maroon-800 text-xs font-medium px-2.5 py-1 rounded-full">
-                    Status: {{ ucfirst(request('status')) }}
-                    <a href="{{ request()->fullUrlWithQuery(['status' => null]) }}" class="hover:text-maroon-950" aria-label="Remove status filter">&times;</a>
-                </span>
-            @endif
-        </div>
-    @endif
-</div>
+    <x-filter-field label="Department">
+        <select name="department" id="filter-department" class="select">
+            <option value="">All departments</option>
+            @foreach ($colleges as $college)
+                <optgroup label="{{ $college->code }}" data-college="{{ $college->id }}">
+                    @foreach ($college->activeDepartments as $department)
+                        <option value="{{ $department->id }}"
+                                data-college="{{ $college->id }}"
+                                @selected((string) request('department') === (string) $department->id)>
+                            {{ $department->code }} — {{ $department->name }}
+                        </option>
+                    @endforeach
+                </optgroup>
+            @endforeach
+        </select>
+    </x-filter-field>
+
+    <x-filter-field label="Status">
+        <select name="status" class="select">
+            <option value="">All statuses</option>
+            <option value="active" @selected(request('status') === 'active')>Active</option>
+            <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
+        </select>
+    </x-filter-field>
+
+    <x-filter-field label="Order">
+        <select name="sort" class="select">
+            <option value="" @selected(! request('sort'))>Name (A–Z)</option>
+            @foreach ($sortLabels as $value => $label)
+                <option value="{{ $value }}" @selected(request('sort') === $value)>{{ $label }}</option>
+            @endforeach
+        </select>
+    </x-filter-field>
+
+</x-filter-bar>
 
 <!-- Table -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+<div class="card overflow-hidden">
 
-    <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 text-sm text-gray-500">
+    <div class="flex items-center justify-between px-5 py-3 border-b border-sand-100 text-sm text-sand-500">
         <span>
             @if ($employees->total() > 0)
-                Showing <span class="font-medium text-gray-700">{{ $employees->firstItem() }}–{{ $employees->lastItem() }}</span>
-                of <span class="font-medium text-gray-700">{{ $employees->total() }}</span> employees
+                Showing <span class="font-medium text-sand-700">{{ $employees->firstItem() }}–{{ $employees->lastItem() }}</span>
+                of <span class="font-medium text-sand-700">{{ $employees->total() }}</span> employees
             @else
                 No employees found
             @endif
@@ -166,20 +153,21 @@
 
     {{-- Desktop table --}}
     <div class="hidden md:block overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead class="bg-gray-50 text-left text-gray-500">
+        <table class="table">
+            <thead>
                 <tr>
-                    <th class="px-5 py-3 font-medium">Employee</th>
-                    <th class="px-5 py-3 font-medium">Employee No.</th>
-                    <th class="px-5 py-3 font-medium">College / Program</th>
-                    <th class="px-5 py-3 font-medium">Status</th>
-                    <th class="px-5 py-3 font-medium text-right">Actions</th>
+                    <th>Employee</th>
+                    <th>Employee No.</th>
+                    <th>College / Program</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th class="text-right">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($employees as $employee)
-                    <tr class="border-t border-gray-100 hover:bg-gray-50 transition">
-                        <td class="px-5 py-3">
+                    <tr class="border-t border-sand-100 hover:bg-sand-50 transition">
+                        <td>
                             <div class="flex items-center gap-3">
                                 <div class="w-9 h-9 rounded-full overflow-hidden bg-maroon-50 flex items-center justify-center flex-shrink-0">
                                     @if ($employee->profile_photo_path)
@@ -191,29 +179,41 @@
                                     @endif
                                 </div>
                                 <div>
-                                    <p class="font-medium text-gray-800">{{ $employee->name }}</p>
-                                    <p class="text-xs text-gray-400">{{ $employee->email }}</p>
+                                    <p class="font-medium text-sand-800">{{ $employee->name }}</p>
+                                    <p class="text-xs text-sand-400">{{ $employee->email }}</p>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-5 py-3 text-gray-600">{{ $employee->employee_number }}</td>
-                        <td class="px-5 py-3 text-gray-600">
-                            @if ($employee->department)
-                                <p class="font-medium text-gray-700">{{ $employee->department }}</p>
-                                <p class="text-xs text-gray-400">{{ $employee->program ?: '—' }}</p>
+                        <td>{{ $employee->employee_number }}</td>
+                        <td>
+                            @if ($employee->college)
+                                <p class="font-medium text-sand-700">{{ $employee->college->code }}</p>
+                                <p class="text-xs text-sand-400">{{ $employee->departmentName() ?? 'No department' }}</p>
                             @else
-                                —
+                                <span class="badge badge-amber">
+                                    <x-heroicon-o-exclamation-triangle />
+                                    Unassigned
+                                </span>
                             @endif
                         </td>
-                        <td class="px-5 py-3">
+                        <td>
+                            @if ($employee->isEmployee())
+                                <span class="text-sand-500">—</span>
+                            @else
+                                <x-badge :color="$employee->isDean() ? 'violet' : 'amber'">
+                                    {{ $employee->roleLabel() }}
+                                </x-badge>
+                            @endif
+                        </td>
+                        <td>
                             <x-badge :color="$employee->status === 'active' ? 'green' : 'gray'">
                                 {{ ucfirst($employee->status) }}
                             </x-badge>
                         </td>
-                        <td class="px-5 py-3 text-right">
+                        <td class="text-right">
                             <div class="flex items-center justify-end gap-2">
                                 <a href="{{ route('admin.employees.show', $employee) }}"
-                                   class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-maroon-800 hover:bg-maroon-50 transition"
+                                   class="icon-btn"
                                    title="View employee">
                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
@@ -224,14 +224,14 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5"><x-empty-state message="No employees match your search or filters." /></td></tr>
+                    <tr><td colspan="6"><x-empty-state message="No employees match your search or filters." /></td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
     {{-- Mobile card list --}}
-    <div class="md:hidden divide-y divide-gray-100">
+    <div class="md:hidden divide-y divide-sand-100">
         @forelse ($employees as $employee)
             <div class="flex items-center gap-3 p-4">
                 <a href="{{ route('admin.employees.show', $employee) }}" class="flex items-center gap-3 flex-1 min-w-0">
@@ -245,15 +245,15 @@
                         @endif
                     </div>
                     <div class="min-w-0">
-                        <p class="font-medium text-gray-800 truncate">{{ $employee->name }}</p>
-                        <p class="text-xs text-gray-400 truncate">{{ $employee->employee_number }} · {{ $employee->department ?: 'No department' }}</p>
+                        <p class="font-medium text-sand-800 truncate">{{ $employee->name }}</p>
+                        <p class="text-xs text-sand-400 truncate">{{ $employee->employee_number }} · {{ $employee->college->code ?? 'Unassigned' }}</p>
                     </div>
                 </a>
                 <x-badge :color="$employee->status === 'active' ? 'green' : 'gray'">
                     {{ ucfirst($employee->status) }}
                 </x-badge>
-                <a href="{{ route('admin.employees.edit', $employee) }}" class="text-gray-400 hover:text-maroon-800 p-1" title="Edit">
-                    <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+                <a href="{{ route('admin.employees.edit', $employee) }}" class="text-sand-400 hover:text-maroon-800 p-1" title="Edit">
+                    <x-heroicon-o-pencil-square class="w-4.5 h-4.5" />
                 </a>
             </div>
         @empty
@@ -264,3 +264,34 @@
 
 <div class="mt-4">{{ $employees->links() }}</div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    // Narrow the department filter to whichever college is selected, so HR is
+    // not scrolling past every programme on campus.
+    const college = document.getElementById('filter-college');
+    const department = document.getElementById('filter-department');
+
+    if (!college || !department) return;
+
+    function sync() {
+        const chosen = college.value;
+
+        Array.from(department.querySelectorAll('optgroup')).forEach(function (group) {
+            group.hidden = chosen !== '' && group.dataset.college !== chosen;
+        });
+
+        // A department from a college that is no longer selected must not stay
+        // applied, or the filters would contradict each other.
+        const selected = department.options[department.selectedIndex];
+        if (selected && selected.dataset.college && chosen !== '' && selected.dataset.college !== chosen) {
+            department.value = '';
+        }
+    }
+
+    sync();
+    college.addEventListener('change', sync);
+})();
+</script>
+@endpush
