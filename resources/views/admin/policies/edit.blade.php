@@ -15,17 +15,9 @@
 
     <x-slot:actions>
         <a href="{{ route('admin.policies.index') }}"
-           class="inline-flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50 transition">
+           class="btn btn-md btn-secondary">
 
-            <svg class="w-4 h-4"
-                 fill="none"
-                 viewBox="0 0 24 24"
-                 stroke="currentColor">
-                <path stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
-            </svg>
+            <x-heroicon-o-arrow-left class="w-4 h-4" />
 
             Back to Policies
         </a>
@@ -40,7 +32,7 @@
     @csrf
     @method('PUT')
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+    <div class="card">
 
         <div class="p-6 space-y-6">
 
@@ -49,7 +41,7 @@
 
                 {{-- Title --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="label">
                         Title
                     </label>
 
@@ -57,7 +49,7 @@
                         type="text"
                         name="title"
                         value="{{ old('title', $policy->title) }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
+                        class="input">
 
                     @error('title')
                         <p class="text-xs text-red-600 mt-1">
@@ -68,7 +60,7 @@
 
                 {{-- Category --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="label">
                         Category (optional)
                     </label>
 
@@ -78,7 +70,7 @@
                         value="{{ old('category', $policy->category) }}"
                         list="category-list"
                         placeholder="e.g. Leave, Benefits, Conduct"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
+                        class="input">
 
                     <datalist id="category-list">
                         @foreach(\App\Models\HrPolicy::whereNotNull('category')->distinct()->pluck('category') as $cat)
@@ -97,16 +89,16 @@
 
 
             {{-- Policy Type --}}
-            <div class="border-t border-gray-100 pt-4">
+            <div class="border-t border-sand-100 pt-4">
 
-                <label class="block text-sm font-medium text-gray-700 mb-3">
+                <label class="block text-sm font-medium text-sand-700 mb-3">
                     Policy Format
                 </label>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     {{-- Text --}}
-                    <label class="cursor-pointer border border-gray-300 rounded-lg p-4 flex gap-3 items-start has-[:checked]:border-maroon-700 has-[:checked]:bg-maroon-50 transition">
+                    <label class="cursor-pointer border border-sand-200 rounded-lg p-4 flex gap-3 items-start has-[:checked]:border-maroon-700 has-[:checked]:bg-maroon-50 transition">
 
                         <input
                             type="radio"
@@ -117,11 +109,11 @@
                             class="text-maroon-700 focus:ring-maroon-700">
 
                         <div>
-                            <p class="text-sm font-medium text-gray-700">
+                            <p class="text-sm font-medium text-sand-700">
                                 Write Text
                             </p>
 
-                            <p class="text-xs text-gray-500 mt-1">
+                            <p class="text-xs text-sand-500 mt-1">
                                 Create the policy using the editor.
                             </p>
                         </div>
@@ -130,7 +122,7 @@
 
 
                     {{-- File --}}
-                    <label class="cursor-pointer border border-gray-300 rounded-lg p-4 flex gap-3 items-start has-[:checked]:border-maroon-700 has-[:checked]:bg-maroon-50 transition">
+                    <label class="cursor-pointer border border-sand-200 rounded-lg p-4 flex gap-3 items-start has-[:checked]:border-maroon-700 has-[:checked]:bg-maroon-50 transition">
 
                         <input
                             type="radio"
@@ -141,11 +133,11 @@
                             class="text-maroon-700 focus:ring-maroon-700">
 
                         <div>
-                            <p class="text-sm font-medium text-gray-700">
+                            <p class="text-sm font-medium text-sand-700">
                                 Upload File
                             </p>
 
-                            <p class="text-xs text-gray-500 mt-1">
+                            <p class="text-xs text-sand-500 mt-1">
                                 PDF, DOC, DOCX, PPT, PPTX
                             </p>
                         </div>
@@ -154,7 +146,7 @@
 
 
                     {{-- Link --}}
-                    <label class="cursor-pointer border border-gray-300 rounded-lg p-4 flex gap-3 items-start has-[:checked]:border-maroon-700 has-[:checked]:bg-maroon-50 transition">
+                    <label class="cursor-pointer border border-sand-200 rounded-lg p-4 flex gap-3 items-start has-[:checked]:border-maroon-700 has-[:checked]:bg-maroon-50 transition">
 
                         <input
                             type="radio"
@@ -165,11 +157,11 @@
                             class="text-maroon-700 focus:ring-maroon-700">
 
                         <div>
-                            <p class="text-sm font-medium text-gray-700">
+                            <p class="text-sm font-medium text-sand-700">
                                 Post a Link
                             </p>
 
-                            <p class="text-xs text-gray-500 mt-1">
+                            <p class="text-xs text-sand-500 mt-1">
                                 Google Form, video, external portal
                             </p>
                         </div>
@@ -191,13 +183,13 @@
             <div id="text-section"
                  class="{{ old('type', $policy->type) !== 'text' ? 'hidden' : '' }}">
 
-                <label class="block text-sm font-medium text-gray-700 mb-2">
+                <label class="label">
                     Policy Content
                 </label>
 
                 {{-- Quill Editor --}}
                 <div id="editor"
-                     class="bg-white border border-gray-300 rounded-lg overflow-hidden"
+                     class="card overflow-hidden"
                      style="height:300px;">
                 </div>
 
@@ -221,16 +213,16 @@
             <div id="file-section"
                  class="{{ old('type', $policy->type) !== 'file' ? 'hidden' : '' }}">
 
-                <label class="block text-sm font-medium text-gray-700 mb-2">
+                <label class="label">
                     Upload File
                 </label>
 
                 @if ($policy->file_path)
 
-                    <p class="text-sm text-gray-500 mb-2">
+                    <p class="text-sm text-sand-500 mb-2">
                         Current file:
 
-                        <span class="font-medium text-gray-700">
+                        <span class="font-medium text-sand-700">
                             {{ $policy->file_original_name }}
                         </span>
                     </p>
@@ -241,9 +233,9 @@
                     type="file"
                     name="file"
                     accept=".pdf,.doc,.docx,.ppt,.pptx"
-                    class="text-sm">
+                    class="file-input">
 
-                <p class="text-xs text-gray-400 mt-2">
+                <p class="text-xs text-sand-400 mt-2">
                     Leave blank to keep the current file. Maximum 10 MB.
                 </p>
 
@@ -260,7 +252,7 @@
             <div id="link-section"
                  class="{{ old('type', $policy->type) !== 'link' ? 'hidden' : '' }}">
 
-                <label class="block text-sm font-medium text-gray-700 mb-1">
+                <label class="label">
                     Link URL
                 </label>
 
@@ -269,9 +261,9 @@
                     name="link_url"
                     value="{{ old('link_url', $policy->link_url ?? '') }}"
                     placeholder="https://forms.google.com/..."
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
+                    class="input">
 
-                <p class="text-xs text-gray-400 mt-1">
+                <p class="text-xs text-sand-400 mt-1">
                     Employees will see this as an "Open Link" card.
                 </p>
 
@@ -285,9 +277,9 @@
 
 
             {{-- Additional Settings --}}
-            <div class="pt-5 border-t border-gray-100">
+            <div class="pt-5 border-t border-sand-100">
 
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                <p class="section-label mb-3">
                     Additional Settings
                 </p>
 
@@ -295,7 +287,7 @@
 
                     {{-- Effective Date --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label class="label">
                             Effective Date (optional)
                         </label>
 
@@ -308,7 +300,7 @@
                                     ? \Carbon\Carbon::parse($policy->effective_date)->format('Y-m-d')
                                     : ''
                             ) }}"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
+                            class="input">
 
                         @error('effective_date')
                             <p class="text-xs text-red-600 mt-1">
@@ -320,7 +312,7 @@
 
                     {{-- Expiry Date --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label class="label">
                             Expiry Date (optional)
                         </label>
 
@@ -333,7 +325,7 @@
                                     ? \Carbon\Carbon::parse($policy->expiry_date)->format('Y-m-d')
                                     : ''
                             ) }}"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
+                            class="input">
 
                         @error('expiry_date')
                             <p class="text-xs text-red-600 mt-1">
@@ -353,7 +345,7 @@
                         name="is_pinned"
                         value="1"
                         {{ old('is_pinned', $policy->is_pinned) ? 'checked' : '' }}
-                        class="rounded border-gray-300 text-maroon-700 focus:ring-maroon-700">
+                        class="rounded border-sand-200 text-maroon-700 focus:ring-maroon-700">
 
                     Pin to top of employee list
 
@@ -368,7 +360,7 @@
                         name="requires_acknowledgment"
                         value="1"
                         {{ old('requires_acknowledgment', $policy->requires_acknowledgment) ? 'checked' : '' }}
-                        class="rounded border-gray-300 text-maroon-700 focus:ring-maroon-700">
+                        class="rounded border-sand-200 text-maroon-700 focus:ring-maroon-700">
 
                     Require employees to acknowledge reading this policy
 
@@ -378,7 +370,7 @@
 
 
             {{-- Publish --}}
-            <div class="pt-4 border-t border-gray-100">
+            <div class="pt-4 border-t border-sand-100">
 
                 <label class="flex items-center gap-2 text-sm">
 
@@ -387,7 +379,7 @@
                         name="is_published"
                         value="1"
                         {{ old('is_published', $policy->is_published) ? 'checked' : '' }}
-                        class="rounded border-gray-300 text-maroon-700 focus:ring-maroon-700">
+                        class="rounded border-sand-200 text-maroon-700 focus:ring-maroon-700">
 
                     Published (visible to employees)
 
@@ -399,11 +391,11 @@
 
 
         {{-- Footer --}}
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+        <div class="px-6 py-4 bg-sand-50 border-t border-sand-100 flex justify-end gap-3">
 
             <a
                 href="{{ route('admin.policies.index') }}"
-                class="px-4 py-2 rounded-lg text-sm border border-gray-300 hover:bg-white transition">
+                class="btn btn-md btn-secondary">
 
                 Cancel
 
@@ -411,7 +403,7 @@
 
             <button
                 type="submit"
-                class="bg-maroon-800 hover:bg-maroon-900 text-white px-5 py-2 rounded-lg text-sm font-medium transition">
+                class="btn btn-lg btn-primary">
 
                 Update Policy
 

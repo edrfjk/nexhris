@@ -114,4 +114,21 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Two-Factor Authentication
+    |--------------------------------------------------------------------------
+    |
+    | The emailed one-time code required of the HR Administrator, Deans and the
+    | Campus Director. It can be switched off during development so signing in
+    | does not need a round trip through email — but it defaults to ON, so a
+    | missing or misspelt env var never silently disables it.
+    |
+    | While it is off the sign-in screen says so plainly, because a security
+    | control that is quietly disabled is the kind that reaches production.
+    |
+    */
+
+    'two_factor_enabled' => (bool) env('TWO_FACTOR_ENABLED', true),
+
 ];

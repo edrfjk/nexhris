@@ -8,15 +8,27 @@ use Illuminate\Support\Facades\Route;
 // ============================================================
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicVerificationController;
+use App\Http\Controllers\AnnouncementFeedController;
+use App\Http\Controllers\Admin\AnnouncementController;
+use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\Auth\PasswordResetController;
 
 
 // ============================================================
 // ADMIN CONTROLLERS
 // ============================================================
 
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\CollegeController;
+use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\LeaveLedgerController;
+use App\Http\Controllers\Admin\LeaveReviewController;
+use App\Http\Controllers\Admin\LeaveFormTemplateController;
 use App\Http\Controllers\Admin\PdsReviewController;
 use App\Http\Controllers\Admin\PdsTemplateController;
 use App\Http\Controllers\Admin\HrPolicyController;
@@ -27,8 +39,10 @@ use App\Http\Controllers\Admin\HrPolicyController;
 // ============================================================
 
 use App\Http\Controllers\Employee\LeaveApplicationController;
+use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Employee\PdsEditorController;
 use App\Http\Controllers\Employee\MyIdController;
+use App\Http\Controllers\Employee\MyLedgerController;
 use App\Http\Controllers\Employee\PolicyController;
 
 
@@ -37,6 +51,17 @@ use App\Http\Controllers\Employee\PolicyController;
 // ============================================================
 
 Route::get('/', fn () => redirect('/login'));
+
+
+// ============================================================
+// PUBLIC ID VERIFICATION
+// ============================================================
+// The page a digital ID's QR code points at. No sign-in, and no more than
+// name, position, college and active status. Addressed by an unguessable
+// token so staff cannot be enumerated.
+
+Route::get('/verify/{token}', [PublicVerificationController::class, 'show'])
+    ->name('verify.show');
 
 
 // ============================================================
@@ -50,6 +75,51 @@ Route::middleware('guest')->group(function () {
 
     Route::post('/login', [LoginController::class, 'store']);
 
+
+    // --------------------------------------------------------
+    // FORGOT / RESET PASSWORD
+    // --------------------------------------------------------
+
+    Route::get('/forgot-password', [PasswordResetController::class, 'requestForm'])
+        ->name('password.request');
+
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendLink'])
+        ->middleware('throttle:6,1')
+        ->name('password.email');
+
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'resetForm'])
+        ->name('password.reset');
+
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])
+        ->middleware('throttle:6,1')
+        ->name('password.update');
+
+});
+
+
+// ============================================================
+// TWO-FACTOR CHALLENGE
+// ============================================================
+// Reached only while a session is half-authenticated: the password was
+// correct but the emailed code has not been entered yet. These routes sit
+// outside the 2FA gate, otherwise they would redirect to themselves.
+
+Route::middleware('auth')->withoutMiddleware([\App\Http\Middleware\EnsureTwoFactorVerified::class])->group(function () {
+
+    Route::get('/two-factor', [TwoFactorController::class, 'show'])
+        ->name('two-factor.challenge');
+
+    Route::post('/two-factor', [TwoFactorController::class, 'verify'])
+        ->middleware('throttle:20,15')
+        ->name('two-factor.verify');
+
+    Route::post('/two-factor/resend', [TwoFactorController::class, 'resend'])
+        ->middleware('throttle:6,10')
+        ->name('two-factor.resend');
+
+    Route::post('/two-factor/cancel', [TwoFactorController::class, 'cancel'])
+        ->name('two-factor.cancel');
+
 });
 
 
@@ -58,6 +128,23 @@ Route::middleware('guest')->group(function () {
 // ============================================================
 
 Route::middleware('auth')->group(function () {
+
+
+    // ========================================================
+    // NOTIFICATIONS (all roles)
+    // ========================================================
+
+    Route::get('/announcements', [AnnouncementFeedController::class, 'index'])
+        ->name('announcements.index');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])
+        ->name('notifications.index');
+
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'read'])
+        ->name('notifications.read');
+
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])
+        ->name('notifications.read-all');
 
 
     // ========================================================
@@ -84,6 +171,49 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('dashboard');
+
+
+        // ----------------------------------------------------
+        // ACTIVITY LOG / AUDIT TRAIL
+        // ----------------------------------------------------
+
+        Route::get('/activity-logs', [ActivityLogController::class, 'index'])
+            ->middleware('role:admin')
+            ->name('activity-logs.index');
+
+
+        // ----------------------------------------------------
+        // ANNOUNCEMENTS
+        // ----------------------------------------------------
+
+        Route::middleware('role:admin')->group(function () {
+            Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+            Route::post('/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
+            Route::put('/announcements/{announcement}', [AnnouncementController::class, 'update'])->name('announcements.update');
+            Route::delete('/announcements/{announcement}', [AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+        });
+
+
+        // ----------------------------------------------------
+        // COLLEGES / DEPARTMENTS
+        // ----------------------------------------------------
+        // HR only: the college a person belongs to decides which Dean signs
+        // their leave, so Deans must not be able to edit it.
+
+        Route::middleware('role:admin')->group(function () {
+            Route::get('/colleges', [CollegeController::class, 'index'])->name('colleges.index');
+            Route::post('/colleges', [CollegeController::class, 'store'])->name('colleges.store');
+            Route::put('/colleges/{college}', [CollegeController::class, 'update'])->name('colleges.update');
+            Route::delete('/colleges/{college}', [CollegeController::class, 'destroy'])->name('colleges.destroy');
+
+            // Departments / programmes / offices, nested under their college.
+            Route::post('/colleges/{college}/departments', [DepartmentController::class, 'store'])
+                ->name('departments.store');
+            Route::put('/departments/{department}', [DepartmentController::class, 'update'])
+                ->name('departments.update');
+            Route::delete('/departments/{department}', [DepartmentController::class, 'destroy'])
+                ->name('departments.destroy');
+        });
 
 
         // ----------------------------------------------------
@@ -116,55 +246,23 @@ Route::middleware('auth')->group(function () {
         // LEAVE MANAGEMENT
         // ----------------------------------------------------
 
+        // Static leave segments must be declared before /leave/{employee},
+        // otherwise "calendar" and "review" get bound as employee ids.
+
         Route::get(
             '/leave',
             [LeaveLedgerController::class, 'index']
         )->name('leave.index');
 
-        Route::post(
-            '/leave/bulk-earned',
-            [LeaveLedgerController::class, 'bulkStoreEarned']
-        )->name('leave.bulk-earned.store');
-
-        Route::get(
-            '/leave/pending',
-            [LeaveLedgerController::class, 'pending']
-        )->name('leave.pending');
-
-        Route::post(
-            '/leave/{application}/approve',
-            [LeaveLedgerController::class, 'approve']
-        )->name('leave.approve');
-
-        Route::post(
-            '/leave/{application}/decline',
-            [LeaveLedgerController::class, 'decline']
-        )->name('leave.decline');
-
-        Route::get(
-            '/leave/{employee}/ledger',
-            [LeaveLedgerController::class, 'show']
-        )->name('leave.ledger');
-
-        Route::post(
-            '/leave/{employee}/earned',
-            [LeaveLedgerController::class, 'storeEarned']
-        )->name('leave.earned.store');
-
-        Route::post(
-            '/leave/{employee}/adjust',
-            [LeaveLedgerController::class, 'storeAdjustment']
-        )->name('leave.adjust.store');
-
-        Route::get(
-            '/leave/{employee}/ledger/pdf',
-            [LeaveLedgerController::class, 'exportLedgerPdf']
-        )->name('leave.ledger.pdf');
-
         Route::get(
             '/leave/calendar',
             [LeaveLedgerController::class, 'calendar']
         )->name('leave.calendar');
+
+        Route::get(
+            '/leave/calendar/export',
+            [LeaveLedgerController::class, 'exportMonthPdf']
+        )->name('leave.calendar.export');
 
         Route::get(
             '/leave/export/pdf',
@@ -176,10 +274,130 @@ Route::middleware('auth')->group(function () {
             [LeaveLedgerController::class, 'exportAllExcel']
         )->name('leave.export.excel');
 
+        Route::post(
+            '/leave/bulk-earned',
+            [LeaveLedgerController::class, 'bulkStoreEarned']
+        )->name('leave.bulk-earned.store');
+
+
+        // ----------------------------------------------------
+        // LEAVE REVIEW — Dean → HR → Campus Director
+        // ----------------------------------------------------
+        // One set of screens for all three reviewers. Each sees only the
+        // forms waiting on their own stage.
+
+        Route::prefix('leave/review')
+            ->name('leave.review.')
+            ->group(function () {
+
+            Route::get('/', [LeaveReviewController::class, 'index'])
+                ->name('index');
+
+            Route::get('/{application}', [LeaveReviewController::class, 'show'])
+                ->name('show');
+
+            Route::get('/{application}/form', [LeaveReviewController::class, 'viewForm'])
+                ->name('form');
+
+            // The same form converted, so a reviewer can read it in the
+            // browser instead of downloading a workbook to sign it.
+            Route::get('/{application}/form.pdf', [LeaveReviewController::class, 'viewFormAsPdf'])
+                ->name('form.pdf');
+
+            Route::get('/{application}/print', [LeaveReviewController::class, 'printApproved'])
+                ->name('print');
+
+            Route::post('/{application}/approve', [LeaveReviewController::class, 'approve'])
+                ->name('approve');
+
+            Route::post('/{application}/return', [LeaveReviewController::class, 'returnForRevision'])
+                ->name('return');
+
+            Route::post('/{application}/post-to-ledger', [LeaveReviewController::class, 'postToLedger'])
+                ->name('post-to-ledger');
+
+        });
+
+
+        // ----------------------------------------------------
+        // LEAVE FORM TEMPLATES (HR publishes the blank form)
+        // ----------------------------------------------------
+
+        Route::get('/leave-form-templates', [LeaveFormTemplateController::class, 'index'])
+            ->name('leave.templates.index');
+
+        Route::post('/leave-form-templates', [LeaveFormTemplateController::class, 'store'])
+            ->name('leave.templates.store');
+
+        Route::post('/leave-form-templates/{template}/activate', [LeaveFormTemplateController::class, 'activate'])
+            ->name('leave.templates.activate');
+
+        Route::delete('/leave-form-templates/{template}', [LeaveFormTemplateController::class, 'destroy'])
+            ->name('leave.templates.destroy');
+
+
+        // ----------------------------------------------------
+        // MASTER LEDGER TEMPLATE
+        // ----------------------------------------------------
+        // Seeded once. Each employee's ledger is copied from it on first use;
+        // it is never handed to employees directly.
+
+        Route::post('/ledger-template', [LeaveFormTemplateController::class, 'storeLedgerMaster'])
+            ->name('leave.ledger-template.store');
+
+        Route::post('/ledger-template/{template}/activate', [LeaveFormTemplateController::class, 'activateLedgerMaster'])
+            ->name('leave.ledger-template.activate');
+
+
+        // ----------------------------------------------------
+        // SERVICE RECORDS
+        // ----------------------------------------------------
+
+
+
+
+
+
+        // ----------------------------------------------------
+        // PER-EMPLOYEE LEDGER CARD
+        // ----------------------------------------------------
+
         Route::get(
-            '/leave/calendar/export',
-            [LeaveLedgerController::class, 'exportMonthPdf']
-        )->name('leave.calendar.export');
+            '/leave/{employee}/ledger',
+            [LeaveLedgerController::class, 'show']
+        )->name('leave.ledger');
+
+        Route::get(
+            '/leave/{employee}/ledger/pdf',
+            [LeaveLedgerController::class, 'exportLedgerPdf']
+        )->name('leave.ledger.pdf');
+
+        Route::post(
+            '/leave/{employee}/earned',
+            [LeaveLedgerController::class, 'storeEarned']
+        )->name('leave.earned.store');
+
+        Route::post(
+            '/leave/{employee}/adjust',
+            [LeaveLedgerController::class, 'storeAdjustment']
+        )->name('leave.adjust.store');
+
+
+        // ----------------------------------------------------
+        // LEDGER WORKBOOK EDITOR
+        // ----------------------------------------------------
+        // HR corrects the card by editing its lines. The printed card is
+        // drawn from these, so a correction here is what actually shows.
+
+        Route::put(
+            '/leave/ledger-entries/{entry}',
+            [LeaveLedgerController::class, 'updateEntry']
+        )->middleware('role:admin')->name('leave.ledger.entry.update');
+
+        Route::delete(
+            '/leave/ledger-entries/{entry}',
+            [LeaveLedgerController::class, 'destroyEntry']
+        )->middleware('role:admin')->name('leave.ledger.entry.destroy');
 
 
         // ====================================================
@@ -210,6 +428,12 @@ Route::middleware('auth')->group(function () {
             '/pds/{employee}/download',
             [PdsReviewController::class, 'download']
         )->name('pds.download');
+
+        // The original workbook, for when the PDF preview is not enough.
+        Route::get(
+            '/pds/{employee}/workbook',
+            [PdsReviewController::class, 'downloadWorkbook']
+        )->name('pds.workbook');
 
 
         // ====================================================
@@ -259,7 +483,6 @@ Route::middleware('auth')->group(function () {
 
     });
 
-
     // ========================================================
     // EMPLOYEE ROUTES
     // ========================================================
@@ -271,7 +494,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get(
         '/dashboard',
-        fn () => view('employee.dashboard')
+        [EmployeeDashboardController::class, 'index']
     )->name('employee.dashboard');
 
 
@@ -293,11 +516,60 @@ Route::middleware('auth')->group(function () {
             [LeaveApplicationController::class, 'store']
         )->name('store');
 
+        // Blank form published by HR, for the employee to fill in.
+        Route::get(
+            '/template/download',
+            [LeaveApplicationController::class, 'downloadTemplate']
+        )->name('template.download');
+
+        // Corrected re-upload after a reviewer returns the form.
+        Route::post(
+            '/{application}/resubmit',
+            [LeaveApplicationController::class, 'resubmit']
+        )->name('resubmit');
+
+        // Unlocked only once the Campus Director has approved.
+        Route::get(
+            '/{application}/print',
+            [LeaveApplicationController::class, 'printApproved']
+        )->name('print');
+
+        // The employee's own uploaded form, as the reviewers will read it.
+        Route::get(
+            '/{application}/form.pdf',
+            [LeaveApplicationController::class, 'exportFormPdf']
+        )->name('form.pdf');
+
         Route::get(
             '/ledger/pdf',
             [LeaveApplicationController::class, 'exportLedgerPdf']
         )->name('ledger.pdf');
 
+        // A page framing the official card, which is drawn from the posted
+        // ledger entries rather than converted from a workbook.
+        Route::get(
+            '/my-ledger',
+            [MyLedgerController::class, 'show']
+        )->name('ledger.mine');
+
+    });
+
+
+    // --------------------------------------------------------
+    // MY PROFILE
+    // --------------------------------------------------------
+    // Everyone edits their own name, email, contact number, photo and
+    // password here. Employee number, position, role and college stay with
+    // HR — the college decides who approves your leave.
+
+    Route::prefix('profile')
+        ->name('profile.')
+        ->group(function () {
+
+        Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+        Route::put('/', [ProfileController::class, 'update'])->name('update');
+        Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+        Route::post('/photo', [ProfileController::class, 'updatePhoto'])->name('photo.update');
     });
 
 
@@ -345,59 +617,28 @@ Route::middleware('auth')->group(function () {
     // ========================================================
     // PDS / PERSONAL DATA SHEET
     // ========================================================
-    // Employee PDS is now handled by PdsEditorController.
-    //
-    // Existing route names are preserved:
-    // pds.edit
-    // pds.save
-    // pds.submit
-    // pds.download
-    // ========================================================
+    // Every role files a PDS, including Deans and the Campus Director.
+    // The employee downloads the official blank, fills it offline, and
+    // uploads the workbook back; the system converts it to PDF.
 
     Route::prefix('pds')->name('pds.')->group(function () {
-    Route::get('/', [PdsEditorController::class, 'show'])->name('editor');
-    Route::post('/upload', [PdsEditorController::class, 'upload'])->name('upload');
-    Route::post('/submit', [PdsEditorController::class, 'submit'])->name('submit');
-    Route::get('/export', [PdsEditorController::class, 'exportPdf'])->name('export');
 
-        // ----------------------------------------------------
-        // PDS EDITOR
-        // ----------------------------------------------------
+        Route::get('/', [PdsEditorController::class, 'show'])->name('editor');
 
-        Route::get(
-            '/',
-            [PdsEditorController::class, 'show']
-        )->name('edit');
+        // `pds.edit` is kept as an alias: the sidebar and several views
+        // already link to it.
+        Route::get('/edit', [PdsEditorController::class, 'show'])->name('edit');
 
+        Route::get('/template/download', [PdsEditorController::class, 'downloadTemplate'])
+            ->name('template.download');
 
-        // ----------------------------------------------------
-        // SAVE PDS
-        // ----------------------------------------------------
+        Route::post('/upload', [PdsEditorController::class, 'upload'])->name('upload');
 
-        Route::post(
-            '/save',
-            [PdsEditorController::class, 'save']
-        )->name('save');
+        Route::post('/submit', [PdsEditorController::class, 'submit'])->name('submit');
 
-
-        // ----------------------------------------------------
-        // SUBMIT PDS
-        // ----------------------------------------------------
-
-        Route::post(
-            '/submit',
-            [PdsEditorController::class, 'submit']
-        )->name('submit');
-
-
-        // ----------------------------------------------------
-        // DOWNLOAD / EXPORT PDS
-        // ----------------------------------------------------
-
-        Route::get(
-            '/download',
-            [PdsEditorController::class, 'exportPdf']
-        )->name('download');
+        // Two names for one action, both already in use across the views.
+        Route::get('/export', [PdsEditorController::class, 'exportPdf'])->name('export');
+        Route::get('/download', [PdsEditorController::class, 'exportPdf'])->name('download');
 
     });
 

@@ -2,225 +2,336 @@
 @section('title', 'My Leave')
 
 @section('content')
-<x-page-header title="My Leave" subtitle="File leave requests and track your balance.">
+
+<x-page-header
+    title="My Leave"
+    subtitle="Download the form, fill it in, upload it — then track it through the approval chain">
     <x-slot:actions>
-        <a href="{{ route('leave.ledger.pdf') }}" target="_blank"
-           class="inline-flex items-center gap-1.5 bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9.75L12 3.75m0 6l3-3m-3 3l-3-3M3.75 15.75v3a2.25 2.25 0 002.25 2.25h12a2.25 2.25 0 002.25-2.25v-3"/></svg>
-            Export My Ledger (PDF)
+        {{-- One card covers both records now: the leave ledger and, on its
+             own page, the service credits. It opens as a page rather than a
+             file, so no new tab and no "(PDF)" in the label. --}}
+        <a href="{{ route('leave.ledger.mine') }}" class="btn btn-md btn-secondary">
+            <x-heroicon-o-book-open />
+            My ledger card
         </a>
     </x-slot:actions>
 </x-page-header>
 
-@if (session('success'))
-    <div class="mb-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 12.75l6 6 9-13.5"/></svg>
-        {{ session('success') }}
+{{-- ------------------------------------------------------------------
+     Balances
+     ------------------------------------------------------------------ --}}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-maroon-800 text-white rounded p-5 shadow-soft">
+        <p class="text-[11px] font-medium text-white/70 uppercase tracking-wide">Vacation Leave</p>
+        <p class="text-3xl font-bold mt-1">{{ number_format((float) ($balance->vl_balance ?? 0), 2) }}</p>
+        <p class="text-[11px] text-white/60 mt-0.5">days available</p>
+    </div>
+
+    <div class="card p-5">
+        <p class="section-label">Sick Leave</p>
+        <p class="text-3xl font-bold mt-1 text-sand-800">{{ number_format((float) ($balance->sl_balance ?? 0), 2) }}</p>
+        <p class="text-[11px] text-sand-400 mt-0.5">days available</p>
+    </div>
+
+    <div class="card p-5">
+        <p class="section-label">Service Credits</p>
+        <p class="text-3xl font-bold mt-1 text-sand-800">{{ number_format((float) ($balance->service_balance ?? 0), 2) }}</p>
+        <p class="text-[11px] text-sand-400 mt-0.5">days available</p>
+    </div>
+
+    <div class="card p-5">
+        <p class="section-label">Used this year</p>
+        <p class="text-3xl font-bold mt-1 text-sand-800">{{ number_format((float) $approvedThisYear, 2) }}</p>
+        <p class="text-[11px] text-sand-400 mt-0.5">approved days</p>
+    </div>
+</div>
+
+{{-- ------------------------------------------------------------------
+     Attention banners
+     ------------------------------------------------------------------ --}}
+@if ($needsAttention > 0)
+    <div class="mb-6 rounded border border-red-200 bg-red-50 px-5 py-4 flex items-start gap-3">
+        <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+        <div>
+            <p class="text-sm font-semibold text-red-800">
+                {{ $needsAttention }} form{{ $needsAttention === 1 ? ' was' : 's were' }} returned to you
+            </p>
+            <p class="text-xs text-red-700 mt-0.5">
+                Read the reviewer's remarks below, correct the form, and upload it again.
+            </p>
+        </div>
     </div>
 @endif
 
-<!-- Stat cards -->
-<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 ring-1 ring-blue-100 p-4">
-        <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
-            <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+@if ($readyToPrint > 0)
+    <div class="mb-6 rounded border border-forest-200 bg-forest-50 px-5 py-4 flex items-start gap-3">
+        <x-heroicon-o-check-circle class="w-5 h-5 text-forest-600 flex-shrink-0 mt-0.5" />
+        <div>
+            <p class="text-sm font-semibold text-forest-800">
+                {{ $readyToPrint }} form{{ $readyToPrint === 1 ? ' is' : 's are' }} fully approved
+            </p>
+            <p class="text-xs text-forest-700 mt-0.5">
+                The Dean, HR and the Campus Director have all signed off online.
+                Print the approval sheet below and collect the wet signatures.
+            </p>
         </div>
-        <p class="text-2xl font-bold text-gray-800 leading-none">{{ number_format($balance->vl_balance ?? 0, 3) }}</p>
-        <p class="text-xs text-gray-500 mt-1.5">Vacation Leave Balance</p>
     </div>
-
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 ring-1 ring-green-100 p-4">
-        <div class="w-9 h-9 rounded-lg bg-green-50 text-green-600 flex items-center justify-center mb-3">
-            <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <p class="text-2xl font-bold text-gray-800 leading-none">{{ number_format($balance->sl_balance ?? 0, 3) }}</p>
-        <p class="text-xs text-gray-500 mt-1.5">Sick Leave Balance</p>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 ring-1 ring-yellow-100 p-4">
-        <div class="w-9 h-9 rounded-lg bg-yellow-50 text-yellow-600 flex items-center justify-center mb-3">
-            <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9.75L12 3.75m0 6l3-3m-3 3l-3-3M3.75 15.75v3a2.25 2.25 0 002.25 2.25h12a2.25 2.25 0 002.25-2.25v-3"/></svg>
-        </div>
-        <p class="text-2xl font-bold text-gray-800 leading-none">{{ $pendingCount }}</p>
-        <p class="text-xs text-gray-500 mt-1.5">Pending Requests</p>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 ring-1 ring-gray-100 p-4">
-        <div class="w-9 h-9 rounded-lg bg-gray-50 text-gray-600 flex items-center justify-center mb-3">
-            <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-        </div>
-        <p class="text-2xl font-bold text-gray-800 leading-none">{{ $approvedThisYear }}</p>
-        <p class="text-xs text-gray-500 mt-1.5">Days Used ({{ now()->year }})</p>
-    </div>
-</div>
+@endif
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-    <!-- File a request -->
-    <div class="lg:col-span-1">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 sticky top-20">
-            <div class="px-5 py-4 border-b border-gray-100">
-                <h3 class="font-semibold text-gray-800 text-sm">File a Leave Application</h3>
+    {{-- ============================================================
+         LEFT — how it works + file a new leave
+         ============================================================ --}}
+    <div class="space-y-6">
+
+        {{-- Step 1: get the form --}}
+        <x-card>
+            <div class="flex items-start gap-3 mb-4">
+                <div class="w-7 h-7 rounded-full bg-maroon-800 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
+                <div>
+                    <h3 class="font-semibold text-sm text-sand-800">Download the official form</h3>
+                    <p class="text-xs text-sand-500 mt-0.5">
+                        @if ($template)
+                            {{ $template->label }} · {{ strtoupper($template->extension()) }} · {{ $template->sizeLabel() }}
+                        @else
+                            HR has not published a form yet — the standard form is provided.
+                        @endif
+                    </p>
+                </div>
             </div>
-            <form method="POST" action="{{ route('leave.store') }}" class="p-5 space-y-4" x-data="{
-                leaveType: '{{ old('leave_type', 'VL') }}',
-                dateFrom: '{{ old('date_from') }}',
-                dateTo: '{{ old('date_to') }}',
-                vlBalance: {{ $balance->vl_balance ?? 0 }},
-                slBalance: {{ $balance->sl_balance ?? 0 }},
-                get available() { return this.leaveType === 'VL' ? this.vlBalance : this.slBalance },
-                get estimatedDays() {
-                    if (!this.dateFrom || !this.dateTo) return 0;
-                    const from = new Date(this.dateFrom), to = new Date(this.dateTo);
-                    if (to < from) return 0;
-                    let count = 0;
-                    for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
-                        const day = d.getDay();
-                        if (day !== 0 && day !== 6) count++;
-                    }
-                    return count;
-                },
-                get exceedsBalance() { return this.estimatedDays > this.available }
-            }">
+
+            <a href="{{ route('leave.template.download') }}"
+               class="btn btn-lg btn-primary w-full">
+                <x-heroicon-o-arrow-up-tray class="w-4 h-4" />
+                Download leave form
+            </a>
+        </x-card>
+
+        {{-- Step 2: submit --}}
+        <div class="card overflow-hidden">
+            <div class="px-5 py-4 border-b border-sand-100 flex items-start gap-3">
+                <div class="w-7 h-7 rounded-full bg-maroon-800 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
+                <div>
+                    <h3 class="font-semibold text-sm text-sand-800">Upload the filled-in form</h3>
+                    <p class="text-xs text-sand-500 mt-0.5">It goes straight to your Dean.</p>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ route('leave.store') }}" enctype="multipart/form-data" class="p-5 space-y-4">
                 @csrf
 
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1.5">Leave Type</label>
-                    <select name="leave_type" x-model="leaveType" class="border border-gray-300 rounded-lg px-3 py-2 w-full text-sm focus:ring-2 focus:ring-maroon-700 focus:border-transparent" required>
-                        <option value="VL">Vacation Leave</option>
-                        <option value="SL">Sick Leave</option>
+                <label class="block">
+                    <span class="label">Type of leave</span>
+                    <select name="leave_type" required
+                            class="select mt-1">
+                        <option value="VL" @selected(old('leave_type') === 'VL')>Vacation Leave</option>
+                        <option value="SL" @selected(old('leave_type') === 'SL')>Sick Leave</option>
                     </select>
-                    <p class="text-xs text-gray-400 mt-1">Available: <span x-text="available" class="font-medium"></span> day(s)</p>
+                </label>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="block">
+                        <span class="label">From</span>
+                        <input type="date" name="date_from" required value="{{ old('date_from') }}"
+                               class="input mt-1">
+                    </label>
+                    <label class="block">
+                        <span class="label">To</span>
+                        <input type="date" name="date_to" required value="{{ old('date_to') }}"
+                               class="input mt-1">
+                    </label>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1.5">Date From</label>
-                    <input type="date" name="date_from" x-model="dateFrom" class="border border-gray-300 rounded-lg px-3 py-2 w-full text-sm focus:ring-2 focus:ring-maroon-700 focus:border-transparent" required>
-                </div>
+                <label class="block">
+                    <span class="label">Reason <span class="text-sand-400">(optional)</span></span>
+                    <textarea name="reason" rows="2" maxlength="500"
+                              class="textarea mt-1"
+                              placeholder="Brief reason for the leave">{{ old('reason') }}</textarea>
+                </label>
 
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1.5">Date To</label>
-                    <input type="date" name="date_to" x-model="dateTo" class="border border-gray-300 rounded-lg px-3 py-2 w-full text-sm focus:ring-2 focus:ring-maroon-700 focus:border-transparent" required>
-                </div>
+                <label class="block">
+                    <span class="label">Accomplished form <span class="text-red-500">*</span></span>
+                    <input type="file" name="leave_form" required accept=".pdf,.xlsx,.xls,.doc,.docx"
+                           class="file-input mt-1 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-maroon-50 file:text-maroon-800 hover:file:bg-maroon-100 file:cursor-pointer">
+                    <span class="hint">PDF, Excel or Word · up to 10 MB</span>
+                </label>
 
-                <div x-show="estimatedDays > 0" x-cloak
-                     :class="exceedsBalance ? 'bg-red-50 border-red-200 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700'"
-                     class="border rounded-lg px-3 py-2 text-xs">
-                    <span x-text="estimatedDays"></span> weekday(s) requested.
-                    <template x-if="exceedsBalance">
-                        <span class="block font-medium mt-1">⚠ This exceeds your available balance.</span>
-                    </template>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1.5">Reason (optional)</label>
-                    <textarea name="reason" rows="3" class="border border-gray-300 rounded-lg px-3 py-2 w-full text-sm focus:ring-2 focus:ring-maroon-700 focus:border-transparent">{{ old('reason') }}</textarea>
-                </div>
-
-                @if ($errors->any())
-                    <div class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                        {{ $errors->first() }}
-                    </div>
-                @endif
-
-                <button type="submit" :disabled="exceedsBalance"
-                        :class="exceedsBalance ? 'bg-gray-300 cursor-not-allowed' : 'bg-maroon-800 hover:bg-maroon-900'"
-                        class="w-full text-white py-2.5 rounded-lg text-sm font-medium transition">
-                    Submit Application
+                <button class="btn btn-lg btn-primary w-full">
+                    Submit for review
                 </button>
             </form>
         </div>
+
+        {{-- Step 3 explainer --}}
+        <x-card>
+            <div class="flex items-start gap-3 mb-3">
+                <div class="w-7 h-7 rounded-full bg-maroon-800 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+                <div>
+                    <h3 class="font-semibold text-sm text-sand-800">Print only once approved</h3>
+                </div>
+            </div>
+            <p class="text-xs text-sand-500 leading-relaxed">
+                Your form is checked online by the <strong>Dean</strong>, then the
+                <strong>HR Administrator</strong>, then the <strong>Campus Director</strong>.
+                Only when all three approve does the print button unlock — so you never print a hard
+                copy and chase signatures for a form that was going to be sent back.
+            </p>
+        </x-card>
+
+        {{-- Recent ledger movement --}}
+        @if ($ledger->isNotEmpty())
+            <x-card title="Recent ledger activity">
+                <ul class="space-y-2.5">
+                    @foreach ($ledger as $row)
+                        <li class="flex items-start justify-between gap-3 text-sm">
+                            <div class="min-w-0">
+                                <p class="text-sand-700 truncate">{{ $row->remarks ?: ucfirst($row->type) }}</p>
+                                <p class="text-[11px] text-sand-400">{{ $row->periodLabel() }}</p>
+                            </div>
+                            <div class="text-right flex-shrink-0 text-xs">
+                                <p class="text-sand-500">VL {{ number_format((float) $row->vl_balance, 2) }}</p>
+                                <p class="text-sand-500">SL {{ number_format((float) $row->sl_balance, 2) }}</p>
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
+            </x-card>
+        @endif
     </div>
 
-    <!-- Applications list + recent ledger -->
-    <div class="lg:col-span-2 space-y-6">
+    {{-- ============================================================
+         RIGHT — my applications
+         ============================================================ --}}
+    <div class="lg:col-span-2">
+        <div class="card overflow-hidden">
+            <div class="px-5 py-3.5 border-b border-sand-100 flex items-center justify-between gap-3 flex-wrap">
+                <h3 class="font-semibold text-sm text-sand-700">My leave applications</h3>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2">
-                <h3 class="font-semibold text-gray-800 text-sm">My Applications</h3>
-                <form method="GET" class="flex gap-2">
-                    <select name="status" onchange="this.form.submit()" class="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-maroon-700 focus:border-transparent">
-                        <option value="">All Statuses</option>
-                        <option value="pending" @selected(request('status') === 'pending')>Pending</option>
-                        <option value="approved" @selected(request('status') === 'approved')>Approved</option>
-                        <option value="declined" @selected(request('status') === 'declined')>Declined</option>
-                    </select>
-                </form>
+                <div class="flex items-center gap-2 text-xs">
+                    @if ($inReview > 0)
+                        <span class="px-2 py-0.5 rounded-full bg-gold-50 text-gold-700 ring-1 ring-gold-100 font-medium">
+                            {{ $inReview }} in review
+                        </span>
+                    @endif
+                    <form method="GET">
+                        <select name="status" onchange="this.form.submit()"
+                                class="select">
+                            <option value="">All statuses</option>
+                            <option value="submitted" @selected(request('status') === 'submitted')>Awaiting Dean</option>
+                            <option value="dean_approved" @selected(request('status') === 'dean_approved')>Awaiting HR</option>
+                            <option value="hr_approved" @selected(request('status') === 'hr_approved')>Awaiting Campus Director</option>
+                            <option value="cd_approved" @selected(request('status') === 'cd_approved')>Ready to print</option>
+                            <option value="completed" @selected(request('status') === 'completed')>Completed</option>
+                        </select>
+                    </form>
+                </div>
             </div>
 
-            <div class="divide-y divide-gray-100">
-                @forelse ($applications as $application)
-                    <div class="px-5 py-4" x-data="{ open: false }">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="flex items-start gap-3">
-                                <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0
-                                    {{ match($application->status) { 'approved' => 'bg-green-50 text-green-600', 'declined' => 'bg-red-50 text-red-600', default => 'bg-yellow-50 text-yellow-600' } }}">
-                                    @if ($application->status === 'approved')
-                                        <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                                    @elseif ($application->status === 'declined')
-                                        <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    @else
-                                        <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    @endif
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-800">
-                                        {{ $application->leave_type === 'VL' ? 'Vacation Leave' : 'Sick Leave' }}
-                                        <span class="text-gray-400 font-normal">· {{ $application->days }} day(s)</span>
-                                    </p>
-                                    <p class="text-xs text-gray-400">{{ $application->date_from->format('M d') }} – {{ $application->date_to->format('M d, Y') }}</p>
+            @if ($applications->isEmpty())
+                <x-empty-state message="You have not filed any leave yet. Download the form to get started." />
+            @else
+                <ul class="divide-y divide-sand-100">
+                    @foreach ($applications as $application)
+                        <li class="p-5" x-data="{ fixing: false }">
+                            <div class="flex items-start justify-between gap-4 flex-wrap mb-4">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <x-badge :color="$application->leave_type === 'VL' ? 'blue' : 'purple'">
+                                            {{ $application->leave_type === 'VL' ? 'Vacation' : 'Sick' }}
+                                        </x-badge>
+                                        <p class="text-sm font-semibold text-sand-800">
+                                            {{ $application->date_from?->format('M j, Y') }}
+                                            @if ($application->date_to && ! $application->date_to->eq($application->date_from))
+                                                – {{ $application->date_to->format('M j, Y') }}
+                                            @endif
+                                        </p>
+                                        <span class="text-xs text-sand-400">
+                                            {{ rtrim(rtrim(number_format((float) $application->days, 2), '0'), '.') }} day(s)
+                                        </span>
+                                    </div>
                                     @if ($application->reason)
-                                        <button @click="open = !open" class="text-xs text-blue-600 hover:underline mt-1">
-                                            <span x-show="!open">View reason</span><span x-show="open" x-cloak>Hide reason</span>
-                                        </button>
-                                        <p x-show="open" x-cloak class="text-xs text-gray-500 mt-1 bg-gray-50 rounded px-2 py-1.5">{{ $application->reason }}</p>
-                                    @endif
-                                    @if ($application->status === 'declined' && $application->remarks)
-                                        <p class="text-xs text-red-600 mt-1 bg-red-50 rounded px-2 py-1.5">HR remarks: {{ $application->remarks }}</p>
+                                        <p class="text-xs text-sand-500 mt-1">{{ $application->reason }}</p>
                                     @endif
                                 </div>
+
+                                <x-leave.status-pill :application="$application" />
                             </div>
-                            <x-badge :color="match($application->status) { 'approved' => 'green', 'declined' => 'red', default => 'yellow' }">
-                                {{ ucfirst($application->status) }}
-                            </x-badge>
-                        </div>
-                    </div>
-                @empty
-                    <x-empty-state message="No leave applications yet." />
-                @endforelse
-            </div>
 
-            <div class="px-5 py-3">{{ $applications->links() }}</div>
-        </div>
+                            <x-leave.stepper :application="$application" class="mb-4" />
 
-        <!-- Recent ledger snapshot -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100">
-                <h3 class="font-semibold text-gray-800 text-sm">Recent Ledger Activity</h3>
-            </div>
-            <table class="w-full text-xs">
-                <thead class="bg-gray-50 text-left text-gray-500">
-                    <tr>
-                        <th class="px-5 py-2 font-medium">Period</th>
-                        <th class="px-5 py-2 font-medium">Remarks</th>
-                        <th class="px-5 py-2 font-medium text-right">VL Balance</th>
-                        <th class="px-5 py-2 font-medium text-right">SL Balance</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($ledger as $row)
-                        <tr class="border-t border-gray-100">
-                            <td class="px-5 py-2.5 text-gray-600">{{ $row->period_from->format('M d, Y') }}</td>
-                            <td class="px-5 py-2.5 text-gray-500">{{ $row->remarks ?: '—' }}</td>
-                            <td class="px-5 py-2.5 text-right font-medium text-gray-700">{{ number_format($row->vl_balance, 3) }}</td>
-                            <td class="px-5 py-2.5 text-right font-medium text-gray-700">{{ number_format($row->sl_balance, 3) }}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="4"><x-empty-state message="No ledger entries yet." /></td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+                            {{-- Reviewer remarks when returned --}}
+                            @if ($application->isReturned() && $application->remarks)
+                                <div class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 mb-3">
+                                    <p class="text-[11px] font-semibold uppercase tracking-wide text-red-700 mb-1">
+                                        What needs correcting
+                                    </p>
+                                    <p class="text-sm text-red-800">{{ $application->remarks }}</p>
+                                </div>
+                            @endif
+
+                            <div class="flex items-center gap-2 flex-wrap">
+                                @if ($application->file_path)
+                                    {{-- The same converted copy the Dean, HR and
+                                         the Campus Director read, so you can see
+                                         exactly what they are signing. --}}
+                                    <a href="{{ route('leave.form.pdf', $application) }}" target="_blank"
+                                       class="btn btn-sm btn-primary">
+                                        <x-heroicon-o-document-text class="w-3.5 h-3.5" />
+                                        View as PDF
+                                    </a>
+                                    <a href="{{ $application->employeeFormUrl() }}" target="_blank"
+                                       class="btn btn-sm btn-secondary">
+                                        My upload
+                                    </a>
+                                @endif
+
+                                @if ($application->isFullyApproved())
+                                    <a href="{{ route('leave.print', $application) }}" target="_blank"
+                                       class="btn btn-sm btn-success">
+                                        <x-heroicon-o-printer class="w-3.5 h-3.5" />
+                                        Print approval sheet
+                                    </a>
+                                @elseif ($application->isReturned())
+                                    <button @click="fixing = !fixing"
+                                            class="btn btn-sm btn-primary">
+                                        Upload corrected form
+                                    </button>
+                                @endif
+                            </div>
+
+                            {{-- Re-upload --}}
+                            @if ($application->isReturned())
+                                <form method="POST" action="{{ route('leave.resubmit', $application) }}"
+                                      enctype="multipart/form-data" x-show="fixing" x-cloak
+                                      class="mt-3 p-4 rounded-lg bg-sand-50 border border-sand-200 space-y-3">
+                                    @csrf
+                                    <label class="block">
+                                        <span class="label">Corrected form</span>
+                                        <input type="file" name="leave_form" required accept=".pdf,.xlsx,.xls,.doc,.docx"
+                                               class="file-input mt-1 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-maroon-50 file:text-maroon-800 hover:file:bg-maroon-100 file:cursor-pointer">
+                                    </label>
+                                    <div class="flex gap-2">
+                                        <button class="btn btn-sm btn-primary">
+                                            Re-submit to Dean
+                                        </button>
+                                        <button type="button" @click="fixing = false"
+                                                class="btn btn-sm btn-secondary">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </form>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+
+                <div class="px-5 py-3 border-t border-sand-100">
+                    {{ $applications->links() }}
+                </div>
+            @endif
         </div>
     </div>
 </div>
+
 @endsection

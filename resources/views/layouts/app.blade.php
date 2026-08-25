@@ -1,3 +1,14 @@
+@php
+    $user = auth()->user();
+    $reviewQueue = 0;
+
+    // Badge on the review link, so a Dean or the Campus Director can see at a
+    // glance that something is waiting on them.
+    if ($user?->isReviewer()) {
+        $reviewQueue = app(\App\Services\LeaveWorkflowService::class)->queueFor($user)->count();
+    }
+
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,144 +16,287 @@
     <title>@yield('title', 'NexHRIS') | ISPSC Tagudin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
-    <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body>
 <div class="flex min-h-screen" x-data="{ sidebarOpen: false }" x-cloak>
 
     <!-- Mobile overlay -->
     <div x-show="sidebarOpen" @click="sidebarOpen = false"
-         class="fixed inset-0 bg-black/40 z-30 lg:hidden" x-transition.opacity></div>
+         class="fixed inset-0 bg-sand-900/50 backdrop-blur-sm z-30 lg:hidden" x-transition.opacity></div>
 
-    <!-- Sidebar -->
+    <!-- ============================================================
+         SIDEBAR
+         ============================================================ -->
     <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-           class="fixed inset-y-0 left-0 z-40 w-64 h-screen bg-maroon-900 text-white flex flex-col transition-transform duration-200">
+           class="fixed inset-y-0 left-0 z-40 w-64 h-screen flex flex-col
+                  transition-transform duration-300 ease-smooth bg-maroon-900 text-white">
 
-        <div class="flex flex-col items-center text-center gap-2 px-4 py-6 border-b border-maroon-800 flex-shrink-0">
+        {{-- Seal, system name, campus — the standard institutional lockup. --}}
+        <div class="shrink-0 flex items-center gap-3 px-5 h-16 border-b border-white/10">
             <img src="{{ asset('images/ispsc-logo.png') }}" alt="ISPSC Seal"
-                 class="w-20 h-20 rounded-full object-cover drop-shadow-lg">
-            <div class="leading-tight">
-                <p class="font-bold text-base">NexHRIS</p>
-                <p class="text-[11px] text-gray-300">ISPSC Tagudin Campus</p>
+                 class="w-10 h-10 rounded-full object-cover bg-white p-0.5 shadow-soft">
+            <div class="min-w-0 leading-tight">
+                <p class="text-sm font-bold tracking-wide">NexHRIS</p>
+                <p class="text-[10px] text-white/60 truncate">ISPSC Tagudin Campus</p>
             </div>
         </div>
 
-        <nav class="flex-1 px-3 py-4 space-y-6 text-sm overflow-y-auto">
-            @if (auth()->user()->isAdmin())
-                <div>
-                    <p class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Overview</p>
-                    <a href="{{ route('admin.dashboard') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-maroon-800 transition {{ request()->routeIs('admin.dashboard') ? 'bg-maroon-800' : '' }}">
-                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+        {{-- Ordered the same way for every role: what is waiting on you,
+             then what you manage, then your own records, then shared
+             resources, then your account. --}}
+        <nav class="nav-scroll flex-1 py-2 overflow-y-auto">
+
+            @if ($user->isAdmin())
+                {{-- ---------------- HR ADMINISTRATOR ---------------- --}}
+                {{-- This is the system administrator's account, not a member
+                     of staff: no My Leave, ledger or PDS here. --}}
+                <x-nav.section label="Overview">
+                    <x-nav.item :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" icon="squares-2x2">
                         Dashboard
-                    </a>
-                </div>
+                    </x-nav.item>
+                </x-nav.section>
 
-                <div>
-                    <p class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">People</p>
-                    <a href="{{ route('admin.employees.index') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-maroon-800 transition {{ request()->routeIs('admin.employees.*') ? 'bg-maroon-800' : '' }}">
-                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+                <x-nav.section label="People">
+                    <x-nav.item :href="route('admin.employees.index')" :active="request()->routeIs('admin.employees.*')" icon="users">
                         Employee Accounts
-                    </a>
-                </div>
+                    </x-nav.item>
+                    <x-nav.item :href="route('admin.colleges.index')" :active="request()->routeIs('admin.colleges.*')" icon="building-library">
+                        Colleges &amp; Departments
+                    </x-nav.item>
+                </x-nav.section>
 
-                <div>
-                    <p class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Records</p>
-                    <a href="{{ route('admin.pds.index') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-maroon-800 transition {{ request()->routeIs('admin.pds.*') ? 'bg-maroon-800' : '' }}">
-                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <x-nav.section label="Leave Management">
+                    <x-nav.item :href="route('admin.leave.review.index')" :active="request()->routeIs('admin.leave.review.*')" icon="inbox-arrow-down" :badge="$reviewQueue">
+                        Leave Reviews
+                    </x-nav.item>
+                    <x-nav.item :href="route('admin.leave.index')" :active="request()->routeIs('admin.leave.index') || request()->routeIs('admin.leave.ledger')" icon="book-open">
+                        Ledger Cards
+                    </x-nav.item>
+                    <x-nav.item :href="route('admin.leave.calendar')" :active="request()->routeIs('admin.leave.calendar')" icon="calendar-days">
+                        Leave Calendar
+                    </x-nav.item>
+                </x-nav.section>
+
+                <x-nav.section label="Records">
+                    <x-nav.item :href="route('admin.pds.index')" :active="request()->routeIs('admin.pds.*')" icon="document-text">
                         PDS Requests
-                    </a>
-                    <a href="{{ route('admin.leave.index') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-maroon-800 transition {{ request()->routeIs('admin.leave.*') ? 'bg-maroon-800' : '' }}">
-                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Leave Management
-                    </a>
-                    <a href="{{ route('admin.policies.index') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-maroon-800 transition {{ request()->routeIs('admin.policies.*') ? 'bg-maroon-800' : '' }}">
-                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                    </x-nav.item>
+                    <x-nav.item :href="route('admin.leave.templates.index')" :active="request()->routeIs('admin.leave.templates.*')" icon="arrow-up-tray">
+                        Form Templates
+                    </x-nav.item>
+                </x-nav.section>
+
+                <x-nav.section label="Publishing">
+                    <x-nav.item :href="route('admin.announcements.index')" :active="request()->routeIs('admin.announcements.*')" icon="megaphone">
+                        Announcements
+                    </x-nav.item>
+                    <x-nav.item :href="route('admin.policies.index')" :active="request()->routeIs('admin.policies.*')" icon="clipboard-document-list">
                         HR Policies
-                    </a>
-                </div>
+                    </x-nav.item>
+                </x-nav.section>
+
+                <x-nav.section label="System">
+                    <x-nav.item :href="route('admin.activity-logs.index')" :active="request()->routeIs('admin.activity-logs.*')" icon="shield-check">
+                        Activity Log
+                    </x-nav.item>
+                    <x-nav.item :href="route('profile.edit')" :active="request()->routeIs('profile.*')" icon="user-circle">
+                        My Profile
+                    </x-nav.item>
+                </x-nav.section>
+
+            @elseif ($user->isDean() || $user->isCampusDirector())
+                {{-- ---------------- DEAN / CAMPUS DIRECTOR ---------------- --}}
+                <x-nav.section label="Overview">
+                    <x-nav.item :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" icon="squares-2x2">
+                        Dashboard
+                    </x-nav.item>
+                </x-nav.section>
+
+                <x-nav.section label="Needs Review">
+                    <x-nav.item :href="route('admin.leave.review.index')" :active="request()->routeIs('admin.leave.review.*')" icon="inbox-arrow-down" :badge="$reviewQueue">
+                        Awaiting My Review
+                    </x-nav.item>
+                </x-nav.section>
+
+                <x-nav.section label="Oversight">
+                    {{-- Ledger cards are HR's record. A Dean approves leave
+                         but does not hold other people's credit balances. --}}
+                    @if ($user->isCampusDirector())
+                        <x-nav.item :href="route('admin.leave.index')" :active="request()->routeIs('admin.leave.index') || request()->routeIs('admin.leave.ledger')" icon="book-open">
+                            Employee Ledgers
+                        </x-nav.item>
+                    @endif
+                    <x-nav.item :href="route('admin.leave.calendar')" :active="request()->routeIs('admin.leave.calendar')" icon="calendar-days">
+                        Leave Calendar
+                    </x-nav.item>
+                </x-nav.section>
+
+                {{-- A Dean and the Campus Director take leave like anyone
+                     else — the approval chain already skips whichever stage
+                     is their own — so their own records belong here too. --}}
+                <x-nav.section label="My Records">
+                    <x-nav.item :href="route('leave.index')" :active="request()->routeIs('leave.index')" icon="calendar-days">
+                        My Leave
+                    </x-nav.item>
+                    <x-nav.item :href="route('leave.ledger.mine')" :active="request()->routeIs('leave.ledger.*')" icon="book-open">
+                        My Leave Ledger
+                    </x-nav.item>
+                    <x-nav.item :href="route('pds.edit')" :active="request()->routeIs('pds.*')" icon="document-text">
+                        My Personal Data Sheet
+                    </x-nav.item>
+                </x-nav.section>
+
+                <x-nav.section label="Resources">
+                    <x-nav.item :href="route('announcements.index')" :active="request()->routeIs('announcements.*')" icon="megaphone">
+                        Announcements
+                    </x-nav.item>
+                    <x-nav.item :href="route('policies.index')" :active="request()->routeIs('policies.*')" icon="clipboard-document-list">
+                        HR Policies
+                    </x-nav.item>
+                </x-nav.section>
+
+                <x-nav.section label="Account">
+                    <x-nav.item :href="route('my-id.show')" :active="request()->routeIs('my-id.*')" icon="identification">
+                        My Digital ID
+                    </x-nav.item>
+                    <x-nav.item :href="route('profile.edit')" :active="request()->routeIs('profile.*')" icon="user-circle">
+                        My Profile
+                    </x-nav.item>
+                </x-nav.section>
 
             @else
-                <div>
-                    <p class="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Menu</p>
-                    <a href="{{ route('employee.dashboard') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-maroon-800 transition {{ request()->routeIs('employee.dashboard') ? 'bg-maroon-800' : '' }}">
-                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6z"/></svg>
+                {{-- ---------------- EMPLOYEE ---------------- --}}
+                <x-nav.section label="Overview">
+                    <x-nav.item :href="route('employee.dashboard')" :active="request()->routeIs('employee.dashboard')" icon="squares-2x2">
                         Dashboard
-                    </a>
-                    <a href="{{ route('pds.edit') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-maroon-800 transition {{ request()->routeIs('pds.*') ? 'bg-maroon-800' : '' }}">
-                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        Personal Data Sheet
-                    </a>
-                    <a href="{{ route('leave.index') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-maroon-800 transition {{ request()->routeIs('leave.*') ? 'bg-maroon-800' : '' }}">
-                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </x-nav.item>
+                </x-nav.section>
+
+                {{-- An employee's own records are the whole point of their
+                     account, so they sit directly under the dashboard. --}}
+                <x-nav.section label="My Records">
+                    <x-nav.item :href="route('leave.index')" :active="request()->routeIs('leave.index')" icon="calendar-days">
                         My Leave
-                    </a>
-                    <a href="{{ route('policies.index') }}"
-                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-maroon-800 transition {{ request()->routeIs('policies.*') ? 'bg-maroon-800' : '' }}">
-                        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                    </x-nav.item>
+                    <x-nav.item :href="route('leave.ledger.mine')" :active="request()->routeIs('leave.ledger.*')" icon="book-open">
+                        My Leave Ledger
+                    </x-nav.item>
+                    <x-nav.item :href="route('pds.edit')" :active="request()->routeIs('pds.*')" icon="document-text">
+                        My Personal Data Sheet
+                    </x-nav.item>
+                </x-nav.section>
+
+                <x-nav.section label="Resources">
+                    <x-nav.item :href="route('announcements.index')" :active="request()->routeIs('announcements.*')" icon="megaphone">
+                        Announcements
+                    </x-nav.item>
+                    <x-nav.item :href="route('policies.index')" :active="request()->routeIs('policies.*')" icon="clipboard-document-list">
                         HR Policies
-                    </a>
-                </div>
+                    </x-nav.item>
+                </x-nav.section>
+
+                <x-nav.section label="Account">
+                    <x-nav.item :href="route('my-id.show')" :active="request()->routeIs('my-id.*')" icon="identification">
+                        My Digital ID
+                    </x-nav.item>
+                    <x-nav.item :href="route('profile.edit')" :active="request()->routeIs('profile.*')" icon="user-circle">
+                        My Profile
+                    </x-nav.item>
+                </x-nav.section>
             @endif
         </nav>
 
-        <form method="POST" action="{{ route('logout') }}" class="p-3 border-t border-maroon-800 flex-shrink-0">
+        <form method="POST" action="{{ route('logout') }}" class="shrink-0 border-t border-white/10 py-2">
             @csrf
-            <button class="w-full flex items-center gap-2.5 text-left text-sm px-3 py-2 rounded-lg hover:bg-maroon-800 transition">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 9V5.25A2.25 2.25 0 0110.5 3h6a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0116.5 21h-6a2.25 2.25 0 01-2.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/></svg>
+            <button class="nav-link w-full text-left">
+                <x-heroicon-o-arrow-left-on-rectangle />
                 Log Out
             </button>
         </form>
     </aside>
 
-    <!-- Main content -->
+    <!-- ============================================================
+         MAIN
+         ============================================================ -->
     <div class="flex-1 flex flex-col min-w-0 lg:ml-64">
-        <header class="bg-white border-b border-gray-100 px-6 py-3.5 flex justify-between items-center sticky top-0 z-20">
-            <div class="flex items-center gap-4 min-w-0">
-                <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-gray-500 hover:text-gray-700 flex-shrink-0">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/>
-                    </svg>
-                </button>
+        {{-- Fixed-height application bar: page title on the left, the signed-in
+             account on the right. Same height as the sidebar's brand block. --}}
+        <header class="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border-b border-sand-200">
+            <div class="h-16 px-4 sm:px-6 flex justify-between items-center gap-4">
 
-                @stack('page-title')
-            </div>
+                <div class="flex items-center gap-3 min-w-0">
+                    <button @click="sidebarOpen = !sidebarOpen"
+                            class="lg:hidden text-sand-500 hover:text-sand-900 shrink-0">
+                        <x-heroicon-o-bars-3 class="w-6 h-6" />
+                    </button>
 
-            <!-- Profile block, top right -->
-            <div class="flex items-center gap-3 flex-shrink-0">
-                <div class="w-10 h-10 rounded-full bg-maroon-800 text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                    {{ strtoupper(substr(auth()->user()->name ?? '?', 0, 1)) }}
+                    {{-- Marked so the duplicate-heading test can inspect just
+                         this slot, rather than the whole bar (which also holds
+                         the notification bell's own dropdown). --}}
+                    <div data-app-bar-title class="min-w-0">
+                        @stack('page-title')
+                    </div>
                 </div>
-                <div class="text-left hidden sm:block">
-                    <p class="text-sm font-semibold text-gray-800 leading-tight">{{ auth()->user()->name ?? '' }}</p>
-                    <span class="inline-block mt-0.5 text-[11px] font-medium px-2 py-0.5 rounded-full
-                                {{ auth()->user()->isAdmin() ? 'bg-maroon-50 text-maroon-800' : 'bg-blue-50 text-blue-700' }}">
-                        {{ auth()->user()->isAdmin() ? 'HR Administrator' : 'Employee' }}
-                    </span>
+
+                <div class="flex items-center gap-2.5 shrink-0">
+                    <x-notification-bell />
+
+                    <div class="text-right hidden sm:block leading-tight">
+                        <p class="text-[13px] font-medium text-sand-900">{{ $user->name }}</p>
+                        <p class="text-[11px] text-sand-500">{{ $user->roleLabel() }}</p>
+                    </div>
+
+                    @if ($user->profile_photo_path)
+                        <img src="{{ Storage::url($user->profile_photo_path) }}" alt=""
+                             class="w-9 h-9 rounded-full object-cover border border-sand-200">
+                    @else
+                        <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0
+                                    bg-maroon-800 text-white text-sm font-semibold shadow-soft">
+                            {{ strtoupper(substr($user->name ?? '?', 0, 1)) }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </header>
 
-        <main class="p-6">
+        <main class="p-4 sm:p-5 flex-1">
             @if (session('success'))
-                <div data-flash class="mb-4 flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-4 py-2.5 text-sm text-green-700">
-                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                    {{ session('success') }}
+                <div data-flash class="alert alert-success mb-4">
+                    <x-heroicon-o-check-circle />
+                    <span>{{ session('success') }}</span>
                 </div>
             @endif
+
+            @if (session('warning'))
+                <div data-flash class="alert alert-warning mb-4">
+                    <x-heroicon-o-exclamation-triangle />
+                    <span>{{ session('warning') }}</span>
+                </div>
+            @endif
+
             @if (session('error'))
-                <div data-flash class="mb-4 flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-2.5 text-sm text-red-700">
-                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    {{ session('error') }}
+                <div data-flash class="alert alert-error mb-4">
+                    <x-heroicon-o-exclamation-triangle />
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="alert alert-error mb-4">
+                    <x-heroicon-o-exclamation-circle />
+                    <div>
+                        <p class="font-semibold mb-1">Please correct the following:</p>
+                        <ul class="list-disc list-inside space-y-0.5">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
                 </div>
             @endif
 
@@ -158,12 +312,9 @@
             el.style.opacity = '0';
             setTimeout(() => el.remove(), 400);
         });
-    }, 4000);
+    }, 5000);
 </script>
 
 @stack('scripts')
 </body>
 </html>
-
-
-    <!-- Test -->
