@@ -39,7 +39,8 @@
         <text x="155" y="436" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">CAMPUS DIRECTOR</text>
 
         <path d="M155,458 L217,486 L155,514 L93,486 Z" fill="#fff" stroke="#000" stroke-width="1.1"/>
-        <text x="155" y="490" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">DIRECTOR APPROVES?</text>
+        <text x="155" y="484" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">DIRECTOR</text>
+        <text x="155" y="496" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">APPROVES?</text>
 
         <rect x="65" y="525" width="180" height="46" fill="#fff" stroke="#000" stroke-width="1.1"/>
         <text x="155" y="540" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">DAYS WRITTEN ON THE</text>
