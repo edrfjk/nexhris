@@ -86,50 +86,53 @@
             icon="clipboard-document-list" />
     @else
         <div class="table-wrap">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>When</th>
-                        <th>Who</th>
-                        <th>Action</th>
-                        <th>Details</th>
-                        <th class="hidden lg:table-cell">Record</th>
-                        <th class="hidden md:table-cell">IP address</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($logs as $log)
+            {{-- A data table is wider than a phone. Without this the whole page scrolls sideways instead of the table. --}}
+            <div class="overflow-x-auto">
+                <table class="table">
+                    <thead>
                         <tr>
-                            <td class="whitespace-nowrap">
-                                <span class="block text-sand-900">{{ $log->created_at->format('M j, Y') }}</span>
-                                <span class="block text-xs text-sand-400 tabular">{{ $log->created_at->format('g:i:s A') }}</span>
-                            </td>
-                            <td>
-                                @if ($log->user)
-                                    <span class="block font-medium text-sand-900">{{ $log->user->name }}</span>
-                                    <span class="block text-xs text-sand-400">{{ $log->user->roleLabel() }}</span>
-                                @else
-                                    <span class="text-sand-400 italic">Unauthenticated</span>
-                                @endif
-                            </td>
-                            <td>
-                                <x-badge :color="$log->tone()">{{ $log->actionLabel() }}</x-badge>
-                            </td>
-                            <td class="max-w-sm">
-                                <span class="block truncate" title="{{ $log->description }}">
-                                    {{ $log->description ?: '—' }}
-                                </span>
-                            </td>
-                            <td class="hidden lg:table-cell text-xs text-sand-500">
-                                {{ $log->subjectLabel() ?: '—' }}
-                            </td>
-                            <td class="hidden md:table-cell text-xs text-sand-500 tabular">
-                                {{ $log->ip_address ?: '—' }}
-                            </td>
+                            <th>When</th>
+                            <th>Who</th>
+                            <th>Action</th>
+                            <th>Details</th>
+                            <th class="hidden lg:table-cell">Record</th>
+                            <th class="hidden md:table-cell">IP address</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach ($logs as $log)
+                            <tr>
+                                <td class="whitespace-nowrap">
+                                    <span class="block text-sand-900">{{ $log->created_at->format('M j, Y') }}</span>
+                                    <span class="block text-xs text-sand-400 tabular">{{ $log->created_at->format('g:i:s A') }}</span>
+                                </td>
+                                <td>
+                                    @if ($log->user)
+                                        <span class="block font-medium text-sand-900">{{ $log->user->name }}</span>
+                                        <span class="block text-xs text-sand-400">{{ $log->user->roleLabel() }}</span>
+                                    @else
+                                        <span class="text-sand-400 italic">Unauthenticated</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <x-badge :color="$log->tone()">{{ $log->actionLabel() }}</x-badge>
+                                </td>
+                                <td class="max-w-sm">
+                                    <span class="block truncate" title="{{ $log->description }}">
+                                        {{ $log->description ?: '—' }}
+                                    </span>
+                                </td>
+                                <td class="hidden lg:table-cell text-xs text-sand-500">
+                                    {{ $log->subjectLabel() ?: '—' }}
+                                </td>
+                                <td class="hidden md:table-cell text-xs text-sand-500 tabular">
+                                    {{ $log->ip_address ?: '—' }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="card-footer">

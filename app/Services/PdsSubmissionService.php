@@ -7,6 +7,7 @@ use App\Models\PdsSubmissionRevision;
 use App\Models\PdsTemplate;
 use App\Models\User;
 use App\Notifications\PdsStatusChanged;
+use App\Support\Notifier;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -86,7 +87,7 @@ class PdsSubmissionService
      */
     public function storeUpload(PdsSubmission $submission, UploadedFile $file, PdsTemplate $template): PdsSubmission
     {
-        return DB::transaction(function () use ($submission, $file, $template) {
+        $submission = DB::transaction(function () use ($submission, $file, $template) {
             // Keep the previous attempt, together with the verdict it drew.
             if ($submission->workbookExists()) {
                 PdsSubmissionRevision::create([
@@ -108,7 +109,7 @@ class PdsSubmissionService
             $path = $file->storeAs(
                 'pds-working',
                 $submission->user_id . '_' . $submission->applicable_year . '_v' . $version . '.xlsx',
-                'public'
+                'local'
             );
 
             $submission->update([
@@ -124,8 +125,6 @@ class PdsSubmissionService
                 'reviewed_at' => null,
             ]);
 
-            $this->convert($submission->refresh());
-
             $this->log->log(
                 'pds.uploaded',
                 "{$submission->user->name} uploaded their {$submission->applicable_year} PDS (v{$version}).",
@@ -136,6 +135,42 @@ class PdsSubmissionService
 
             return $submission;
         });
+
+        // Converting is deliberately outside the transaction above.
+        //
+        // A full PDS takes seconds to render, and holding a database
+        // transaction open for that long is bad on its own. Worse, if the
+        // request hits the host's execution limit mid-convert, the whole
+        // transaction rolls back and an upload the employee watched succeed
+        // disappears. The workbook is what matters; the PDF is a convenience
+        // that the viewer will produce on demand if this does not finish.
+        $this->convertQuietly($submission->refresh());
+
+        return $submission;
+    }
+
+    /**
+     * Renders the PDF without letting it break the upload.
+     *
+     * Failure here costs nothing: the download route converts on demand and
+     * caches the result, so the first person to open the sheet pays instead.
+     */
+    private function convertQuietly(PdsSubmission $submission): void
+    {
+        // Shared hosting caps a request at thirty seconds by default, which a
+        // four-page PDS can approach on a slow box.
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(120);
+        }
+
+        try {
+            $this->convert($submission);
+        } catch (\Throwable $e) {
+            Log::warning('PDS uploaded but not converted; it will render on first view.', [
+                'submission' => $submission->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -152,10 +187,14 @@ class PdsSubmissionService
         try {
             $pdf = $this->converter->convert($submission->workbookPath());
 
+            // The renderer that produced it is part of the name, so a later
+            // improvement to the renderer replaces this file rather than
+            // leaving the employee looking at an older rendering for ever.
             $target = 'pds-pdf/' . $submission->user_id . '_' . $submission->applicable_year
-                . '_v' . $submission->version . '.pdf';
+                . '_v' . $submission->version
+                . '-' . XlsxToPdfService::rendererStamp() . '.pdf';
 
-            Storage::disk('public')->put($target, file_get_contents($pdf));
+            Storage::disk('local')->put($target, file_get_contents($pdf));
 
             $submission->update(['pdf_path' => $target, 'converted_at' => now()]);
 
@@ -192,7 +231,7 @@ class PdsSubmissionService
         $hr = User::where('role', 'admin')->where('status', 'active')->get();
 
         if ($hr->isNotEmpty()) {
-            Notification::send($hr, new PdsStatusChanged(
+            Notifier::send($hr, new PdsStatusChanged(
                 $submission,
                 'A PDS is awaiting your review',
                 "{$submission->user->name} submitted their {$submission->applicable_year} Personal Data Sheet.",
@@ -220,7 +259,7 @@ class PdsSubmissionService
             $reviewer,
         );
 
-        $submission->user->notify(new PdsStatusChanged(
+        Notifier::send($submission->user, new PdsStatusChanged(
             $submission,
             'Your PDS has been approved',
             "Your {$submission->applicable_year} Personal Data Sheet was approved by {$reviewer->name}.",
@@ -247,7 +286,7 @@ class PdsSubmissionService
             $reviewer,
         );
 
-        $submission->user->notify(new PdsStatusChanged(
+        Notifier::send($submission->user, new PdsStatusChanged(
             $submission,
             'Your PDS was returned for correction',
             "{$reviewer->name} returned your PDS: \"{$remarks}\"",

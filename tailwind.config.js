@@ -5,22 +5,25 @@ export default {
   // whole Tailwind v4 dump, whose arbitrary-value class names would otherwise
   // be scanned and emitted as dead rules.
   content: [
-    "./resources/views/admin/**/*.blade.php",
-    "./resources/views/employee/**/*.blade.php",
-    "./resources/views/auth/**/*.blade.php",
-    "./resources/views/components/**/*.blade.php",
-    "./resources/views/layouts/**/*.blade.php",
-    // Pages that live outside the role folders. Left off this list they are
-    // never scanned, so any class used only there generates no CSS at all and
-    // the page renders half-styled — which is how My Profile and My Leave
-    // Ledger came to look unlike the rest of the system.
-    "./resources/views/announcements/**/*.blade.php",
-    "./resources/views/leave/**/*.blade.php",
-    "./resources/views/notifications/**/*.blade.php",
-    "./resources/views/profile/**/*.blade.php",
-    "./resources/views/public/**/*.blade.php",
+    // One recursive glob, deliberately. This was a list of per-directory
+    // globs, and the two that were missing meant any class used only in
+    // views/profile or views/leave generated no CSS at all — My Profile and
+    // My Leave Ledger rendered half-styled and it looked like a design
+    // problem rather than a build one. A directory added later cannot be
+    // forgotten this way.
+    "./resources/views/**/*.blade.php",
     "./resources/js/**/*.js",
     "./vendor/blade-ui-kit/blade-heroicons/resources/svg/**/*.svg",
+  ],
+
+  // <x-badge> builds its class as 'badge-' . $tone, so the scanner never sees
+  // these as literal strings and drops any tone no view happens to spell out.
+  // badge-violet was already being purged: a purple badge rendered with no
+  // colour at all, and would have looked like a design slip rather than a
+  // build one.
+  safelist: [
+    "badge-slate", "badge-maroon", "badge-green",
+    "badge-amber", "badge-red", "badge-blue", "badge-violet",
   ],
   theme: {
     extend: {

@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 842" width="620" height="842">
+<title>Dataflow Diagram Level 1 &#8212; NexHRIS, ISPSC Tagudin Campus</title>
+<rect x="0" y="0" width="620" height="842" fill="#ffffff"/>
+
+        <defs>
+          <marker id="ufa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0.8 L9.2,5 L0,9.2 z" fill="#000"/>
+          </marker>
+          <marker id="ufg" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto">
+            <path d="M0.5,0.5 L11,6 L0.5,11.5 z" fill="#fff" stroke="#000" stroke-width="1"/>
+          </marker>
+          <marker id="ufcrow" viewBox="0 0 12 12" refX="12" refY="6" markerWidth="12" markerHeight="12" orient="auto">
+            <path d="M12,0.5 L1,6 L12,11.5 M1,6 H12 M0,0.5 V11.5" fill="none" stroke="#000" stroke-width="1"/>
+          </marker>
+          <marker id="ufone" viewBox="0 0 12 12" refX="12" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+            <path d="M3,0.5 V11.5 M7,0.5 V11.5 M0,6 H12" fill="none" stroke="#000" stroke-width="1"/>
+          </marker>
+        </defs>
+
+        <rect x="232" y="12" width="116" height="112" rx="8" fill="#fff" stroke="#000" stroke-width="1.4"/>
+        <path d="M232,26 H348" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="290" y="21.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">1.0</text>
+        <text x="290" y="72.92" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">AUTHENTICATE</text>
+        <text x="290" y="82.68" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">USER</text>
+        <rect x="4" y="12" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,34 V15 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <text x="53.5" y="26.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">EMPLOYEE</text>
+        <path d="M100,17 L231,17" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,29 L101,29" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="121.3" y="13.6" width="89.3" height="8.0" fill="#fff"/>
+        <text x="166" y="19.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LOGIN CREDENTIALS</text>
+        <rect x="128.7" y="25.6" width="74.6" height="8.0" fill="#fff"/>
+        <text x="166" y="31.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">SIGN-IN RESULT</text>
+        <rect x="4" y="42" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,64 V45 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <text x="53.5" y="56.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">DEAN</text>
+        <path d="M100,47 L231,47" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,59 L101,59" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="121.3" y="43.6" width="89.3" height="8.0" fill="#fff"/>
+        <text x="166" y="49.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">CREDENTIALS, CODE</text>
+        <rect x="114.0" y="55.6" width="104.0" height="8.0" fill="#fff"/>
+        <text x="166" y="61.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">EMAILED CODE, ACCESS</text>
+        <rect x="4" y="72" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,94 V75 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <text x="53.5" y="86.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">CAMPUS DIRECTOR</text>
+        <path d="M100,77 L231,77" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,89 L101,89" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="121.3" y="73.6" width="89.3" height="8.0" fill="#fff"/>
+        <text x="166" y="79.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">CREDENTIALS, CODE</text>
+        <rect x="114.0" y="85.6" width="104.0" height="8.0" fill="#fff"/>
+        <text x="166" y="91.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">EMAILED CODE, ACCESS</text>
+        <rect x="4" y="102" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,124 V105 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <text x="53.5" y="116.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">HR ADMINISTRATOR</text>
+        <path d="M100,107 L231,107" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,119 L101,119" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="121.3" y="103.6" width="89.3" height="8.0" fill="#fff"/>
+        <text x="166" y="109.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">CREDENTIALS, CODE</text>
+        <rect x="114.0" y="115.6" width="104.0" height="8.0" fill="#fff"/>
+        <text x="166" y="121.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">EMAILED CODE, ACCESS</text>
+        <path d="M616,27 H488 V49 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,27 V49" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="501" y="41" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D1</text>
+        <text x="520" y="41" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">USERS</text>
+        <path d="M348,32 L487,32" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M488,44 L349,44" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="378.2" y="28.6" width="79.5" height="8.0" fill="#fff"/>
+        <text x="418" y="34.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">FAILED ATTEMPTS</text>
+        <rect x="375.8" y="40.6" width="84.4" height="8.0" fill="#fff"/>
+        <text x="418" y="46.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">ACCOUNT AND ROLE</text>
+        <path d="M616,57 H488 V79 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,57 V79" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="501" y="71" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D2</text>
+        <text x="520" y="71" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">VERIFICATION CODES</text>
+        <path d="M348,62 L487,62" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M488,74 L349,74" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="388.1" y="58.6" width="59.9" height="8.0" fill="#fff"/>
+        <text x="418" y="64.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">ISSUED CODE</text>
+        <rect x="388.1" y="70.6" width="59.9" height="8.0" fill="#fff"/>
+        <text x="418" y="76.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">STORED CODE</text>
+        <path d="M616,87 H488 V109 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,87 V109" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="501" y="101" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D3</text>
+        <text x="520" y="101" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">ACTIVITY LOG</text>
+        <path d="M348,98 L487,98" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="383.1" y="94.6" width="69.7" height="8.0" fill="#fff"/>
+        <text x="418" y="100.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">SIGN-IN ENTRY</text>
+        <rect x="232" y="143" width="116" height="52" rx="8" fill="#fff" stroke="#000" stroke-width="1.4"/>
+        <path d="M232,157 H348" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="290" y="152.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">2.0</text>
+        <text x="290" y="169.04" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">MANAGE ACCOUNTS,</text>
+        <text x="290" y="178.8" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">PROFILES AND</text>
+        <text x="290" y="188.56" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">DIGITAL ID</text>
+        <rect x="4" y="143" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,165 V146 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,165 L100,156" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="157.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">HR ADMINISTRATOR</text>
+        <path d="M100,148 L231,148" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,160 L101,160" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="118.9" y="144.6" width="94.2" height="8.0" fill="#fff"/>
+        <text x="166" y="150.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">ACCOUNTS, COLLEGES</text>
+        <rect x="118.9" y="156.6" width="94.2" height="8.0" fill="#fff"/>
+        <text x="166" y="162.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">EMPLOYEE DIRECTORY</text>
+        <rect x="4" y="173" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,195 V176 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,195 L100,186" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="187.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">EMPLOYEE</text>
+        <path d="M100,178 L231,178" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,190 L101,190" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="126.2" y="174.6" width="79.5" height="8.0" fill="#fff"/>
+        <text x="166" y="180.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">PROFILE UPDATES</text>
+        <rect x="116.5" y="186.6" width="99.1" height="8.0" fill="#fff"/>
+        <text x="166" y="192.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">PROFILE, DIGITAL ID</text>
+        <path d="M616,143 H488 V165 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,143 V165" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M493,143 V165" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="503" y="157" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D1</text>
+        <text x="520" y="157" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">USERS</text>
+        <path d="M348,148 L487,148" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M488,160 L349,160" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="378.2" y="144.6" width="79.5" height="8.0" fill="#fff"/>
+        <text x="418" y="150.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">ACCOUNT DETAILS</text>
+        <rect x="378.2" y="156.6" width="79.5" height="8.0" fill="#fff"/>
+        <text x="418" y="162.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">EMPLOYEE RECORD</text>
+        <path d="M616,173 H488 V195 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,173 V195" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="501" y="187" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D4</text>
+        <text x="520" y="187" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">COLLEGES, DEPARTMENTS</text>
+        <path d="M348,178 L487,178" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M488,190 L349,190" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="368.4" y="174.6" width="99.1" height="8.0" fill="#fff"/>
+        <text x="418" y="180.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">COLLEGE, DEPARTMENT</text>
+        <rect x="388.1" y="186.6" width="59.9" height="8.0" fill="#fff"/>
+        <text x="418" y="192.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">ASSIGNMENTS</text>
+        <rect x="232" y="214" width="116" height="46" rx="8" fill="#fff" stroke="#000" stroke-width="1.4"/>
+        <path d="M232,228 H348" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="290" y="223.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">3.0</text>
+        <text x="290" y="241.92" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">PUBLISH FORM</text>
+        <text x="290" y="251.68" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">TEMPLATES</text>
+        <rect x="4" y="226" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,248 V229 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,248 L100,239" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="240.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">HR ADMINISTRATOR</text>
+        <path d="M100,231 L231,231" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,243 L101,243" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="114.0" y="227.6" width="104.0" height="8.0" fill="#fff"/>
+        <text x="166" y="233.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">BLANK OFFICIAL FORMS</text>
+        <rect x="121.3" y="239.6" width="89.3" height="8.0" fill="#fff"/>
+        <text x="166" y="245.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">VERSIONS, PREVIEW</text>
+        <path d="M616,226 H488 V248 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,226 V248" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="501" y="240" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D5</text>
+        <text x="520" y="240" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">FORM TEMPLATES</text>
+        <path d="M348,231 L487,231" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M488,243 L349,243" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="388.1" y="227.6" width="59.9" height="8.0" fill="#fff"/>
+        <text x="418" y="233.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">NEW VERSION</text>
+        <rect x="378.2" y="239.6" width="79.5" height="8.0" fill="#fff"/>
+        <text x="418" y="245.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">VERSION HISTORY</text>
+        <rect x="232" y="279" width="116" height="52" rx="8" fill="#fff" stroke="#000" stroke-width="1.4"/>
+        <path d="M232,293 H348" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="290" y="288.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">4.0</text>
+        <text x="290" y="309.92" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">PROCESS PERSONAL</text>
+        <text x="290" y="319.68" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">DATA SHEET</text>
+        <rect x="4" y="279" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,301 V282 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,301 L100,292" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="293.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">EMPLOYEE</text>
+        <path d="M100,284 L231,284" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,296 L101,296" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="116.5" y="280.6" width="99.1" height="8.0" fill="#fff"/>
+        <text x="166" y="286.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">FILLED PDS WORKBOOK</text>
+        <rect x="118.9" y="292.6" width="94.2" height="8.0" fill="#fff"/>
+        <text x="166" y="298.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">REVIEW RESULT, PDF</text>
+        <rect x="4" y="309" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,331 V312 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,331 L100,322" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="323.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">HR ADMINISTRATOR</text>
+        <path d="M100,314 L231,314" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,326 L101,326" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="121.3" y="310.6" width="89.3" height="8.0" fill="#fff"/>
+        <text x="166" y="316.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">APPROVE OR RETURN</text>
+        <rect x="133.6" y="322.6" width="64.8" height="8.0" fill="#fff"/>
+        <text x="166" y="328.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">PDS REQUESTS</text>
+        <path d="M616,279 H488 V301 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,279 V301" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M493,279 V301" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="503" y="293" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D5</text>
+        <text x="520" y="293" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">FORM TEMPLATES</text>
+        <path d="M488,290 L349,290" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="368.4" y="286.6" width="99.1" height="8.0" fill="#fff"/>
+        <text x="418" y="292.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">ACTIVE PDS TEMPLATE</text>
+        <path d="M616,309 H488 V331 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,309 V331" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="501" y="323" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D6</text>
+        <text x="520" y="323" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">PDS SUBMISSIONS</text>
+        <path d="M348,314 L487,314" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M488,326 L349,326" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="370.9" y="310.6" width="94.2" height="8.0" fill="#fff"/>
+        <text x="418" y="316.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">WORKBOOK, DECISION</text>
+        <rect x="378.2" y="322.6" width="79.5" height="8.0" fill="#fff"/>
+        <text x="418" y="328.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">SUBMISSION, PDF</text>
+        <rect x="232" y="350" width="116" height="112" rx="8" fill="#fff" stroke="#000" stroke-width="1.4"/>
+        <path d="M232,364 H348" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="290" y="359.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">5.0</text>
+        <text x="290" y="410.92" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">PROCESS LEAVE</text>
+        <text x="290" y="420.68" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">APPLICATION</text>
+        <rect x="4" y="350" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,372 V353 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,372 L100,363" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="364.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">EMPLOYEE</text>
+        <path d="M100,355 L231,355" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,367 L101,367" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="121.3" y="351.6" width="89.3" height="8.0" fill="#fff"/>
+        <text x="166" y="357.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">FILLED LEAVE FORM</text>
+        <rect x="116.5" y="363.6" width="99.1" height="8.0" fill="#fff"/>
+        <text x="166" y="369.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">STATUS, SIGNED FORM</text>
+        <rect x="4" y="380" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,402 V383 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,402 L100,393" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="394.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">DEAN</text>
+        <path d="M100,385 L231,385" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,397 L101,397" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="128.7" y="381.6" width="74.6" height="8.0" fill="#fff"/>
+        <text x="166" y="387.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">FIRST DECISION</text>
+        <rect x="131.2" y="393.6" width="69.7" height="8.0" fill="#fff"/>
+        <text x="166" y="399.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">COLLEGE QUEUE</text>
+        <rect x="4" y="410" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,432 V413 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,432 L100,423" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="424.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">HR ADMINISTRATOR</text>
+        <path d="M100,415 L231,415" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,427 L101,427" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="136.1" y="411.6" width="59.9" height="8.0" fill="#fff"/>
+        <text x="166" y="417.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">HR DECISION</text>
+        <rect x="143.4" y="423.6" width="45.2" height="8.0" fill="#fff"/>
+        <text x="166" y="429.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">HR QUEUE</text>
+        <rect x="4" y="440" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,462 V443 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,462 L100,453" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="454.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">CAMPUS DIRECTOR</text>
+        <path d="M100,445 L231,445" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,457 L101,457" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="128.7" y="441.6" width="74.6" height="8.0" fill="#fff"/>
+        <text x="166" y="447.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">FINAL DECISION</text>
+        <rect x="136.1" y="453.6" width="59.9" height="8.0" fill="#fff"/>
+        <text x="166" y="459.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">FINAL QUEUE</text>
+        <path d="M616,365 H488 V387 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,365 V387" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M493,365 V387" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="503" y="379" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D5</text>
+        <text x="520" y="379" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">FORM TEMPLATES</text>
+        <path d="M488,376 L349,376" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="373.4" y="372.6" width="89.3" height="8.0" fill="#fff"/>
+        <text x="418" y="378.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">ACTIVE LEAVE FORM</text>
+        <path d="M616,395 H488 V417 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,395 V417" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="501" y="409" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D7</text>
+        <text x="520" y="409" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LEAVE APPLICATIONS</text>
+        <path d="M348,400 L487,400" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M488,412 L349,412" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="363.6" y="396.6" width="108.9" height="8.0" fill="#fff"/>
+        <text x="418" y="402.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">APPLICATION, DECISION</text>
+        <rect x="370.9" y="408.6" width="94.2" height="8.0" fill="#fff"/>
+        <text x="418" y="414.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">APPLICATION STATUS</text>
+        <path d="M616,425 H488 V447 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,425 V447" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="501" y="439" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D8</text>
+        <text x="520" y="439" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">NOTIFICATIONS</text>
+        <path d="M348,436 L487,436" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="378.2" y="432.6" width="79.5" height="8.0" fill="#fff"/>
+        <text x="418" y="438.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">REVIEWER NOTICE</text>
+        <rect x="232" y="481" width="116" height="82" rx="8" fill="#fff" stroke="#000" stroke-width="1.4"/>
+        <path d="M232,495 H348" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="290" y="490.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">6.0</text>
+        <text x="290" y="526.92" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">MANAGE LEDGER</text>
+        <text x="290" y="536.68" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">CARDS</text>
+        <rect x="4" y="481" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,503 V484 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,503 L100,494" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="495.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">HR ADMINISTRATOR</text>
+        <path d="M100,486 L231,486" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,498 L101,498" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="116.5" y="482.6" width="99.1" height="8.0" fill="#fff"/>
+        <text x="166" y="488.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">POSTING, CORRECTION</text>
+        <rect x="118.9" y="494.6" width="94.2" height="8.0" fill="#fff"/>
+        <text x="166" y="500.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">CARDS AND BALANCES</text>
+        <rect x="4" y="511" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,533 V514 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,533 L100,524" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="525.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">CAMPUS DIRECTOR</text>
+        <path d="M100,516 L231,516" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,528 L101,528" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="116.5" y="512.6" width="99.1" height="8.0" fill="#fff"/>
+        <text x="166" y="518.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LEDGER CARD REQUEST</text>
+        <rect x="114.0" y="524.6" width="104.0" height="8.0" fill="#fff"/>
+        <text x="166" y="530.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">EMPLOYEE LEDGER CARD</text>
+        <rect x="4" y="541" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,563 V544 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,563 L100,554" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="555.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">EMPLOYEE</text>
+        <path d="M100,546 L231,546" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,558 L101,558" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="116.5" y="542.6" width="99.1" height="8.0" fill="#fff"/>
+        <text x="166" y="548.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LEDGER CARD REQUEST</text>
+        <rect x="128.7" y="554.6" width="74.6" height="8.0" fill="#fff"/>
+        <text x="166" y="560.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">MY LEDGER CARD</text>
+        <path d="M616,481 H488 V503 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,481 V503" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M493,481 V503" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="503" y="495" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D5</text>
+        <text x="520" y="495" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">FORM TEMPLATES</text>
+        <path d="M488,492 L349,492" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="366.0" y="488.6" width="104.0" height="8.0" fill="#fff"/>
+        <text x="418" y="494.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LEDGER CARD TEMPLATE</text>
+        <path d="M616,511 H488 V533 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,511 V533" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M493,511 V533" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="503" y="525" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D7</text>
+        <text x="520" y="525" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LEAVE APPLICATIONS</text>
+        <path d="M488,522 L349,522" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="380.7" y="518.6" width="74.6" height="8.0" fill="#fff"/>
+        <text x="418" y="524.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">APPROVED LEAVE</text>
+        <path d="M616,541 H488 V563 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,541 V563" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="501" y="555" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D9</text>
+        <text x="520" y="555" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LEAVE LEDGER</text>
+        <path d="M348,546 L487,546" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M488,558 L349,558" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="366.0" y="542.6" width="104.0" height="8.0" fill="#fff"/>
+        <text x="418" y="548.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LEDGER LINE, BALANCE</text>
+        <rect x="380.7" y="554.6" width="74.6" height="8.0" fill="#fff"/>
+        <text x="418" y="560.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LEDGER HISTORY</text>
+        <rect x="232" y="582" width="116" height="52" rx="8" fill="#fff" stroke="#000" stroke-width="1.4"/>
+        <path d="M232,596 H348" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="290" y="591.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">7.0</text>
+        <text x="290" y="608.04" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">PUBLISH</text>
+        <text x="290" y="617.8" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">ANNOUNCEMENTS</text>
+        <text x="290" y="627.56" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">AND POLICIES</text>
+        <rect x="4" y="582" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,604 V585 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,604 L100,595" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="596.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">HR ADMINISTRATOR</text>
+        <path d="M100,587 L231,587" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,599 L101,599" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="128.7" y="583.6" width="74.6" height="8.0" fill="#fff"/>
+        <text x="166" y="589.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">NOTICE, POLICY</text>
+        <rect x="118.9" y="595.6" width="94.2" height="8.0" fill="#fff"/>
+        <text x="166" y="601.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">COMPLIANCE TRACKER</text>
+        <rect x="4" y="612" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,634 V615 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,634 L100,625" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="626.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">EMPLOYEE</text>
+        <path d="M100,617 L231,617" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,629 L101,629" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="128.7" y="613.6" width="74.6" height="8.0" fill="#fff"/>
+        <text x="166" y="619.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">ACKNOWLEDGMENT</text>
+        <rect x="121.3" y="625.6" width="89.3" height="8.0" fill="#fff"/>
+        <text x="166" y="631.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">NOTICES, POLICIES</text>
+        <path d="M616,597 H488 V619 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,597 V619" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="501" y="611" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D10</text>
+        <text x="520" y="611" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">NOTICES AND POLICIES</text>
+        <path d="M348,602 L487,602" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M488,614 L349,614" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="366.0" y="598.6" width="104.0" height="8.0" fill="#fff"/>
+        <text x="418" y="604.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">ITEM, ACKNOWLEDGMENT</text>
+        <rect x="378.2" y="610.6" width="79.5" height="8.0" fill="#fff"/>
+        <text x="418" y="616.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">PUBLISHED ITEMS</text>
+        <rect x="232" y="653" width="116" height="112" rx="8" fill="#fff" stroke="#000" stroke-width="1.4"/>
+        <path d="M232,667 H348" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="290" y="662.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">8.0</text>
+        <text x="290" y="709.04" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">GENERATE</text>
+        <text x="290" y="718.8" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">DASHBOARDS AND</text>
+        <text x="290" y="728.56" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">LEAVE CALENDAR</text>
+        <rect x="4" y="653" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,675 V656 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,675 L100,666" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="667.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">HR ADMINISTRATOR</text>
+        <path d="M100,658 L231,658" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,670 L101,670" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="128.7" y="654.6" width="74.6" height="8.0" fill="#fff"/>
+        <text x="166" y="660.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">REPORT FILTERS</text>
+        <rect x="128.7" y="666.6" width="74.6" height="8.0" fill="#fff"/>
+        <text x="166" y="672.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">CAMPUS REPORTS</text>
+        <rect x="4" y="683" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,705 V686 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,705 L100,696" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="697.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">DEAN</text>
+        <path d="M100,688 L231,688" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,700 L101,700" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="128.7" y="684.6" width="74.6" height="8.0" fill="#fff"/>
+        <text x="166" y="690.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">MONTH, COLLEGE</text>
+        <rect x="123.8" y="696.6" width="84.4" height="8.0" fill="#fff"/>
+        <text x="166" y="702.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">COLLEGE CALENDAR</text>
+        <rect x="4" y="713" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,735 V716 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,735 L100,726" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="727.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">CAMPUS DIRECTOR</text>
+        <path d="M100,718 L231,718" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,730 L101,730" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="128.7" y="714.6" width="74.6" height="8.0" fill="#fff"/>
+        <text x="166" y="720.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">MONTH, COLLEGE</text>
+        <rect x="123.8" y="726.6" width="84.4" height="8.0" fill="#fff"/>
+        <text x="166" y="732.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">CAMPUS DASHBOARD</text>
+        <rect x="4" y="743" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,765 V746 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,765 L100,756" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="757.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">EMPLOYEE</text>
+        <path d="M100,748 L231,748" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,760 L101,760" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="121.3" y="744.6" width="89.3" height="8.0" fill="#fff"/>
+        <text x="166" y="750.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">DASHBOARD REQUEST</text>
+        <rect x="138.5" y="756.6" width="55.0" height="8.0" fill="#fff"/>
+        <text x="166" y="762.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">MY SUMMARY</text>
+        <path d="M616,668 H488 V690 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,668 V690" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M493,668 V690" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="503" y="682" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D7</text>
+        <text x="520" y="682" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LEAVE APPLICATIONS</text>
+        <path d="M488,679 L349,679" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="383.1" y="675.6" width="69.7" height="8.0" fill="#fff"/>
+        <text x="418" y="681.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LEAVE RECORDS</text>
+        <path d="M616,698 H488 V720 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,698 V720" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M493,698 V720" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="503" y="712" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D9</text>
+        <text x="520" y="712" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LEAVE LEDGER</text>
+        <path d="M488,709 L349,709" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="380.7" y="705.6" width="74.6" height="8.0" fill="#fff"/>
+        <text x="418" y="711.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LEAVE BALANCES</text>
+        <path d="M616,728 H488 V750 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,728 V750" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M493,728 V750" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="503" y="742" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D8</text>
+        <text x="520" y="742" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">NOTIFICATIONS</text>
+        <path d="M488,739 L349,739" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="383.1" y="735.6" width="69.7" height="8.0" fill="#fff"/>
+        <text x="418" y="741.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">NOTIFICATIONS</text>
+        <rect x="232" y="784" width="116" height="46" rx="8" fill="#fff" stroke="#000" stroke-width="1.4"/>
+        <path d="M232,798 H348" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="290" y="793.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">9.0</text>
+        <text x="290" y="811.92" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">MONITOR</text>
+        <text x="290" y="821.68" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">ACTIVITY LOG</text>
+        <rect x="4" y="796" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M7,818 V799 H100" fill="none" stroke="#000" stroke-width="1.3"/>
+        <path d="M91,818 L100,809" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="53.5" y="810.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">HR ADMINISTRATOR</text>
+        <path d="M100,801 L231,801" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M232,813 L101,813" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="116.5" y="797.6" width="99.1" height="8.0" fill="#fff"/>
+        <text x="166" y="803.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">DATE, ACTION FILTER</text>
+        <rect x="126.2" y="809.6" width="79.5" height="8.0" fill="#fff"/>
+        <text x="166" y="815.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">ACTIVITY REPORT</text>
+        <path d="M616,796 H488 V818 H616" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <path d="M514,796 V818" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M493,796 V818" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="503" y="810" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">D3</text>
+        <text x="520" y="810" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">ACTIVITY LOG</text>
+        <path d="M488,807 L349,807" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
+        <rect x="388.1" y="803.6" width="59.9" height="8.0" fill="#fff"/>
+        <text x="418" y="809.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">LOG ENTRIES</text>
+      
+
+</svg>

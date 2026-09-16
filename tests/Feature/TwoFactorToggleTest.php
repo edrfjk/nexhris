@@ -66,6 +66,7 @@ class TwoFactorToggleTest extends TestCase
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'correct-horse-battery',
+            'terms' => '1',
         ])->assertRedirect($home);
 
         $this->assertAuthenticatedAs($user);
@@ -100,14 +101,14 @@ class TwoFactorToggleTest extends TestCase
 
         // Wrong credentials are still refused.
         $user = $this->user('admin');
-        $this->post('/login', ['email' => $user->email, 'password' => 'wrong'])
+        $this->post('/login', ['email' => $user->email, 'password' => 'wrong', 'terms' => '1'])
             ->assertSessionHasErrors('email');
         $this->assertGuest();
 
         // An inactive account is still refused.
         $inactive = $this->user('admin');
         $inactive->update(['status' => 'inactive']);
-        $this->post('/login', ['email' => $inactive->email, 'password' => 'correct-horse-battery']);
+        $this->post('/login', ['email' => $inactive->email, 'password' => 'correct-horse-battery', 'terms' => '1']);
         $this->assertGuest();
 
         // Role boundaries still hold.
@@ -118,7 +119,7 @@ class TwoFactorToggleTest extends TestCase
         $this->post('/logout');
 
         // And sign-ins are still recorded.
-        $this->post('/login', ['email' => $user->email, 'password' => 'correct-horse-battery']);
+        $this->post('/login', ['email' => $user->email, 'password' => 'correct-horse-battery', 'terms' => '1']);
         $this->assertDatabaseHas('activity_logs', ['action' => 'auth.login', 'user_id' => $user->id]);
     }
 
@@ -133,6 +134,7 @@ class TwoFactorToggleTest extends TestCase
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'correct-horse-battery',
+            'terms' => '1',
         ])->assertRedirect(route('two-factor.challenge'));
 
         Mail::assertSent(TwoFactorCodeMail::class);

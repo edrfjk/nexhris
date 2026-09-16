@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\LeaveFormTemplate;
 use App\Models\LedgerTemplate;
 use App\Services\TemplatePublisher;
+use App\Services\XlsxToPdfService;
+use App\Support\DocumentName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -95,6 +97,38 @@ class LeaveFormTemplateController extends Controller
             . ($inUse > 0
                 ? " {$inUse} existing ledger(s) keep the version they were created from."
                 : ' New employee ledgers will be copied from it.'));
+    }
+
+    /**
+     * The published blank form, rendered so HR can actually read it.
+     *
+     * "View" used to link straight at the stored .xlsx. No browser renders a
+     * workbook, so the new tab opened empty and the button looked broken.
+     * Converting it is the same job the employee's filled form goes through,
+     * so it comes out on A4 looking like the paper form.
+     */
+    public function preview(Request $request, LeaveFormTemplate $template, XlsxToPdfService $converter)
+    {
+        abort_unless($request->user()->isAdmin(), 403);
+        abort_unless($template->exists(), 404, 'The uploaded file for this version is missing.');
+
+        // The original workbook, for HR to edit and re-publish. Served through
+        // here rather than the /storage URL, which is built from APP_URL and
+        // so points at the wrong host whenever that setting is stale.
+        if ($request->query('format') === 'xlsx') {
+            return Storage::disk('public')->download(
+                $template->file_path,
+                DocumentName::template('Leave Form Template', $template->version, 'xlsx'),
+            );
+        }
+
+        return $converter->stream(
+            $template->absolutePath(),
+            DocumentName::template('Leave Form Template', $template->version),
+            // The checksum pins the cache to this exact upload, so a
+            // re-published version never serves the previous one's preview.
+            cacheKey: 'leave-form-template:' . $template->checksum,
+        );
     }
 
     public function activate(Request $request, LeaveFormTemplate $template)

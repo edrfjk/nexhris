@@ -106,6 +106,13 @@
                 <x-heroicon-o-arrow-up-tray class="w-4 h-4" />
                 Download leave form
             </a>
+
+            {{-- The leave form's type-of-leave boxes are form controls, which the
+                 same editors drop as on the Personal Data Sheet. --}}
+            <p class="mt-3 text-[12px] leading-relaxed text-sand-500">
+                Fill it in with Microsoft Excel on a computer or LibreOffice Calc.
+                Google Sheets, Excel in a browser, WPS and phone apps remove the tick boxes.
+            </p>
         </x-card>
 
         {{-- Step 2: submit --}}
@@ -275,12 +282,12 @@
                                     {{-- The same converted copy the Dean, HR and
                                          the Campus Director read, so you can see
                                          exactly what they are signing. --}}
-                                    <a href="{{ route('leave.form.pdf', $application) }}" target="_blank"
+                                    <a href="{{ route('leave.form.pdf', [$application, $application->formPdfName()]) }}" target="_blank"
                                        class="btn btn-sm btn-primary">
                                         <x-heroicon-o-document-text class="w-3.5 h-3.5" />
                                         View as PDF
                                     </a>
-                                    <a href="{{ $application->employeeFormUrl() }}" target="_blank"
+                                    <a href="{{ route('leave.form.download', $application) }}" target="_blank"
                                        class="btn btn-sm btn-secondary">
                                         My upload
                                     </a>

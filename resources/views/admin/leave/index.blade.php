@@ -17,11 +17,14 @@
             Calendar
         </a>
 
-        <a href="{{ route('admin.leave.export.pdf') }}" target="_blank"
-           class="btn btn-md btn-secondary">PDF</a>
+        {{-- Named for what they contain: the per-row PDF button further down
+             prints one ledger card, and two bare "PDF" buttons on one screen
+             is how you end up opening the wrong document. --}}
+        <a href="{{ route('admin.leave.export.pdf', ['filename' => \App\Support\DocumentName::leaveBalances()]) }}" target="_blank"
+           class="btn btn-md btn-secondary">Balances (PDF)</a>
 
         <a href="{{ route('admin.leave.export.excel') }}"
-           class="btn btn-md btn-secondary">Excel</a>
+           class="btn btn-md btn-secondary">Balances (Excel)</a>
 
         <a href="{{ route('admin.leave.review.index') }}"
            class="btn btn-md btn-primary relative">
@@ -71,7 +74,7 @@
             </p>
             @if ($activeTemplate)
                 <p class="text-sm font-semibold text-sand-800 mt-1.5">{{ $activeTemplate->label }}</p>
-                <p class="text-xs text-sand-400 mt-0.5">
+                <p class="text-xs text-sand-400 mt-0.5 break-all">
                     {{ $activeTemplate->original_filename }} ·
                     uploaded {{ $activeTemplate->created_at->format('M j, Y') }}
                 </p>
@@ -244,7 +247,7 @@
                                    class="btn btn-sm btn-secondary">
                                     Open
                                 </a>
-                                <a href="{{ route('admin.leave.ledger.pdf', $employee) }}" target="_blank"
+                                <a href="{{ route('admin.leave.ledger.pdf', [$employee, \App\Support\DocumentName::ledgerCard($employee)]) }}" target="_blank"
                                    class="btn btn-sm btn-primary ml-1">
                                     PDF
                                 </a>

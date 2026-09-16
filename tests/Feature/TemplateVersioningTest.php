@@ -59,6 +59,7 @@ class TemplateVersioningTest extends TestCase
     public function test_publishing_creates_a_new_version_and_retires_the_old_one(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
 
         $this->actingAs($hr)->post(route('admin.leave.templates.store'), [
@@ -86,6 +87,7 @@ class TemplateVersioningTest extends TestCase
     public function test_an_identical_reupload_does_not_create_a_duplicate_version(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
 
         // Same bytes twice.
@@ -109,6 +111,7 @@ class TemplateVersioningTest extends TestCase
     public function test_a_submission_records_the_template_version_it_was_filled_on(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $employee = $this->user('employee');
 
@@ -142,6 +145,7 @@ class TemplateVersioningTest extends TestCase
     public function test_a_version_with_submissions_is_retired_not_deleted(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $employee = $this->user('employee');
 
@@ -170,6 +174,7 @@ class TemplateVersioningTest extends TestCase
     public function test_hr_can_roll_back_to_an_earlier_version(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
 
         foreach ([['v1', 'A'], ['v2', 'B']] as [$label, $marker]) {
@@ -189,6 +194,7 @@ class TemplateVersioningTest extends TestCase
     public function test_pds_templates_version_the_same_way(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
 
         foreach ([['CS Form 212 (2017)', 'A'], ['CS Form 212 (2025)', 'B']] as [$label, $marker]) {
@@ -206,6 +212,7 @@ class TemplateVersioningTest extends TestCase
     public function test_only_hr_publishes_templates(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
 
         foreach (['dean', 'campus_director', 'employee'] as $role) {
             $this->actingAs($this->user($role))
@@ -343,13 +350,16 @@ class TemplateVersioningTest extends TestCase
     // Conversion
     // ------------------------------------------------------------------
 
+    /**
+     * Against the pure-PHP renderer, because that is the one the server runs.
+     * These used to skip unless LibreOffice was installed, so the path that
+     * actually ships was the only one never exercised.
+     */
     public function test_the_converter_renders_a_real_workbook_as_a4_pdf(): void
     {
-        $converter = app(XlsxToPdfService::class);
+        config(['pdf.renderer' => 'php']);
 
-        if (! $converter->isAvailable()) {
-            $this->markTestSkipped('LibreOffice is not installed on this machine.');
-        }
+        $converter = app(XlsxToPdfService::class);
 
         $pdf = $converter->convert(resource_path('templates/leave-ledger-template.xlsx'));
 
@@ -368,11 +378,9 @@ class TemplateVersioningTest extends TestCase
 
     public function test_conversion_results_are_cached(): void
     {
-        $converter = app(XlsxToPdfService::class);
+        config(['pdf.renderer' => 'php']);
 
-        if (! $converter->isAvailable()) {
-            $this->markTestSkipped('LibreOffice is not installed on this machine.');
-        }
+        $converter = app(XlsxToPdfService::class);
 
         $source = resource_path('templates/leave-form-template.xlsx');
 

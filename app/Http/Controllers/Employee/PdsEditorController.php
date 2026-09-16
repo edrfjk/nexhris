@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PdsTemplate;
 use App\Services\PdsSubmissionService;
 use App\Services\XlsxToPdfService;
+use App\Support\DocumentName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -41,7 +42,28 @@ class PdsEditorController extends Controller
         abort_unless($template && $template->exists(), 404,
             'No PDS template has been published yet. Please contact the HR Office.');
 
-        return Storage::disk('public')->download($template->file_path, $template->original_filename);
+        return Storage::disk('public')->download(
+            $template->file_path,
+            DocumentName::template('Personal Data Sheet Template', $template->version, 'xlsx'),
+        );
+    }
+
+    /**
+     * The employee's own PDS workbook, for editing offline.
+     *
+     * A filled PDS holds a birth date, a home address and four government ID
+     * numbers, so it sits on the private disk and is reached only through here.
+     */
+    public function downloadWorkbook()
+    {
+        $submission = $this->pds->forYear(Auth::user());
+
+        abort_unless($submission->workbookExists(), 404, 'You have not uploaded a PDS yet.');
+
+        return Storage::disk('local')->download(
+            $submission->file_path,
+            DocumentName::personalDataSheet(Auth::user(), $submission->applicable_year, 'xlsx'),
+        );
     }
 
     public function upload(Request $request)
@@ -101,23 +123,27 @@ class PdsEditorController extends Controller
     {
         $submission = $this->pds->forYear(Auth::user());
 
-        abort_unless($submission->workbookExists(), 422,
-            'Upload your completed PDS before exporting it.');
+        if (! $submission->workbookExists()) {
+            // Reached by typing the URL: the button only appears once there
+            // is something to export. A sentence beats an error page.
+            return back()->with('error', 'Upload your completed PDS before exporting it.');
+        }
 
         // Serve the stored conversion when it exists; convert on demand if the
         // upload-time conversion had failed.
+        // Named after the owner rather than "My PDS": once saved, the file
+        // sits in a folder alongside everyone else's.
+        $filename = DocumentName::personalDataSheet(Auth::user(), $submission->applicable_year);
+
         if ($submission->pdfExists()) {
             return response()->file($submission->pdfPath(), [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="My_PDS_' . $submission->applicable_year . '.pdf"',
+                'Content-Disposition' => DocumentName::disposition($filename),
             ]);
         }
 
         try {
-            return $converter->stream(
-                $submission->workbookPath(),
-                'My_PDS_' . $submission->applicable_year . '.pdf'
-            );
+            return $converter->stream($submission->workbookPath(), $filename);
         } catch (\Throwable $e) {
             return back()->with('error', $e->getMessage());
         }

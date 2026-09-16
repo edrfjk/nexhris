@@ -65,6 +65,16 @@ Route::get('/verify/{token}', [PublicVerificationController::class, 'show'])
 
 
 // ============================================================
+// TERMS AND CONDITIONS
+// ============================================================
+// Public by necessity: a user has to be able to read what they are agreeing
+// to before they sign in, and at that point they have no session. The
+// sign-in screen opens the same wording in a dialog.
+
+Route::view('/terms', 'legal.terms')->name('terms');
+
+
+// ============================================================
 // GUEST / AUTHENTICATION ROUTES
 // ============================================================
 
@@ -220,24 +230,46 @@ Route::middleware('auth')->group(function () {
         // EMPLOYEE MANAGEMENT
         // ----------------------------------------------------
 
+        // Browsing staff is part of a reviewer's job — a Dean needs to see who
+        // is in their college. Changing staff is not: the role field decides
+        // who signs whose leave, so writing it is granting authority.
+        //
+        // The middleware on this whole group is named "admin" but admits
+        // admin, dean and campus_director alike, which is why these have to
+        // say so themselves. Without it a Dean could reach the create screen
+        // by typing its address and register a Campus Director.
+        // The HR-only routes are declared first because /employees/create must
+        // be matched before /employees/{employee}, which would otherwise
+        // swallow it and treat "create" as an employee id.
+        Route::middleware('role:admin')->group(function () {
+            Route::resource('employees', EmployeeController::class)
+                ->only(['create', 'store', 'edit', 'update'])
+                ->parameters([
+                    'employees' => 'employee',
+                ]);
+
+            Route::patch(
+                '/employees/{employee}/status',
+                [EmployeeController::class, 'updateStatus']
+            )->name('employees.status.update');
+
+            Route::post(
+                '/employees/{employee}/photo',
+                [EmployeeController::class, 'updatePhoto']
+            )->name('employees.photo.update');
+        });
+
         Route::resource('employees', EmployeeController::class)
-            ->except(['destroy'])
+            ->only(['index', 'show'])
             ->parameters([
                 'employees' => 'employee',
             ]);
 
-        Route::patch(
-            '/employees/{employee}/status',
-            [EmployeeController::class, 'updateStatus']
-        )->name('employees.status.update');
-
-        Route::post(
-            '/employees/{employee}/photo',
-            [EmployeeController::class, 'updatePhoto']
-        )->name('employees.photo.update');
-
+        // The trailing {filename?} is what the browser saves the PDF as:
+        // Chrome names an inline document after the last path segment, so
+        // without it these land on disk as a file called "pdf".
         Route::get(
-            '/employees/export/pdf',
+            '/employees/export/pdf/{filename?}',
             [EmployeeController::class, 'exportPdf']
         )->name('employees.export.pdf');
 
@@ -260,12 +292,12 @@ Route::middleware('auth')->group(function () {
         )->name('leave.calendar');
 
         Route::get(
-            '/leave/calendar/export',
+            '/leave/calendar/export/{filename?}',
             [LeaveLedgerController::class, 'exportMonthPdf']
         )->name('leave.calendar.export');
 
         Route::get(
-            '/leave/export/pdf',
+            '/leave/export/pdf/{filename?}',
             [LeaveLedgerController::class, 'exportAllPdf']
         )->name('leave.export.pdf');
 
@@ -301,7 +333,7 @@ Route::middleware('auth')->group(function () {
 
             // The same form converted, so a reviewer can read it in the
             // browser instead of downloading a workbook to sign it.
-            Route::get('/{application}/form.pdf', [LeaveReviewController::class, 'viewFormAsPdf'])
+            Route::get('/{application}/form.pdf/{filename?}', [LeaveReviewController::class, 'viewFormAsPdf'])
                 ->name('form.pdf');
 
             Route::get('/{application}/print', [LeaveReviewController::class, 'printApproved'])
@@ -328,6 +360,10 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/leave-form-templates', [LeaveFormTemplateController::class, 'store'])
             ->name('leave.templates.store');
+
+        // Rendered to PDF, because "View" on a stored .xlsx opens an empty tab.
+        Route::get('/leave-form-templates/{template}/preview/{filename?}', [LeaveFormTemplateController::class, 'preview'])
+            ->name('leave.templates.preview');
 
         Route::post('/leave-form-templates/{template}/activate', [LeaveFormTemplateController::class, 'activate'])
             ->name('leave.templates.activate');
@@ -368,7 +404,7 @@ Route::middleware('auth')->group(function () {
         )->name('leave.ledger');
 
         Route::get(
-            '/leave/{employee}/ledger/pdf',
+            '/leave/{employee}/ledger/pdf/{filename?}',
             [LeaveLedgerController::class, 'exportLedgerPdf']
         )->name('leave.ledger.pdf');
 
@@ -425,7 +461,7 @@ Route::middleware('auth')->group(function () {
         )->name('pds.return');
 
         Route::get(
-            '/pds/{employee}/download',
+            '/pds/{employee}/download/{filename?}',
             [PdsReviewController::class, 'download']
         )->name('pds.download');
 
@@ -448,6 +484,11 @@ Route::middleware('auth')->group(function () {
             [PdsTemplateController::class, 'store']
         )->name('pds.templates.store');
 
+        Route::get(
+            '/pds-templates/{template}/preview/{filename?}',
+            [PdsTemplateController::class, 'preview']
+        )->name('pds.templates.preview');
+
         Route::post(
             '/pds-templates/{template}/activate',
             [PdsTemplateController::class, 'activate']
@@ -463,23 +504,28 @@ Route::middleware('auth')->group(function () {
         // HR POLICIES / ADMIN
         // ----------------------------------------------------
 
-        Route::resource('policies', HrPolicyController::class)
-            ->except(['show']);
+        // Publishing a policy the whole campus must acknowledge is HR's, not
+        // a reviewer's. Deans and the Campus Director read policies through
+        // /policies like everybody else.
+        Route::middleware('role:admin')->group(function () {
+            Route::resource('policies', HrPolicyController::class)
+                ->except(['show']);
 
-        Route::post(
-            '/policies/{policy}/toggle-publish',
-            [HrPolicyController::class, 'togglePublish']
-        )->name('policies.toggle-publish');
+            Route::post(
+                '/policies/{policy}/toggle-publish',
+                [HrPolicyController::class, 'togglePublish']
+            )->name('policies.toggle-publish');
 
-        Route::post(
-            '/policies/{policy}/toggle-pin',
-            [HrPolicyController::class, 'togglePin']
-        )->name('policies.toggle-pin');
+            Route::post(
+                '/policies/{policy}/toggle-pin',
+                [HrPolicyController::class, 'togglePin']
+            )->name('policies.toggle-pin');
 
-        Route::get(
-            '/policies/{policy}/compliance',
-            [HrPolicyController::class, 'compliance']
-        )->name('policies.compliance');
+            Route::get(
+                '/policies/{policy}/compliance',
+                [HrPolicyController::class, 'compliance']
+            )->name('policies.compliance');
+        });
 
     });
 
@@ -534,14 +580,21 @@ Route::middleware('auth')->group(function () {
             [LeaveApplicationController::class, 'printApproved']
         )->name('print');
 
+        // The workbook itself. Filed leave forms carry medical grounds, so they
+        // sit on the private disk and are reached only through the controller.
+        Route::get(
+            '/{application}/form',
+            [LeaveApplicationController::class, 'downloadForm']
+        )->name('form.download');
+
         // The employee's own uploaded form, as the reviewers will read it.
         Route::get(
-            '/{application}/form.pdf',
+            '/{application}/form.pdf/{filename?}',
             [LeaveApplicationController::class, 'exportFormPdf']
         )->name('form.pdf');
 
         Route::get(
-            '/ledger/pdf',
+            '/ledger/pdf/{filename?}',
             [LeaveApplicationController::class, 'exportLedgerPdf']
         )->name('ledger.pdf');
 
@@ -606,6 +659,13 @@ Route::middleware('auth')->group(function () {
             [PolicyController::class, 'show']
         )->name('show');
 
+        // Attachments live on the private disk; HrPolicyController::attachment
+        // lets any signed-in reader open a published one.
+        Route::get(
+            '/{policy}/attachment',
+            [\App\Http\Controllers\Admin\HrPolicyController::class, 'attachment']
+        )->name('attachment');
+
         Route::post(
             '/{policy}/acknowledge',
             [PolicyController::class, 'acknowledge']
@@ -629,6 +689,11 @@ Route::middleware('auth')->group(function () {
         // already link to it.
         Route::get('/edit', [PdsEditorController::class, 'show'])->name('edit');
 
+        // The filled workbook, for editing offline. Private disk, so it comes
+        // through the controller rather than a /storage link.
+        Route::get('/workbook', [PdsEditorController::class, 'downloadWorkbook'])
+            ->name('workbook');
+
         Route::get('/template/download', [PdsEditorController::class, 'downloadTemplate'])
             ->name('template.download');
 
@@ -637,8 +702,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/submit', [PdsEditorController::class, 'submit'])->name('submit');
 
         // Two names for one action, both already in use across the views.
-        Route::get('/export', [PdsEditorController::class, 'exportPdf'])->name('export');
-        Route::get('/download', [PdsEditorController::class, 'exportPdf'])->name('download');
+        Route::get('/export/{filename?}', [PdsEditorController::class, 'exportPdf'])->name('export');
+        Route::get('/download/{filename?}', [PdsEditorController::class, 'exportPdf'])->name('download');
 
     });
 

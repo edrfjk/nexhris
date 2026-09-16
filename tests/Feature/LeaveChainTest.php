@@ -93,6 +93,7 @@ class LeaveChainTest extends TestCase
     private function fileLeave(User $applicant): LeaveApplication
     {
         Storage::fake('public');
+        Storage::fake('local');
 
         LeaveBalance::firstOrCreate(['user_id' => $applicant->id], [
             'vl_balance' => 20, 'sl_balance' => 20, 'service_balance' => 0,
@@ -247,6 +248,7 @@ class LeaveChainTest extends TestCase
     public function test_submitting_more_days_than_available_warns_the_employee(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $employee = $this->user('employee');
 
         LeaveBalance::create([
@@ -267,6 +269,7 @@ class LeaveChainTest extends TestCase
     public function test_a_sufficient_balance_produces_no_warning(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $employee = $this->user('employee');
 
         LeaveBalance::create([

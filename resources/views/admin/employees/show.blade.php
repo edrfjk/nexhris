@@ -2,7 +2,8 @@
 @section('title', $employee->name)
 
 @section('content')
-<x-page-header title="Employee Details">
+<x-page-header title="Employee Details"
+    :subtitle="$employee->name . ' · ' . $employee->orgLine()">
     <x-slot:actions>
         <a href="{{ route('admin.employees.index') }}"
            class="btn btn-md btn-secondary">
@@ -16,7 +17,7 @@
 
     <!-- Profile header banner -->
     <div class="card overflow-hidden mb-6">
-        <div class="h-24 bg-maroon-800"></div>
+        <div class="h-24 bg-maroon-800 border-b-[3px] border-gold-400"></div>
         <div class="px-6 pb-6">
             <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12">
                 <div class="flex items-end gap-4">
@@ -52,6 +53,56 @@
                     </form>
                 </div>
             </div>
+
+            {{-- What this person has left to spend and whether their sheet
+                 is in order — the two things looked up most often. --}}
+            <div class="mt-6 grid grid-cols-2 gap-3 border-t border-sand-100 pt-5 lg:grid-cols-4">
+                @foreach ([
+                    ['Vacation leave', $balance->vl_balance ?? 0, 'sun'],
+                    ['Sick leave', $balance->sl_balance ?? 0, 'heart'],
+                    ['Service credits', $balance->service_balance ?? 0, 'clock'],
+                ] as [$label, $value, $icon])
+                    @php $value = (float) $value; @endphp
+                    <div class="rounded-lg border border-sand-200 bg-sand-50 px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <x-dynamic-component :component="'heroicon-o-' . $icon"
+                                class="h-4 w-4 {{ $value < 5 ? 'text-red-600' : 'text-forest-700' }}" />
+                            <p class="section-label">{{ $label }}</p>
+                        </div>
+                        <p class="mt-1 text-xl font-semibold tabular text-sand-900">
+                            {{ number_format($value, 2) }}
+                        </p>
+                    </div>
+                @endforeach
+
+                <div class="rounded-lg border border-sand-200 bg-sand-50 px-4 py-3">
+                    <div class="flex items-center gap-2">
+                        <x-heroicon-o-document-text class="h-4 w-4 text-sand-500" />
+                        <p class="section-label">PDS {{ $pdsYear }}</p>
+                    </div>
+                    <div class="mt-1.5">
+                        <x-badge :color="match ($pds->status ?? 'not_started') {
+                            'approved' => 'green', 'submitted' => 'amber',
+                            'returned' => 'red', 'draft' => 'blue', default => 'gray',
+                        }">
+                            {{ ucfirst(str_replace('_', ' ', $pds->status ?? 'not started')) }}
+                        </x-badge>
+                    </div>
+                </div>
+            </div>
+
+            @if ($leaveInFlight > 0)
+                <div class="mt-3 flex items-center gap-2 rounded-lg border border-gold-200 bg-gold-50 px-4 py-2.5 text-[13px] text-gold-900">
+                    <x-heroicon-o-clock class="h-4 w-4 shrink-0" />
+                    <span>
+                        {{ $leaveInFlight }} leave
+                        {{ \Illuminate\Support\Str::plural('form', $leaveInFlight) }}
+                        still moving through the approval chain.
+                    </span>
+                    <a href="{{ route('admin.leave.review.index') }}"
+                       class="ml-auto shrink-0 font-semibold underline underline-offset-2">Review</a>
+                </div>
+            @endif
 
             <!-- Quick stats row -->
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mt-6 pt-5 border-t border-sand-100 text-sm">

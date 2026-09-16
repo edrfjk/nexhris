@@ -66,63 +66,79 @@
                                    icon="document-arrow-up" />
                 @else
                     <div class="table-wrap">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Version</th>
-                                    <th>Label</th>
-                                    <th class="hidden md:table-cell">Published</th>
-                                    <th class="num hidden lg:table-cell">Filed on it</th>
-                                    <th class="text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($pdsTemplates as $template)
+                        {{-- A data table is wider than a phone. Without this the whole page scrolls sideways instead of the table. --}}
+                        <div class="overflow-x-auto">
+                            <table class="table">
+                                <thead>
                                     <tr>
-                                        <td>
-                                            <span class="badge {{ $template->is_active ? 'badge-green' : 'badge-slate' }}">
-                                                v{{ $template->version }}{{ $template->is_active ? ' · active' : '' }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="block font-medium text-sand-900">{{ $template->label }}</span>
-                                            <span class="block text-xs text-sand-500 truncate max-w-xs">
-                                                {{ $template->original_filename }} · {{ $template->sizeLabel() }}
-                                            </span>
-                                            @if ($template->notes)
-                                                <span class="block text-xs text-sand-400 italic">{{ $template->notes }}</span>
-                                            @endif
-                                        </td>
-                                        <td class="hidden md:table-cell text-xs text-sand-500">
-                                            {{ $template->created_at->format('M j, Y') }}<br>
-                                            {{ $template->uploader->name ?? 'HR' }}
-                                        </td>
-                                        <td class="num hidden lg:table-cell">{{ $template->submissions_count }}</td>
-                                        <td class="text-right whitespace-nowrap">
-                                            @if ($template->url())
-                                                <a href="{{ $template->url() }}" target="_blank" class="btn btn-xs btn-secondary">View</a>
-                                            @endif
-
-                                            @unless ($template->is_active)
-                                                <form method="POST" action="{{ route('admin.pds.templates.activate', $template) }}" class="inline">
-                                                    @csrf
-                                                    <button class="btn btn-xs btn-primary">Use this</button>
-                                                </form>
-                                            @endunless
-
-                                            <form method="POST" action="{{ route('admin.pds.templates.destroy', $template) }}"
-                                                  class="inline"
-                                                  onsubmit="return confirm({{ $template->is_active
-                                                        ? Js::from('This is the ACTIVE template. Deleting it stops employees from downloading a blank PDS until another is activated. Delete anyway?')
-                                                        : Js::from('Delete this version?') }})">
-                                                @csrf @method('DELETE')
-                                                <button class="btn btn-xs btn-danger-soft">Delete</button>
-                                            </form>
-                                        </td>
+                                        <th>Version</th>
+                                        <th>Label</th>
+                                        <th class="hidden md:table-cell">Published</th>
+                                        <th class="num hidden lg:table-cell">Filed on it</th>
+                                        <th class="text-right">Actions</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach ($pdsTemplates as $template)
+                                        <tr>
+                                            <td>
+                                                <span class="badge {{ $template->is_active ? 'badge-green' : 'badge-slate' }}">
+                                                    v{{ $template->version }}{{ $template->is_active ? ' · active' : '' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="block font-medium text-sand-900">{{ $template->label }}</span>
+                                                <span class="block text-xs text-sand-500 truncate max-w-xs">
+                                                    {{ $template->original_filename }} · {{ $template->sizeLabel() }}
+                                                </span>
+                                                @if ($template->notes)
+                                                    <span class="block text-xs text-sand-400 italic">{{ $template->notes }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="hidden md:table-cell text-xs text-sand-500">
+                                                {{ $template->created_at->format('M j, Y') }}<br>
+                                                {{ $template->uploader->name ?? 'HR' }}
+                                            </td>
+                                            <td class="num hidden lg:table-cell">{{ $template->submissions_count }}</td>
+                                            <td class="text-right whitespace-nowrap">
+                                                @if ($template->exists())
+                                                    {{-- Rendered to PDF: a browser cannot display a workbook,
+                                                         so linking at the .xlsx just opened a blank tab. --}}
+                                                    <a href="{{ route('admin.pds.templates.preview', [
+                                                            $template,
+                                                            \App\Support\DocumentName::template('Personal Data Sheet Template', $template->version),
+                                                       ]) }}"
+                                                       target="_blank" class="btn btn-xs btn-secondary">View</a>
+
+                                                    <a href="{{ route('admin.pds.templates.preview', [
+                                                            $template,
+                                                            \App\Support\DocumentName::template('Personal Data Sheet Template', $template->version, 'xlsx'),
+                                                            'format' => 'xlsx',
+                                                       ]) }}"
+                                                       class="btn btn-xs btn-ghost">Excel</a>
+                                                @endif
+
+                                                @unless ($template->is_active)
+                                                    <form method="POST" action="{{ route('admin.pds.templates.activate', $template) }}" class="inline">
+                                                        @csrf
+                                                        <button class="btn btn-xs btn-primary">Use this</button>
+                                                    </form>
+                                                @endunless
+
+                                                <form method="POST" action="{{ route('admin.pds.templates.destroy', $template) }}"
+                                                      class="inline"
+                                                      onsubmit="return confirm({{ $template->is_active
+                                                            ? Js::from('This is the ACTIVE template. Deleting it stops employees from downloading a blank PDS until another is activated. Delete anyway?')
+                                                            : Js::from('Delete this version?') }})">
+                                                    @csrf @method('DELETE')
+                                                    <button class="btn btn-xs btn-danger-soft">Delete</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 @endif
             </x-card>
@@ -178,59 +194,73 @@
                                    icon="document-arrow-up" />
                 @else
                     <div class="table-wrap">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Version</th>
-                                    <th>Label</th>
-                                    <th class="hidden md:table-cell">Published</th>
-                                    <th class="num hidden lg:table-cell">Forms filed</th>
-                                    <th class="text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($templates as $template)
+                        {{-- A data table is wider than a phone. Without this the whole page scrolls sideways instead of the table. --}}
+                        <div class="overflow-x-auto">
+                            <table class="table">
+                                <thead>
                                     <tr>
-                                        <td>
-                                            <span class="badge {{ $template->is_active ? 'badge-green' : 'badge-slate' }}">
-                                                v{{ $template->version }}{{ $template->is_active ? ' · active' : '' }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="block font-medium text-sand-900">{{ $template->label }}</span>
-                                            <span class="block text-xs text-sand-500 truncate max-w-xs">
-                                                {{ $template->original_filename }} · {{ $template->sizeLabel() }}
-                                            </span>
-                                            @if ($template->notes)
-                                                <span class="block text-xs text-sand-400 italic">{{ $template->notes }}</span>
-                                            @endif
-                                        </td>
-                                        <td class="hidden md:table-cell text-xs text-sand-500">
-                                            {{ $template->created_at->format('M j, Y') }}<br>
-                                            {{ $template->uploader->name ?? 'HR' }}
-                                        </td>
-                                        <td class="num hidden lg:table-cell">{{ $template->applications_count }}</td>
-                                        <td class="text-right whitespace-nowrap">
-                                            @if ($template->url())
-                                                <a href="{{ $template->url() }}" target="_blank" class="btn btn-xs btn-secondary">View</a>
-                                            @endif
-
-                                            @unless ($template->is_active)
-                                                <form method="POST" action="{{ route('admin.leave.templates.activate', $template) }}" class="inline">
-                                                    @csrf
-                                                    <button class="btn btn-xs btn-primary">Use this</button>
-                                                </form>
-                                                <form method="POST" action="{{ route('admin.leave.templates.destroy', $template) }}"
-                                                      class="inline" onsubmit="return confirm('Delete this version?')">
-                                                    @csrf @method('DELETE')
-                                                    <button class="btn btn-xs btn-danger-soft">Delete</button>
-                                                </form>
-                                            @endunless
-                                        </td>
+                                        <th>Version</th>
+                                        <th>Label</th>
+                                        <th class="hidden md:table-cell">Published</th>
+                                        <th class="num hidden lg:table-cell">Forms filed</th>
+                                        <th class="text-right">Actions</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach ($templates as $template)
+                                        <tr>
+                                            <td>
+                                                <span class="badge {{ $template->is_active ? 'badge-green' : 'badge-slate' }}">
+                                                    v{{ $template->version }}{{ $template->is_active ? ' · active' : '' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="block font-medium text-sand-900">{{ $template->label }}</span>
+                                                <span class="block text-xs text-sand-500 truncate max-w-xs">
+                                                    {{ $template->original_filename }} · {{ $template->sizeLabel() }}
+                                                </span>
+                                                @if ($template->notes)
+                                                    <span class="block text-xs text-sand-400 italic">{{ $template->notes }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="hidden md:table-cell text-xs text-sand-500">
+                                                {{ $template->created_at->format('M j, Y') }}<br>
+                                                {{ $template->uploader->name ?? 'HR' }}
+                                            </td>
+                                            <td class="num hidden lg:table-cell">{{ $template->applications_count }}</td>
+                                            <td class="text-right whitespace-nowrap">
+                                                @if ($template->exists())
+                                                    <a href="{{ route('admin.leave.templates.preview', [
+                                                            $template,
+                                                            \App\Support\DocumentName::template('Leave Form Template', $template->version),
+                                                       ]) }}"
+                                                       target="_blank" class="btn btn-xs btn-secondary">View</a>
+
+                                                    <a href="{{ route('admin.leave.templates.preview', [
+                                                            $template,
+                                                            \App\Support\DocumentName::template('Leave Form Template', $template->version, 'xlsx'),
+                                                            'format' => 'xlsx',
+                                                       ]) }}"
+                                                       class="btn btn-xs btn-ghost">Excel</a>
+                                                @endif
+
+                                                @unless ($template->is_active)
+                                                    <form method="POST" action="{{ route('admin.leave.templates.activate', $template) }}" class="inline">
+                                                        @csrf
+                                                        <button class="btn btn-xs btn-primary">Use this</button>
+                                                    </form>
+                                                    <form method="POST" action="{{ route('admin.leave.templates.destroy', $template) }}"
+                                                          class="inline" onsubmit="return confirm('Delete this version?')">
+                                                        @csrf @method('DELETE')
+                                                        <button class="btn btn-xs btn-danger-soft">Delete</button>
+                                                    </form>
+                                                @endunless
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 @endif
             </x-card>

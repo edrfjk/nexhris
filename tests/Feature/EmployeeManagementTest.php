@@ -42,6 +42,9 @@ class EmployeeManagementTest extends TestCase
 
         $this->actingAs($admin)->post(route('admin.employees.store'), [
             'employee_number' => 'EMP-1001',
+            // The ledger card prints a first day of government service, so a
+            // new account cannot be created without one.
+            'first_day_of_service' => '2020-06-01',
             'name' => 'Test Employee',
             'email' => 'employee@example.test',
             'position' => 'Instructor',
@@ -75,6 +78,9 @@ class EmployeeManagementTest extends TestCase
 
         $this->actingAs($admin)->post(route('admin.employees.store'), [
             'employee_number' => 'EMP-1002',
+            // The ledger card prints a first day of government service, so a
+            // new account cannot be created without one.
+            'first_day_of_service' => '2020-06-01',
             'name' => 'Test Employee',
             'email' => 'mover@example.test',
             'college_id' => $cas->id,
@@ -88,6 +94,9 @@ class EmployeeManagementTest extends TestCase
 
         $this->actingAs($admin)->put(route('admin.employees.update', $employee), [
             'employee_number' => 'EMP-1002',
+            // The ledger card prints a first day of government service, so a
+            // new account cannot be created without one.
+            'first_day_of_service' => '2020-06-01',
             'name' => 'Test Employee',
             'email' => 'mover@example.test',
             'college_id' => $cte->id,
@@ -114,6 +123,9 @@ class EmployeeManagementTest extends TestCase
         // the wrong Dean's reporting line, so it must not be accepted.
         $this->actingAs($admin)->post(route('admin.employees.store'), [
             'employee_number' => 'EMP-1003',
+            // The ledger card prints a first day of government service, so a
+            // new account cannot be created without one.
+            'first_day_of_service' => '2020-06-01',
             'name' => 'Mismatch',
             'email' => 'mismatch@example.test',
             'college_id' => $cas->id,
@@ -133,6 +145,9 @@ class EmployeeManagementTest extends TestCase
 
         $this->actingAs($admin)->post(route('admin.employees.store'), [
             'employee_number' => 'EMP-1004',
+            // The ledger card prints a first day of government service, so a
+            // new account cannot be created without one.
+            'first_day_of_service' => '2020-06-01',
             'name' => 'No Department',
             'email' => 'nodept@example.test',
             'college_id' => $cas->id,

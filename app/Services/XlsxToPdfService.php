@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Services\Xlsx\SheetPainter;
+use App\Support\DocumentName;
 use Dompdf\Dompdf;
 use Dompdf\Options as DompdfOptions;
 use Illuminate\Support\Facades\Log;
@@ -47,6 +49,34 @@ class XlsxToPdfService
 
     /** Below this the form stops being readable, so it is never shrunk past it. */
     private const MIN_SCALE = 35;
+
+    /**
+     * The narrowest margin any page is given, whatever the workbook declares.
+     *
+     * Office printers cannot image the outer few millimetres of a sheet, and
+     * these templates were laid out on screen where that does not show.
+     */
+    private const MARGIN_FLOOR_MM = 5.0;
+
+    /** Bump whenever the painted output changes; it invalidates the cache. */
+    public const RENDERER_VERSION = '2026-09-11-painter';
+
+    /**
+     * A token safe to put in a filename, so anything that keeps a converted
+     * document can tell whether the renderer has moved on since.
+     */
+    public static function rendererStamp(): string
+    {
+        // Which renderer, not only which version. The two produce different
+        // documents from the same workbook, so a PDF converted by one must not
+        // be served as current after a move to the other — that is precisely
+        // how a switch back to LibreOffice would leave everyone still looking
+        // at the pure-PHP rendering.
+        $renderer = app(self::class)->renderer();
+
+        return preg_replace('/[^a-z0-9]+/i', '-', self::RENDERER_VERSION . '-' . $renderer);
+    }
+
 
     public function __construct(private ?string $binary = null)
     {
@@ -122,9 +152,7 @@ class XlsxToPdfService
             $source = $work . DIRECTORY_SEPARATOR . 'source.xlsx';
             copy($xlsxPath, $source);
 
-            if ($forceA4) {
-                $this->applyA4PageSetup($source);
-            }
+            $this->prepareWorkbook($source, $forceA4);
 
             $this->runLibreOffice($source, $work);
 
@@ -169,6 +197,13 @@ class XlsxToPdfService
         bool $forceA4 = true,
         ?string $cacheKey = null,
     ) {
+        // A misleading PDF of an official form is worse than no PDF: someone
+        // prints it, signs it and files it, and the missing half is only found
+        // when the form is rejected.
+        if ($this->renderer() === 'php' && $this->phpRendererWouldLoseContent($xlsxPath)) {
+            return $this->streamWorkbook($xlsxPath, $downloadName);
+        }
+
         try {
             $pdf = $this->convert($xlsxPath, $forceA4, true, $cacheKey);
         } catch (\RuntimeException) {
@@ -177,8 +212,49 @@ class XlsxToPdfService
 
         return response()->file($pdf, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . addslashes($downloadName) . '"',
+            'Content-Disposition' => DocumentName::disposition($downloadName),
         ]);
+    }
+
+    /**
+     * Whether converting this workbook in pure PHP would drop part of the form.
+     *
+     * This used to answer yes for CS Form No. 6 and hand the viewer the
+     * workbook instead, because the old fallback drew cells and nothing else —
+     * no shapes, no tick boxes, and a blank second page. The painter draws all
+     * three, so the honest answer is now no for both campus forms.
+     *
+     * What it still catches is an embedding this cannot open: an OLE object
+     * that is a legacy compound binary rather than a Word file has no readable
+     * content at all, and a page that would print blank is worth refusing.
+     */
+    private function phpRendererWouldLoseContent(string $xlsxPath): bool
+    {
+        $zip = new \ZipArchive();
+
+        if ($zip->open($xlsxPath) !== true) {
+            return false;
+        }
+
+        $unreadable = false;
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = strtolower((string) $zip->getNameIndex($i));
+
+            if (! str_starts_with($name, 'xl/embeddings/')) {
+                continue;
+            }
+
+            // .docx and .xlsx embeddings are packages the painter can read.
+            if (! str_ends_with($name, '.docx') && ! str_ends_with($name, '.xlsx')) {
+                $unreadable = true;
+                break;
+            }
+        }
+
+        $zip->close();
+
+        return $unreadable;
     }
 
     /** The untouched .xlsx, named like the PDF the caller asked for. */
@@ -224,31 +300,129 @@ class XlsxToPdfService
     }
 
     /**
-     * The template workbooks are authored on US Letter. Printing them on A4
-     * without this crops the right-hand balance columns.
+     * Two corrections made inside the .xlsx package, before it is converted.
+     *
+     * Both are edits to single attributes. Nothing is re-serialised, because
+     * the obvious approach — load with PhpSpreadsheet, change, save — silently
+     * destroys the form: its writer does not round-trip drawing shapes, legacy
+     * form controls or embedded OLE objects, and the campus templates are
+     * built almost entirely out of those.
      */
-    private function applyA4PageSetup(string $path): void
+    private function prepareWorkbook(string $path, bool $forceA4): void
     {
-        try {
-            $spreadsheet = IOFactory::load($path);
+        $zip = new \ZipArchive();
 
-            foreach ($spreadsheet->getAllSheets() as $sheet) {
-                $setup = $sheet->getPageSetup();
-                $setup->setPaperSize(PageSetup::PAPERSIZE_A4);
-                $setup->setFitToWidth(1);
-                $setup->setFitToHeight(0);
-            }
-
-            IOFactory::createWriter($spreadsheet, 'Xlsx')->save($path);
-            $spreadsheet->disconnectWorksheets();
-        } catch (\Throwable $e) {
-            // A workbook we cannot re-save is still worth converting as-is —
+        if ($zip->open($path) !== true) {
+            // A workbook we cannot open is still worth converting as-is —
             // better a Letter-sized PDF than no PDF at all.
-            Log::warning('Could not force A4 page setup before conversion.', [
-                'file' => $path,
-                'error' => $e->getMessage(),
-            ]);
+            Log::warning('Could not open workbook to prepare it for conversion.', ['file' => $path]);
+
+            return;
         }
+
+        try {
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $name = (string) $zip->getNameIndex($i);
+
+                $isSheet = (bool) preg_match('#^xl/worksheets/sheet\d+\.xml$#', $name);
+                $isDrawing = (bool) preg_match('#^xl/drawings/drawing\d+\.xml$#', $name);
+
+                if (! $isSheet && ! $isDrawing) {
+                    continue;
+                }
+
+                $xml = $zip->getFromIndex($i);
+
+                if ($xml === false) {
+                    continue;
+                }
+
+                $updated = $isSheet
+                    ? ($forceA4 ? $this->withA4PaperSize($xml) : $xml)
+                    : $this->withUnclippedShapeText($xml);
+
+                if ($updated !== $xml) {
+                    $zip->addFromString($name, $updated);
+                }
+            }
+        } finally {
+            $zip->close();
+        }
+    }
+
+    /**
+     * Stops a text box from clipping its own text away.
+     *
+     * These forms carry their labels in drawing shapes, and Excel sizes those
+     * boxes by eye: the Campus Director's name sits in a box 16.95pt tall
+     * holding 12pt underlined text, which does not fit once DrawingML's
+     * default 3.6pt top and bottom insets come off. Excel lets the text spill
+     * and it looks right on screen. LibreOffice honours vertOverflow="clip"
+     * exactly and drops the text, so the name vanished from the PDF while its
+     * box was still drawn — which is why the form came back missing names
+     * that are plainly there in the workbook.
+     *
+     * Letting the text overflow is what the author saw when they laid the
+     * form out, so it is also what should print.
+     */
+    private function withUnclippedShapeText(string $drawingXml): string
+    {
+        return str_replace(
+            ['vertOverflow="clip"', 'horzOverflow="clip"'],
+            ['vertOverflow="overflow"', 'horzOverflow="overflow"'],
+            $drawingXml,
+        );
+    }
+
+    /**
+     * Rewrites one worksheet's paper size to A4, touching nothing else.
+     *
+     * The obvious implementation — load with PhpSpreadsheet, set the page
+     * setup, save — silently destroys the form. PhpSpreadsheet's writer does
+     * not round-trip drawing shapes, legacy form controls or embedded OLE
+     * objects, and the campus templates are built almost entirely out of
+     * those: the "Stamp of Date of Receipt" box, the HRMO and Campus Director
+     * name blocks and all 25 leave-type checkboxes are shapes, and the whole
+     * second page of CS Form No. 6 is an embedded Word document rendered as a
+     * metafile. Re-saving dropped every one of them before LibreOffice ever
+     * opened the file, so the conversion lost content that was never the
+     * converter's to lose.
+     *
+     * Editing the one attribute inside the package leaves every other part
+     * byte-identical.
+     */
+    private function withA4PaperSize(string $sheetXml): string
+    {
+        if (! str_contains($sheetXml, '<pageSetup')) {
+            return $sheetXml;
+        }
+
+        return (string) preg_replace_callback(
+            '/<pageSetup\b([^>]*?)(\/?)>/',
+            static function (array $match): string {
+                $attributes = $match[1];
+
+                // 9 is A4 in the ECMA-376 paper-size table.
+                $attributes = preg_match('/\bpaperSize="[^"]*"/', $attributes)
+                    ? preg_replace('/\bpaperSize="[^"]*"/', 'paperSize="9"', $attributes)
+                    : ' paperSize="9"' . $attributes;
+
+                // The r:id points at a printerSettings blob holding a Windows
+                // DEVMODE, which carries its own paper size and wins over the
+                // attribute — CS Form 212 kept printing US Letter with A4 set
+                // right next to it. Dropping the reference makes the sheet XML
+                // authoritative; the unused relationship is harmless.
+                $attributes = (string) preg_replace('/\s+r:id="[^"]*"/', '', $attributes);
+
+                return '<pageSetup' . $attributes . $match[2] . '>';
+            },
+            $sheetXml,
+            // Every occurrence, not just the first. Each sheet of CS Form 212
+            // carries a second pageSetup inside a <customSheetView>, and that
+            // one — a custom paper size, not A4 — is the one the renderer
+            // actually applied.
+            -1,
+        );
     }
 
     private function runLibreOffice(string $source, string $workspace): void
@@ -356,13 +530,19 @@ class XlsxToPdfService
             // No page-setup rewrite here. The paper is set on the renderer
             // itself, and clearing fitToHeight would throw away the one flag
             // that says this sheet has to land on a single page.
-            $this->trimToPrintAreas($book);
-
-            $html = $this->workbookHtml($book, $orientation);
+            // Painted from the sheet's real geometry rather than written out
+            // as an HTML table. A table cannot hold Excel's grid still — the
+            // moment a label is wider than its column the browser reflows it,
+            // and an official form that reflows is no longer that form.
+            $html = (new SheetPainter())->paintWorkbook(
+                $book,
+                $this->printableSheets($book),
+                $xlsxPath,
+            );
 
             $book->disconnectWorksheets();
 
-            $this->renderHtmlToPdf($html, $orientation, $cachePath, $forceA4);
+            $this->renderPaintedHtml($html, $orientation, $cachePath);
 
             if (! is_file($cachePath)) {
                 throw new \RuntimeException('The PDF writer produced no output.');
@@ -756,14 +936,21 @@ class XlsxToPdfService
             $sides['left'][] = $margins->getLeft() * 25.4;
         }
 
+        // The page box is shared by every sheet, so one sheet's margin sets it
+        // for the whole document. CS Form 212 declares 0mm right and bottom
+        // margins on sheets 2, 3 and 4 — taking the minimum handed the entire
+        // PDF a zero right margin, so page 1 printed with its 3mm and every
+        // page after it ran to the paper edge. That is the "margins keep
+        // getting smaller" the form comes back with.
+        //
+        // The floor applies to all four sides for the same reason it was
+        // already applied to two: no printer images to the edge of the sheet,
+        // and per-sheet padding cannot reach a page after the first.
         return [
-            // A floor of 3mm on the top and bottom: a sheet that runs past one
-            // page would otherwise start hard against the paper edge on every
-            // page after the first, where no per-sheet padding reaches.
-            'top' => max(3.0, min($sides['top'])),
-            'bottom' => max(3.0, min($sides['bottom'])),
-            'right' => min($sides['right']),
-            'left' => min($sides['left']),
+            'top' => max(self::MARGIN_FLOOR_MM, min($sides['top'])),
+            'bottom' => max(self::MARGIN_FLOOR_MM, min($sides['bottom'])),
+            'right' => max(self::MARGIN_FLOOR_MM, min($sides['right'])),
+            'left' => max(self::MARGIN_FLOOR_MM, min($sides['left'])),
         ];
     }
 
@@ -853,6 +1040,28 @@ CSS;
     }
 
     /** Hands the HTML to Dompdf with the page box set explicitly. */
+    /**
+     * Renders pages that already know their own size.
+     *
+     * The painter emits one div per sheet, sized to the paper in points, with
+     * the sheet's own margins inside it. So the page box is set to zero here:
+     * adding margins again would inset every page twice and push the last
+     * column off the sheet.
+     */
+    private function renderPaintedHtml(string $html, string $orientation, string $cachePath): void
+    {
+        $dompdf = $this->dompdf($orientation, true);
+
+        $dompdf->loadHtml($html);
+        $dompdf->render();
+
+        if (! is_dir(dirname($cachePath))) {
+            mkdir(dirname($cachePath), 0775, true);
+        }
+
+        file_put_contents($cachePath, $dompdf->output());
+    }
+
     private function renderHtmlToPdf(string $html, string $orientation, string $cachePath, bool $forceA4): void
     {
         $dompdf = $this->dompdf($orientation, $forceA4);
@@ -877,6 +1086,11 @@ CSS;
             // The two renderers produce different documents from the same
             // workbook, so switching must not serve the other one's output.
             $this->renderer(),
+            // And a change to how the painter draws must invalidate what it
+            // drew before. Without this the cache serves last release's
+            // output from an unchanged workbook, and the fix looks like it
+            // did not work. Bump on any change to the Xlsx painters.
+            self::RENDERER_VERSION,
         ])) . ($forceA4 ? '-a4' : '-native');
 
         return storage_path('app/pdf-cache' . DIRECTORY_SEPARATOR . $hash . '.pdf');

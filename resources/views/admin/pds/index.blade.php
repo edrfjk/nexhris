@@ -57,7 +57,7 @@
                         <p class="font-medium text-sand-800">{{ $activeTemplate->label }}</p>
                         <x-badge color="green">v{{ $activeTemplate->version }} · active</x-badge>
                     </div>
-                    <p class="text-xs text-sand-400 mt-0.5">
+                    <p class="text-xs text-sand-400 mt-0.5 break-all">
                         {{ $activeTemplate->original_filename }} · published by {{ $activeTemplate->uploader->name ?? 'HR' }}
                         @if ($templates->count() > 1)
                             · {{ $templates->count() }} versions
@@ -141,65 +141,68 @@
 </x-filter-bar>
 
 <div class="card overflow-hidden">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Employee</th>
-                <th class="hidden lg:table-cell">College / Department</th>
-                <th>Status ({{ $year }})</th>
-                <th>Submitted On</th>
-                <th class="text-right">Review</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($employees as $employee)
-                @php $sub = $employee->pdsSubmissions->first(); @endphp
-                <tr class="border-t border-sand-100 hover:bg-sand-50 transition">
-                    <td>
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-full overflow-hidden bg-maroon-50 flex items-center justify-center flex-shrink-0">
-                                @if ($employee->profile_photo_path)
-                                    <img src="{{ asset('storage/' . $employee->profile_photo_path) }}" class="w-full h-full object-cover">
-                                @else
-                                    <span class="text-sm font-semibold text-maroon-800">{{ strtoupper(substr($employee->name, 0, 1)) }}</span>
-                                @endif
-                            </div>
-                            <div>
-                                <p class="font-medium text-sand-800">{{ $employee->name }}</p>
-                                <p class="text-xs text-sand-400">{{ $employee->employee_number }}</p>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="hidden lg:table-cell">
-                        <p class="text-sand-700">{{ $employee->collegeName() ?: '—' }}</p>
-                        @if ($employee->departmentName())
-                            <p class="text-xs text-sand-400">{{ $employee->departmentName() }}</p>
-                        @endif
-                    </td>
-                    <td>
-                        <x-badge :color="match($sub->status ?? 'not_started') {
-                            'approved' => 'green', 'submitted' => 'yellow', 'returned' => 'red', 'draft' => 'blue', default => 'gray',
-                        }">
-                            {{ ucfirst(str_replace('_', ' ', $sub->status ?? 'not_started')) }}
-                        </x-badge>
-                    </td>
-                    <td>{{ $sub && $sub->submitted_at ? $sub->submitted_at->format('M d, Y g:i A') : '—' }}</td>
-                    <td class="text-right">
-                        <a href="{{ route('admin.pds.show', $employee) }}"
-                           class="icon-btn"
-                           title="Review PDS">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                        </a>
-                    </td>
+    {{-- A data table is wider than a phone. Without this the whole page scrolls sideways instead of the table. --}}
+    <div class="overflow-x-auto">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th class="hidden lg:table-cell">College / Department</th>
+                    <th>Status ({{ $year }})</th>
+                    <th>Submitted On</th>
+                    <th class="text-right">Review</th>
                 </tr>
-            @empty
-                <tr><td colspan="5"><x-empty-state message="No employees match your search or filters." /></td></tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @forelse ($employees as $employee)
+                    @php $sub = $employee->pdsSubmissions->first(); @endphp
+                    <tr class="border-t border-sand-100 hover:bg-sand-50 transition">
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full overflow-hidden bg-maroon-50 flex items-center justify-center flex-shrink-0">
+                                    @if ($employee->profile_photo_path)
+                                        <img src="{{ asset('storage/' . $employee->profile_photo_path) }}" class="w-full h-full object-cover">
+                                    @else
+                                        <span class="text-sm font-semibold text-maroon-800">{{ strtoupper(substr($employee->name, 0, 1)) }}</span>
+                                    @endif
+                                </div>
+                                <div>
+                                    <p class="font-medium text-sand-800">{{ $employee->name }}</p>
+                                    <p class="text-xs text-sand-400">{{ $employee->employee_number }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="hidden lg:table-cell">
+                            <p class="text-sand-700">{{ $employee->collegeName() ?: '—' }}</p>
+                            @if ($employee->departmentName())
+                                <p class="text-xs text-sand-400">{{ $employee->departmentName() }}</p>
+                            @endif
+                        </td>
+                        <td>
+                            <x-badge :color="match($sub->status ?? 'not_started') {
+                                'approved' => 'green', 'submitted' => 'yellow', 'returned' => 'red', 'draft' => 'blue', default => 'gray',
+                            }">
+                                {{ ucfirst(str_replace('_', ' ', $sub->status ?? 'not_started')) }}
+                            </x-badge>
+                        </td>
+                        <td>{{ $sub && $sub->submitted_at ? $sub->submitted_at->format('M d, Y g:i A') : '—' }}</td>
+                        <td class="text-right">
+                            <a href="{{ route('admin.pds.show', $employee) }}"
+                               class="icon-btn"
+                               title="Review PDS">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="5"><x-empty-state message="No employees match your search or filters." /></td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <div class="mt-4">{{ $employees->links() }}</div>

@@ -7,6 +7,7 @@ use App\Models\LeaveLedgerEntry;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -19,6 +20,16 @@ use Tests\TestCase;
 class LedgerCardLayoutTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // The master ledger this publishes is a fixture; without faking,
+        // every run left a test.xlsx in the real templates folder.
+        Storage::fake('public');
+        Storage::fake('local');
+    }
 
     private const LONG_REMARK = 'Vacation leave to attend the Regional Training Workshop on '
         . 'Records Management and Digital Archiving held at the Provincial Capitol, Vigan '

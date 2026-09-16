@@ -3,7 +3,7 @@
 @section('title', 'Add HR Policy')
 
 @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 @endpush
 
 @section('content')
@@ -34,13 +34,22 @@
 
     <div class="card">
 
+        <div class="border-b border-sand-100 px-6 py-4">
+            <h3 class="font-semibold text-sand-800">New HR Policy</h3>
+            <p class="mt-0.5 text-xs text-sand-400">Publish a policy for staff to read and acknowledge.</p>
+        </div>
+
         <div class="p-6 space-y-6">
 
             {{-- =========================================================
                  TITLE + CATEGORY
             ========================================================== --}}
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p class="section-label mb-3">Policy details</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 -mt-3">
 
                 {{-- Title --}}
                 <div>
@@ -99,9 +108,7 @@
 
             <div class="border-t border-sand-100 pt-4">
 
-                <label class="block text-sm font-medium text-sand-700 mb-3">
-                    Policy Format
-                </label>
+                <p class="section-label mb-3">Policy format</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
@@ -209,9 +216,11 @@
                     Policy Content
                 </label>
 
+                {{-- A field the user types into, so it carries the same
+                     boundary as every other field rather than a card's. --}}
                 <div
                     id="editor"
-                    class="card overflow-hidden"
+                    class="overflow-hidden rounded-lg border border-sand-400 bg-white shadow-inset"
                     style="height: 300px;">
                 </div>
 
@@ -444,7 +453,11 @@
 
 @push('scripts')
 
-<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+{{-- The same editor, at the same version, as the edit page. Creating a policy
+     with Quill 1 and editing it with Quill 2 meant the two wrote different HTML
+     for the same list, and opening a policy to fix a typo could turn its bullet
+     points into a numbered list for every employee. --}}
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -465,10 +478,13 @@ document.addEventListener('DOMContentLoaded', function () {
             theme: 'snow',
             placeholder: 'Write your HR policy here...',
             modules: {
+                // The edit page's toolbar exactly, so a policy can be written
+                // with every tool it can later be edited with.
                 toolbar: [
                     [{ header: [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline'],
+                    ['bold', 'italic', 'underline', 'strike'],
                     [{ list: 'ordered' }, { list: 'bullet' }],
+                    [{ align: [] }],
                     ['link'],
                     ['clean']
                 ]
@@ -476,7 +492,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         @if(old('body'))
-            quill.root.innerHTML = {!! json_encode(old('body')) !!};
+            quill.root.innerHTML = @json(old('body'));
         @endif
     }
 

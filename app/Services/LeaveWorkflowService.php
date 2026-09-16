@@ -7,6 +7,7 @@ use App\Models\LeaveApplication;
 use App\Models\LeaveApproval;
 use App\Models\User;
 use App\Notifications\LeaveStageChanged;
+use App\Support\Notifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
@@ -279,7 +280,7 @@ class LeaveWorkflowService
             return;
         }
 
-        Notification::send($recipients, new LeaveStageChanged(
+        Notifier::send($recipients, new LeaveStageChanged(
             $application,
             'A leave form needs your review',
             "{$application->user->name} has submitted a leave form awaiting your approval as "
@@ -305,7 +306,7 @@ class LeaveWorkflowService
         $hr = User::where('role', 'admin')->where('status', 'active')->get();
 
         if ($hr->isNotEmpty()) {
-            Notification::send($hr, new LeaveStageChanged(
+            Notifier::send($hr, new LeaveStageChanged(
                 $application,
                 'Approved leave awaiting a ledger posting',
                 "{$application->user->name}'s leave is fully approved. Record the days and credits used on their ledger card.",
@@ -324,7 +325,7 @@ class LeaveWorkflowService
         string $actionUrl,
         string $tone,
     ): void {
-        $application->user?->notify(new LeaveStageChanged(
+        Notifier::send($application->user, new LeaveStageChanged(
             $application, $headline, $detail, $actionLabel, $actionUrl, $tone,
         ));
     }

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 /**
  * A person's own account.
@@ -47,7 +48,7 @@ class ProfileController extends Controller
             // Their current password, so a walk-up at an unlocked screen
             // cannot lock the real owner out of their own account.
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'confirmed', PasswordRule::min(8)->letters()->numbers()],
         ], [
             'current_password.current_password' => 'That is not your current password.',
             'password.confirmed' => 'The two new passwords do not match.',

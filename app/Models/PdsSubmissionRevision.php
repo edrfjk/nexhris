@@ -33,6 +33,6 @@ class PdsSubmissionRevision extends Model
 
     public function pdfExists(): bool
     {
-        return $this->pdf_path && Storage::disk('public')->exists($this->pdf_path);
+        return $this->pdf_path && Storage::disk('local')->exists($this->pdf_path);
     }
 }

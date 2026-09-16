@@ -8,6 +8,7 @@ use App\Models\College;
 use App\Models\User;
 use App\Notifications\AnnouncementPosted;
 use App\Services\ActivityLogger;
+use App\Support\Notifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 
@@ -52,7 +53,7 @@ class AnnouncementController extends Controller
                     fn ($q) => $q->where('college_id', $announcement->college_id))
                 ->get();
 
-            Notification::send($recipients, new AnnouncementPosted($announcement));
+            Notifier::send($recipients, new AnnouncementPosted($announcement));
         }
 
         return back()->with('success', "\"{$announcement->title}\" has been posted.");

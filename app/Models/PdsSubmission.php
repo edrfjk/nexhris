@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Services\XlsxToPdfService;
 use Illuminate\Support\Facades\Storage;
 
 class PdsSubmission extends Model
@@ -106,21 +107,35 @@ class PdsSubmission extends Model
 
     public function workbookExists(): bool
     {
-        return $this->file_path && Storage::disk('public')->exists($this->file_path);
+        return $this->file_path && Storage::disk('local')->exists($this->file_path);
     }
 
+    /**
+     * Whether there is a stored PDF worth serving.
+     *
+     * A conversion is kept on disk so the same sheet is not rendered on every
+     * view, but that means an improvement to the renderer never reaches a
+     * submission already converted — the employee keeps being shown the PDF
+     * their upload produced months ago, and every fix looks like it did
+     * nothing. Which renderer made it is recorded in the filename, so a stored
+     * PDF from an older one counts as absent and the caller converts afresh.
+     */
     public function pdfExists(): bool
     {
-        return $this->pdf_path && Storage::disk('public')->exists($this->pdf_path);
+        if (! $this->pdf_path || ! Storage::disk('local')->exists($this->pdf_path)) {
+            return false;
+        }
+
+        return str_contains($this->pdf_path, XlsxToPdfService::rendererStamp());
     }
 
     public function workbookPath(): ?string
     {
-        return $this->workbookExists() ? Storage::disk('public')->path($this->file_path) : null;
+        return $this->workbookExists() ? Storage::disk('local')->path($this->file_path) : null;
     }
 
     public function pdfPath(): ?string
     {
-        return $this->pdfExists() ? Storage::disk('public')->path($this->pdf_path) : null;
+        return $this->pdfExists() ? Storage::disk('local')->path($this->pdf_path) : null;
     }
 }

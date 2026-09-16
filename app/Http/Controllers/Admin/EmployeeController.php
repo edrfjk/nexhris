@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\DocumentName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 
 class EmployeeController extends Controller
@@ -98,7 +100,7 @@ public function exportPdf(Request $request)
     // stream() sends Content-Disposition: inline, so the browser previews the
     // PDF in the new tab instead of forcing a save dialog. The user can still
     // save it from the browser's own PDF viewer (Ctrl+S / download icon).
-    return $pdf->stream('employee-directory-' . now()->format('Y-m-d') . '.pdf');
+    return $pdf->stream(DocumentName::employeeDirectory());
 }
 
     public function create()
@@ -118,11 +120,17 @@ public function store(Request $request)
         'college_id' => ['nullable', 'exists:colleges,id'],
         'department_id' => ['nullable', 'exists:departments,id'],
         'role' => ['required', Rule::in(['employee', 'dean', 'campus_director'])],
-        // Printed in the header of the leave ledger card and the service record.
-        'first_day_of_service' => ['nullable', 'date'],
+        // Printed in the header of the leave ledger card. Without it the
+        // official card goes out with the "First day of government service"
+        // line blank, which the campus will not accept — so it is required for
+        // a new account. Existing records that predate this are not blocked.
+        'first_day_of_service' => ['required', 'date'],
         'date_hired' => ['nullable', 'date'],
         'contact_number' => ['nullable', 'string', 'max:20'],
-        'password' => ['required', 'string', 'min:8', 'confirmed'],
+        // The same rule the reset screen enforces. HR sets the passwords for the
+        // accounts with the most access, so this is the last place that should
+        // accept eight of anything.
+        'password' => ['required', 'confirmed', PasswordRule::min(8)->letters()->numbers()],
         'photo' => ['nullable', 'image', 'max:2048'],
     ]);
 
@@ -168,7 +176,7 @@ public function edit(User $employee)
             'first_day_of_service' => ['nullable', 'date'],
             'date_hired' => ['nullable', 'date'],
             'contact_number' => ['nullable', 'string', 'max:20'],
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'password' => ['nullable', 'confirmed', PasswordRule::min(8)->letters()->numbers()],
         ]);
 
         foreach (['college_id', 'department_id', 'role', 'contact_number', 'position', 'first_day_of_service', 'date_hired'] as $field) {
@@ -253,11 +261,37 @@ public function edit(User $employee)
         return back()->with('success', "{$employee->name}'s account is now " . $data['status'] . '.');
     }
 
-public function show(User $employee)
+public function show(Request $request, User $employee)
 {
+    // The list is scoped with visibleTo(); this was not, so a Dean could reach
+    // any employee in the campus by typing the id into the address bar — the
+    // exact thing the query-level boundary is supposed to prevent.
+    $viewer = $request->user();
+
+    abort_unless(
+        $viewer->isAdmin()
+            || $viewer->isCampusDirector()
+            || ($viewer->isDean() && $employee->college_id === $viewer->college_id),
+        403,
+        'This employee is not in your college.',
+    );
+
     $colleges = \App\Models\College::active()->with('activeDepartments')->orderBy('name')->get();
 
-    return view('admin.employees.show', compact('employee', 'colleges'));
+    // The two things HR checks on a record before doing anything else: what
+    // this person has left to spend, and whether their sheet is in order.
+    $year = now()->year;
+
+    return view('admin.employees.show', [
+        'employee' => $employee,
+        'colleges' => $colleges,
+        'balance' => $employee->leaveBalance,
+        'pds' => $employee->pdsSubmissions()->where('applicable_year', $year)->first(),
+        'pdsYear' => $year,
+        'leaveInFlight' => $employee->leaveApplications()
+            ->whereIn('status', ['submitted', 'dean_approved', 'hr_approved'])
+            ->count(),
+    ]);
 }
 
     public function updatePhoto(Request $request, User $employee)

@@ -198,7 +198,22 @@ class DesignSystemConsistencyTest extends TestCase
     {
         $config = file_get_contents(__DIR__ . '/../../tailwind.config.js');
 
-        $scanned = [];
+        // The config used to list one glob per directory, and the two that were
+        // missing meant any class used only in views/profile or views/leave
+        // generated no CSS at all — those pages rendered half-styled and it
+        // read as a design problem rather than a build one. A single recursive
+        // glob makes the whole class of mistake impossible, so that is what is
+        // asserted rather than the old directory-by-directory list.
+        $recursive = str_contains($config, './resources/views/**/*.blade.php');
+
+        if ($recursive) {
+            $this->assertTrue(true);
+
+            return;
+        }
+
+        // Still correct if someone goes back to listing them, as long as the
+        // list is complete.
         preg_match_all('#\./resources/views/([a-z-]+)/#', $config, $matches);
         $scanned = array_flip($matches[1]);
 
@@ -214,16 +229,51 @@ class DesignSystemConsistencyTest extends TestCase
                 continue;
             }
 
-            // Only directories that actually hold a view matter.
             if (glob($dir . '/*.blade.php') || glob($dir . '/*/*.blade.php')) {
                 $missing[] = 'resources/views/' . $name;
             }
         }
 
         $this->assertSame([], $missing,
-            "These view directories are not in tailwind.config.js content[].\n"
-            . "Classes used only there generate no CSS and the pages render unstyled.\n\n"
-            . "  " . implode("\n  ", $missing) . "\n");
+            "These view directories are not in tailwind.config.js content[].
+"
+            . "Classes used only there generate no CSS and the pages render unstyled.
+
+"
+            . "  " . implode("
+  ", $missing) . "
+");
+    }
+
+    /**
+     * A class the scanner cannot see as a literal string.
+     *
+     * <x-badge> builds its class as 'badge-' . $tone, so Tailwind never reads
+     * the finished name and drops any tone no view happens to spell out.
+     * badge-violet was being purged exactly this way.
+     */
+    public function test_dynamically_composed_classes_are_safelisted(): void
+    {
+        $config = file_get_contents(__DIR__ . '/../../tailwind.config.js');
+        $component = file_get_contents(self::VIEWS . '/components/badge.blade.php');
+
+        // Only the tone map — @props carries a default colour name that is an
+        // alias, not a tone, and there is no CSS class for it.
+        preg_match('/\$map = \[(.*?)\];/s', $component, $block);
+        preg_match_all("/=> '([a-z]+)'/", $block[1] ?? '', $matches);
+
+        $tones = array_unique($matches[1]);
+
+        $this->assertNotEmpty($tones, 'no tones found — has the badge component changed shape?');
+
+        foreach ($tones as $tone) {
+            $this->assertStringContainsString(
+                'badge-' . $tone,
+                $config,
+                "badge-{$tone} is reachable from the component but is not safelisted, "
+                . 'so it will be purged and that badge will render with no colour.',
+            );
+        }
     }
 
     /**
@@ -307,6 +357,53 @@ class DesignSystemConsistencyTest extends TestCase
 
         $this->assertSame([], $offenders,
             "Use .chip and .icon-btn rather than spelling them out.\n\n"
+            . "  " . implode("\n  ", $offenders) . "\n");
+    }
+
+    /**
+     * A page's action buttons wrap on a phone instead of widening the page.
+     *
+     * The row was marked shrink-0, so three buttons on the HR dashboard or
+     * four on Leave Management kept their desktop width and pushed every
+     * screen that used them sideways on a phone.
+     */
+    public function test_page_header_actions_wrap_on_a_narrow_screen(): void
+    {
+        $source = file_get_contents(self::VIEWS . '/components/page-header.blade.php');
+
+        preg_match('/<div class="([^"]*)">\s*@if \(\$back\)/', $source, $row);
+
+        $this->assertNotEmpty($row, 'could not find the action row in the page header');
+        $this->assertStringContainsString('flex-wrap', $row[1]);
+        $this->assertStringNotContainsString('shrink-0', $row[1]);
+        $this->assertStringContainsString('max-w-full', $row[1]);
+    }
+
+    /**
+     * An uploaded file's name, which has no spaces to break at, may wrap
+     * anywhere rather than run off the edge of a phone screen.
+     */
+    public function test_uploaded_file_names_can_wrap(): void
+    {
+        $offenders = [];
+
+        foreach (self::appViews() as $view => $source) {
+            // The element that prints the name, up to the name itself.
+            preg_match_all(
+                '/<(?:p|span)\s+class="([^"]*)">\s*\{\{\s*\$\w+->(?:file_original_name|original_filename)\b/',
+                $source,
+                $matches,
+            );
+
+            foreach ($matches[1] as $classes) {
+                if (! preg_match('/\b(?:break-all|truncate)\b/', $classes)) {
+                    $offenders[] = "{$view} — class=\"{$classes}\"";
+                }
+            }
+        }
+
+        $this->assertSame([], $offenders,
+            "These print an uploaded file name that cannot wrap:\n\n"
             . "  " . implode("\n  ", $offenders) . "\n");
     }
 }

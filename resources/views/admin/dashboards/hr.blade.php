@@ -149,46 +149,49 @@
         <x-empty-state message="No colleges have been set up yet." icon="building-library" />
     @else
         <div class="table-wrap">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>College</th>
-                        <th class="num">Staff</th>
-                        <th class="num">Leave in review</th>
-                        <th class="num">Days taken ({{ $year }})</th>
-                        <th>PDS compliance</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($data['byCollege'] as $row)
+            {{-- A data table is wider than a phone. Without this the whole page scrolls sideways instead of the table. --}}
+            <div class="overflow-x-auto">
+                <table class="table">
+                    <thead>
                         <tr>
-                            <td>
-                                <span class="badge badge-slate">{{ $row['code'] }}</span>
-                                <span class="ml-2 text-sand-800">{{ $row['name'] }}</span>
-                            </td>
-                            <td class="num">{{ $row['headcount'] }}</td>
-                            <td class="num">
-                                @if ($row['pending'] > 0)
-                                    <span class="badge badge-amber">{{ $row['pending'] }}</span>
-                                @else
-                                    <span class="text-sand-400">—</span>
-                                @endif
-                            </td>
-                            <td class="num">{{ number_format($row['leaveDays'], 2) }}</td>
-                            <td>
-                                <div class="flex items-center gap-2">
-                                    <div class="flex-1 h-1.5 rounded-full bg-sand-200 overflow-hidden min-w-[4rem]">
-                                        <div class="h-full rounded-full
-                                            {{ $row['compliance'] >= 80 ? 'bg-forest-600' : ($row['compliance'] >= 50 ? 'bg-gold-500' : 'bg-red-500') }}"
-                                             style="width: {{ $row['compliance'] }}%"></div>
-                                    </div>
-                                    <span class="text-xs tabular text-sand-600 w-9 text-right">{{ $row['compliance'] }}%</span>
-                                </div>
-                            </td>
+                            <th>College</th>
+                            <th class="num">Staff</th>
+                            <th class="num">Leave in review</th>
+                            <th class="num">Days taken ({{ $year }})</th>
+                            <th>PDS compliance</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach ($data['byCollege'] as $row)
+                            <tr>
+                                <td>
+                                    <span class="badge badge-slate">{{ $row['code'] }}</span>
+                                    <span class="ml-2 text-sand-800">{{ $row['name'] }}</span>
+                                </td>
+                                <td class="num">{{ $row['headcount'] }}</td>
+                                <td class="num">
+                                    @if ($row['pending'] > 0)
+                                        <span class="badge badge-amber">{{ $row['pending'] }}</span>
+                                    @else
+                                        <span class="text-sand-400">—</span>
+                                    @endif
+                                </td>
+                                <td class="num">{{ number_format($row['leaveDays'], 2) }}</td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex-1 h-1.5 rounded-full bg-sand-200 overflow-hidden min-w-[4rem]">
+                                            <div class="h-full rounded-full
+                                                {{ $row['compliance'] >= 80 ? 'bg-forest-600' : ($row['compliance'] >= 50 ? 'bg-gold-500' : 'bg-red-500') }}"
+                                                 style="width: {{ $row['compliance'] }}%"></div>
+                                        </div>
+                                        <span class="text-xs tabular text-sand-600 w-9 text-right">{{ $row['compliance'] }}%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
     @endif
 </x-card>
@@ -260,7 +263,9 @@
                 See who has read it →
             </a>
         @else
-            <x-empty-state message="No policy has been published yet." icon="clipboard-document-list" />
+            {{-- Published policies may well exist; none of them asks staff to
+                 acknowledge it, so there is nothing to track. --}}
+            <x-empty-state message="No published policy asks staff to acknowledge it." icon="clipboard-document-list" />
         @endif
     </x-card>
 </div>

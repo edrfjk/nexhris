@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 700" width="620" height="700">
+<title>Flow Chart of Manual Process &#8212; NexHRIS, ISPSC Tagudin Campus</title>
+<rect x="0" y="0" width="620" height="700" fill="#ffffff"/>
+
+        <defs>
+          <marker id="mc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0.8 L9.2,5 L0,9.2 z" fill="#000"/>
+          </marker>
+        </defs>
+
+        <rect x="100" y="13" width="110" height="30" rx="15" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="155" y="32" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">START</text>
+
+        <rect x="65" y="62" width="180" height="36" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="155" y="76" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">HR ISSUES THE BLANK</text>
+        <text x="155" y="88" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">CAMPUS FORM</text>
+
+        <rect x="65" y="118" width="180" height="36" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="155" y="132" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">EMPLOYEE FILLS THE</text>
+        <text x="155" y="144" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">FORM IN BY HAND</text>
+
+        <rect x="65" y="174" width="180" height="36" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="155" y="188" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">PRINTED FORM SUBMITTED</text>
+        <text x="155" y="200" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">TO THE DEAN</text>
+
+        <path d="M155,222 L217,250 L155,278 L93,250 Z" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="155" y="254" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">DEAN APPROVES?</text>
+
+        <rect x="65" y="292" width="180" height="36" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="155" y="306" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">FORM WALKED TO THE</text>
+        <text x="155" y="318" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">HR OFFICE</text>
+
+        <path d="M155,340 L217,368 L155,396 L93,368 Z" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="155" y="372" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">HR APPROVES?</text>
+
+        <rect x="65" y="410" width="180" height="36" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="155" y="424" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">FORM WALKED TO THE</text>
+        <text x="155" y="436" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">CAMPUS DIRECTOR</text>
+
+        <path d="M155,458 L217,486 L155,514 L93,486 Z" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="155" y="490" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">DIRECTOR APPROVES?</text>
+
+        <rect x="65" y="525" width="180" height="46" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="155" y="540" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">DAYS WRITTEN ON THE</text>
+        <text x="155" y="552" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">HANDWRITTEN LEDGER</text>
+        <text x="155" y="564" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">CARD</text>
+
+        <rect x="65" y="594" width="180" height="36" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="155" y="608" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">BALANCE RECOMPUTED</text>
+        <text x="155" y="620" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">BY HAND, FORM FILED</text>
+
+        <rect x="100" y="651" width="110" height="30" rx="15" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="155" y="670" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">END OF PROCESS</text>
+
+        <rect x="375" y="232" width="170" height="36" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="460" y="246" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">RETURNED TO THE</text>
+        <text x="460" y="258" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10">EMPLOYEE FOR REDO</text>
+
+        <path d="M155,43 V58" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M155,98 V114" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M155,154 V170" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M155,210 V218" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M155,278 V288" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+        
+        <path d="M155,328 V336" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M155,396 V406" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+        
+        <path d="M155,446 V454" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M155,514 V521" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+        
+        <path d="M155,571 V590" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M155,630 V647" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+
+        <path d="M217,250 H371" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+        
+        <path d="M217,368 H480 V272" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+        
+        <path d="M217,486 H520 V272" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+        
+        <path d="M545,250 H580 V136 H249" marker-end="url(#mc)" fill="none" stroke="#000" stroke-width="1"/>
+      
+<rect x="161.0" y="281.0" width="18.8" height="9.2" fill="#fff"/><text x="163" y="288" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8.5" font-weight="bold">YES</text>
+<rect x="161.0" y="399.0" width="18.8" height="9.2" fill="#fff"/><text x="163" y="406" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8.5" font-weight="bold">YES</text>
+<rect x="161.0" y="513.0" width="18.8" height="9.2" fill="#fff"/><text x="163" y="520" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8.5" font-weight="bold">YES</text>
+<rect x="230.0" y="237.0" width="13.9" height="9.2" fill="#fff"/><text x="232" y="244" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8.5" font-weight="bold">NO</text>
+<rect x="230.0" y="355.0" width="13.9" height="9.2" fill="#fff"/><text x="232" y="362" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8.5" font-weight="bold">NO</text>
+<rect x="230.0" y="473.0" width="13.9" height="9.2" fill="#fff"/><text x="232" y="480" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8.5" font-weight="bold">NO</text>
+</svg>

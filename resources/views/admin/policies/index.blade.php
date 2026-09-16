@@ -576,10 +576,18 @@
                                 {{-- Preview Modal --}}
                                 <template x-teleport="body">
 
+                                    {{-- Escape closes it. Without that a keyboard
+                                         user had no way out but tabbing to the
+                                         cross, and the overlay sat on top of every
+                                         other policy's Preview button meanwhile. --}}
                                     <div
                                         x-show="preview"
                                         x-cloak
+                                        role="dialog"
+                                        aria-modal="true"
+                                        aria-label="Policy preview"
                                         class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+                                        @keydown.escape.window="preview = false"
                                         @click.self="preview = false">
 
                                         <div
@@ -604,8 +612,10 @@
                                                 </div>
 
                                                 <button
+                                                    type="button"
                                                     @click="preview = false"
-                                                    class="text-sand-400 hover:text-sand-600">
+                                                    class="text-sand-400 hover:text-sand-600"
+                                                    aria-label="Close the preview">
 
                                                     <x-heroicon-o-x-mark class="w-5 h-5" />
 
@@ -620,8 +630,13 @@
                                                 {{-- TEXT --}}
                                                 @if ($policy->type === 'text')
 
+                                                    {{-- Through the same sanitiser the
+                                                         employee page uses. This printed the
+                                                         stored HTML raw, so a script saved in
+                                                         a policy ran in the HR Administrator's
+                                                         own browser the moment they previewed it. --}}
                                                     <div class="rich-text">
-                                                        {!! $policy->body !!}
+                                                        {!! $policy->renderedBody() !!}
                                                     </div>
 
 
@@ -644,14 +659,14 @@
 
                                                         </svg>
 
-                                                        <p class="text-sm text-sand-500 mb-3">
+                                                        <p class="text-sm text-sand-500 mb-3 break-all">
                                                             {{ $policy->file_original_name }}
                                                         </p>
 
                                                         @if ($policy->file_path)
 
                                                             <a
-                                                                href="{{ asset('storage/' . $policy->file_path) }}"
+                                                                href="{{ route('policies.attachment', $policy) }}"
                                                                 target="_blank"
                                                                 class="btn btn-md btn-primary">
 

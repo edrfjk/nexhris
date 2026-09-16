@@ -148,9 +148,21 @@
             <a href="{{ route('leave.ledger.mine') }}" target="_blank" class="btn btn-sm btn-secondary">
                 My ledger
             </a>
-            <a href="{{ route('pds.export') }}" target="_blank" class="btn btn-sm btn-secondary">
-                My PDS
-            </a>
+            {{-- Only once there is a workbook to convert: the export route
+                 turns an empty PDS back with a message, which reads as a dead
+                 button to anyone who has not uploaded one yet. --}}
+            @if ($pds?->file_path)
+                <a href="{{ route('pds.export', [
+                        \App\Support\DocumentName::personalDataSheet(auth()->user(), $pds->applicable_year),
+                   ]) }}"
+                   target="_blank" class="btn btn-sm btn-secondary">
+                    My PDS
+                </a>
+            @else
+                <a href="{{ route('pds.editor') }}" class="btn btn-sm btn-secondary">
+                    Upload PDS
+                </a>
+            @endif
         </div>
     </x-card>
 </div>

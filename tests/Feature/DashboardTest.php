@@ -296,4 +296,57 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertSee("You're all caught up");
     }
+
+    /**
+     * The HR dashboard tracks a policy that can actually be acknowledged.
+     *
+     * It used to take the newest published policy of any kind. Publish an
+     * ordinary memo after an acknowledgment policy and the dashboard reported
+     * the memo as 0% complied with, and linked to a compliance page that
+     * returns 404 for it.
+     */
+    public function test_the_policy_tracker_ignores_policies_nobody_is_asked_to_acknowledge(): void
+    {
+        $hr = $this->user('admin');
+
+        $acknowledged = HrPolicy::create([
+            'title' => 'Data Privacy Undertaking', 'body' => 'x', 'type' => 'text',
+            'is_published' => true, 'requires_acknowledgment' => true, 'created_by' => $hr->id,
+        ]);
+
+        // Newer, and does not ask to be acknowledged.
+        $this->travel(1)->minutes();
+
+        HrPolicy::create([
+            'title' => 'Office Hours Memo', 'body' => 'x', 'type' => 'text',
+            'is_published' => true, 'requires_acknowledgment' => false, 'created_by' => $hr->id,
+        ]);
+
+        $tracker = $this->service()->forHr($hr)['policyTracker'];
+
+        $this->assertNotNull($tracker);
+        $this->assertTrue($tracker['policy']->is($acknowledged), 'the tracker picked a policy that cannot be acknowledged');
+
+        // And the link it shows must lead somewhere.
+        $this->actingAs($hr)
+            ->get(route('admin.policies.compliance', $tracker['policy']))
+            ->assertOk();
+    }
+
+    public function test_the_policy_tracker_is_empty_when_no_policy_asks_for_acknowledgment(): void
+    {
+        $hr = $this->user('admin');
+
+        HrPolicy::create([
+            'title' => 'Office Hours Memo', 'body' => 'x', 'type' => 'text',
+            'is_published' => true, 'requires_acknowledgment' => false, 'created_by' => $hr->id,
+        ]);
+
+        $this->assertNull($this->service()->forHr($hr)['policyTracker']);
+
+        $this->actingAs($hr)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('No published policy asks staff to acknowledge it.');
+    }
 }

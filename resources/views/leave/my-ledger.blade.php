@@ -7,7 +7,7 @@
     title="My Leave Ledger"
     subtitle="Your official ledger card, as maintained by HR. Read-only — ask HR if a figure looks wrong.">
     <x-slot:actions>
-        <a href="{{ route('leave.ledger.pdf') }}" target="_blank" class="btn btn-sm btn-secondary">
+        <a href="{{ route('leave.ledger.pdf', [\App\Support\DocumentName::ledgerCard(auth()->user())]) }}" target="_blank" class="btn btn-sm btn-secondary">
             <x-heroicon-o-arrow-top-right-on-square />Open in new tab
         </a>
         <a href="{{ route('leave.index') }}" class="btn btn-sm btn-primary">
@@ -60,13 +60,13 @@
     {{-- The official card, laid out from the campus template. It is drawn
          from your posted ledger entries, so it is always available — there is
          no workbook to seed first. --}}
-    <iframe src="{{ route('leave.ledger.pdf') }}"
+    <iframe src="{{ route('leave.ledger.pdf', [\App\Support\DocumentName::ledgerCard(auth()->user())]) }}"
             class="w-full h-[720px] rounded-lg border border-sand-200 bg-sand-50"
             title="My leave ledger card"></iframe>
 
     <p class="text-[11px] text-sand-400 mt-3">
         If the card does not appear, your browser may not preview PDFs —
-        <a href="{{ route('leave.ledger.pdf') }}" target="_blank"
+        <a href="{{ route('leave.ledger.pdf', [\App\Support\DocumentName::ledgerCard(auth()->user())]) }}" target="_blank"
            class="font-medium text-maroon-700 hover:text-maroon-900">open it in a new tab</a>.
     </p>
 </x-card>

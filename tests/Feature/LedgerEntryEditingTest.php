@@ -253,4 +253,47 @@ class LedgerEntryEditingTest extends TestCase
         $this->assertStringNotContainsString(
             route('admin.leave.ledger.entry.update', $entry), $html);
     }
+
+    /**
+     * The "Correct" button and the form it opens must share one Alpine scope.
+     *
+     * They are two sibling rows. The state used to sit on the first row, and
+     * Alpine scope reaches only descendants, so the form row could not see it:
+     * clicking "Correct" opened nothing and every line threw "editing is not
+     * defined". The server-side tests all passed throughout, because they post
+     * to the update route directly and never click the button — this is the
+     * only thing that looks at how the two rows are nested.
+     */
+    public function test_each_correction_form_shares_a_scope_with_its_button(): void
+    {
+        $this->line();
+        $this->line();
+        $this->line();
+
+        $html = $this->actingAs($this->hr)
+            ->get(route('admin.leave.ledger', $this->employee))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString(
+            '<tr x-data="{ editing',
+            $html,
+            'the state is on a row again, where its sibling form row cannot reach it',
+        );
+
+        $scopes = substr_count($html, '<tbody x-data="{ editing: false }">');
+        $forms = substr_count($html, 'x-show="editing"');
+
+        $this->assertSame(3, $forms, 'expected one correction form per line');
+        $this->assertSame($forms, $scopes, 'every correction form needs its own scope around it and its button');
+
+        // Every form row must sit inside a scoped <tbody>, not merely be counted
+        // alongside one.
+        preg_match_all('#<tbody x-data="\{ editing: false \}">(.*?)</tbody>#s', $html, $groups);
+
+        foreach ($groups[1] as $group) {
+            $this->assertStringContainsString('@click="editing = !editing"', $group, 'a scope without its button');
+            $this->assertStringContainsString('x-show="editing"', $group, 'a scope without its form');
+        }
+    }
 }

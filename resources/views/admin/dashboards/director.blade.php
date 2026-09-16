@@ -122,35 +122,38 @@
             <x-empty-state message="No colleges have been set up yet." icon="building-library" />
         @else
             <div class="table-wrap">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>College</th>
-                            <th class="num">Staff</th>
-                            <th class="num">In review</th>
-                            <th class="num">Days taken</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($data['byCollege'] as $row)
+                {{-- A data table is wider than a phone. Without this the whole page scrolls sideways instead of the table. --}}
+                <div class="overflow-x-auto">
+                    <table class="table">
+                        <thead>
                             <tr>
-                                <td>
-                                    <span class="badge badge-slate">{{ $row['code'] }}</span>
-                                    <span class="ml-2 text-sand-800">{{ $row['name'] }}</span>
-                                </td>
-                                <td class="num">{{ $row['headcount'] }}</td>
-                                <td class="num">
-                                    @if ($row['pending'] > 0)
-                                        <span class="badge badge-amber">{{ $row['pending'] }}</span>
-                                    @else
-                                        <span class="text-sand-400">—</span>
-                                    @endif
-                                </td>
-                                <td class="num">{{ number_format($row['leaveDays'], 2) }}</td>
+                                <th>College</th>
+                                <th class="num">Staff</th>
+                                <th class="num">In review</th>
+                                <th class="num">Days taken</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach ($data['byCollege'] as $row)
+                                <tr>
+                                    <td>
+                                        <span class="badge badge-slate">{{ $row['code'] }}</span>
+                                        <span class="ml-2 text-sand-800">{{ $row['name'] }}</span>
+                                    </td>
+                                    <td class="num">{{ $row['headcount'] }}</td>
+                                    <td class="num">
+                                        @if ($row['pending'] > 0)
+                                            <span class="badge badge-amber">{{ $row['pending'] }}</span>
+                                        @else
+                                            <span class="text-sand-400">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="num">{{ number_format($row['leaveDays'], 2) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         @endif
     </x-card>

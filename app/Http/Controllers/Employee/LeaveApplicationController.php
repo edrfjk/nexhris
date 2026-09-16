@@ -10,6 +10,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\XlsxToPdfService;
+use App\Support\DocumentName;
 use Illuminate\Support\Facades\Storage;
 
 class LeaveApplicationController extends Controller
@@ -63,9 +64,11 @@ class LeaveApplicationController extends Controller
         $template = LeaveFormTemplate::active();
 
         if ($template && Storage::disk('public')->exists($template->file_path)) {
+            // Named for what it is rather than whatever HR called the upload,
+            // so the employee can tell it apart from the copy they fill in.
             return Storage::disk('public')->download(
                 $template->file_path,
-                $template->original_filename
+                DocumentName::template('Leave Form Template', $template->version, 'xlsx'),
             );
         }
 
@@ -119,7 +122,7 @@ class LeaveApplicationController extends Controller
             'reason' => $data['reason'] ?? null,
             'days' => $days,
             'status' => 'submitted',
-            'file_path' => $file->store('leave-applications', 'public'),
+            'file_path' => $file->store('leave-applications', 'local'),
             'file_original_name' => $file->getClientOriginalName(),
             'uploaded_at' => now(),
         ]);
@@ -163,12 +166,12 @@ class LeaveApplicationController extends Controller
 
         $file = $request->file('leave_form');
 
-        if ($application->file_path && Storage::disk('public')->exists($application->file_path)) {
-            Storage::disk('public')->delete($application->file_path);
+        if ($application->file_path && Storage::disk('local')->exists($application->file_path)) {
+            Storage::disk('local')->delete($application->file_path);
         }
 
         $application->update([
-            'file_path' => $file->store('leave-applications', 'public'),
+            'file_path' => $file->store('leave-applications', 'local'),
             'file_original_name' => $file->getClientOriginalName(),
             'uploaded_at' => now(),
             // A corrected form may have been filled on a newer blank.
@@ -199,7 +202,32 @@ class LeaveApplicationController extends Controller
     {
         $employee = Auth::user();
 
-        return $this->renderLedgerCard($employee, 'My_Leave_Ledger_' . now()->format('Ymd') . '.pdf');
+        // Named after the employee, not "My …" — the file leaves the browser
+        // and lands in a folder where "who is this" has to be obvious.
+        return $this->renderLedgerCard($employee, DocumentName::ledgerCard($employee));
+    }
+
+    /**
+     * The employee's own uploaded workbook.
+     *
+     * These used to be linked straight at /storage, which put every filed
+     * leave form — medical grounds and all — on the open web. They live on the
+     * private disk now, so reaching one goes through here and past this check.
+     */
+    public function downloadForm(LeaveApplication $application)
+    {
+        abort_unless($application->user_id === Auth::id(), 403, 'This is not your leave form.');
+
+        abort_unless(
+            $application->file_path && Storage::disk('local')->exists($application->file_path),
+            404,
+            'You have not uploaded a form for this application.'
+        );
+
+        return Storage::disk('local')->download(
+            $application->file_path,
+            DocumentName::leaveForm($application->user, $application->reference(), 'xlsx'),
+        );
     }
 
     /**
@@ -214,13 +242,13 @@ class LeaveApplicationController extends Controller
             'This is not your leave form.');
 
         abort_unless(
-            $application->file_path && Storage::disk('public')->exists($application->file_path),
+            $application->file_path && Storage::disk('local')->exists($application->file_path),
             404,
             'You have not uploaded a form for this application.'
         );
 
         return $converter->stream(
-            Storage::disk('public')->path($application->file_path),
+            Storage::disk('local')->path($application->file_path),
             $application->formPdfName(),
             cacheKey: 'leave-form:' . $application->id,
         );
@@ -256,8 +284,6 @@ class LeaveApplicationController extends Controller
             'generatedAt' => now(),
         ])->setPaper('a4', 'portrait');
 
-        $name = preg_replace('/[^A-Za-z0-9_]/', '_', $application->user->name ?? 'Employee');
-
-        return $pdf->stream("Leave_Form_{$name}_{$application->id}.pdf");
+        return $pdf->stream($application->approvalSheetName());
     }
 }

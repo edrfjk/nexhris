@@ -29,6 +29,8 @@ class TwoFactorCodeMail extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: 'emails.two-factor-code');
+        // Markdown, so it renders through the shared shell in
+        // resources/views/vendor/mail and matches every other NexHRIS email.
+        return new Content(markdown: 'emails.two-factor-code');
     }
 }
