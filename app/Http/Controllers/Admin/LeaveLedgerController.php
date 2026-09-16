@@ -10,8 +10,10 @@ use App\Models\LeaveFormTemplate;
 use App\Models\User;
 use App\Services\LeaveLedgerService;
 use App\Services\LeaveWorkflowService;
+use App\Support\DocumentName;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
@@ -210,29 +212,63 @@ class LeaveLedgerController extends Controller
             'sl_earned' => ['nullable', 'numeric', 'min:0'],
             'service_earned' => ['nullable', 'numeric', 'min:0'],
             'remarks' => ['nullable', 'string', 'max:255'],
+            'ledger' => ['nullable', Rule::in([LeaveLedgerEntry::LEAVE, LeaveLedgerEntry::SERVICE])],
         ]);
 
-        $employees = User::where('role', 'employee')->where('status', 'active')->get();
+        // Deans and the Campus Director accrue credits too — they are staff
+        // of the campus, not just reviewers of it.
+        $employees = User::personnel()->where('status', 'active')->get();
         $skipped = [];
+        $alreadyPosted = [];
+
+        $ledger = $data['ledger'] ?? LeaveLedgerEntry::LEAVE;
 
         foreach ($employees as $employee) {
+            // Posting the same month twice credits everybody twice, and the
+            // running balance replays whatever rows exist — so the error
+            // compounds quietly and only surfaces when someone's leave is
+            // refused for credits they were never owed. A double-click, a
+            // refresh, or two HR staff on the same day are all enough.
+            $exists = $employee->leaveLedgerEntries()
+                ->where('type', 'earned')
+                ->where('ledger', $ledger)
+                ->whereDate('period_from', $data['period_from'])
+                ->whereDate('period_to', $data['period_to'])
+                ->exists();
+
+            if ($exists) {
+                $alreadyPosted[] = $employee->name;
+
+                continue;
+            }
+
             try {
                 $service->postEntry(
                     employee: $employee,
                     periodFrom: $data['period_from'],
                     periodTo: $data['period_to'],
                     type: 'earned',
-                    remarks: $data['remarks'] ?: "Earned {$data['period_from']} – {$data['period_to']}",
+                    // A validated 'nullable' field is simply absent when the
+                    // box is left empty, so every read here needs a default.
+                    remarks: ($data['remarks'] ?? null)
+                        ?: "Earned {$data['period_from']} – {$data['period_to']}",
                     vlEarned: (float) ($data['vl_earned'] ?? 0),
                     slEarned: (float) ($data['sl_earned'] ?? 0),
                     serviceEarned: (float) ($data['service_earned'] ?? 0),
+                    ledger: $ledger,
                 );
             } catch (\RuntimeException $e) {
                 $skipped[] = $employee->name;
             }
         }
 
-        $message = 'Leave credits posted to ' . ($employees->count() - count($skipped)) . ' employee(s).';
+        $posted = $employees->count() - count($skipped) - count($alreadyPosted);
+
+        $message = 'Leave credits posted to ' . $posted . ' employee(s).';
+
+        if ($alreadyPosted) {
+            $message .= ' Already had this period: ' . implode(', ', $alreadyPosted) . '.';
+        }
 
         if ($skipped) {
             $message .= ' Skipped (would go negative): ' . implode(', ', $skipped) . '.';
@@ -249,11 +285,9 @@ class LeaveLedgerController extends Controller
     {
         abort_unless(auth()->user()->isReviewer(), 403);
 
-        $name = preg_replace('/[^A-Za-z0-9_]/', '_', $employee->name);
-
         return LeaveApplicationController::renderLedgerCard(
             $employee,
-            "Leave_Ledger_{$name}_" . now()->format('Ymd') . '.pdf'
+            DocumentName::ledgerCard($employee),
         );
     }
 
@@ -359,12 +393,14 @@ class LeaveLedgerController extends Controller
             'generatedBy' => auth()->user()->name ?? 'Admin',
         ])->setPaper('a4', 'landscape');
 
-        return $pdf->stream('Leave_Calendar_' . $start->format('F_Y') . '.pdf');
+        return $pdf->stream(DocumentName::leaveCalendar($start));
     }
 
     public function exportAllPdf()
     {
-        $employees = User::where('role', 'employee')->with('leaveBalance')->orderBy('name')->get();
+        // The same set the on-screen list shows, or the report silently
+        // omits whoever is not a plain employee.
+        $employees = User::personnel()->with('leaveBalance')->orderBy('name')->get();
 
         $pdf = Pdf::loadView('admin.leave.all-balances-pdf', [
             'employees' => $employees,
@@ -372,12 +408,12 @@ class LeaveLedgerController extends Controller
             'generatedBy' => auth()->user()->name ?? 'Admin',
         ])->setPaper('a4', 'portrait');
 
-        return $pdf->stream('Leave_Balances_' . now()->format('Ymd') . '.pdf');
+        return $pdf->stream(DocumentName::leaveBalances());
     }
 
     public function exportAllExcel()
     {
-        $employees = User::where('role', 'employee')->with('leaveBalance')->orderBy('name')->get();
+        $employees = User::personnel()->with('leaveBalance')->orderBy('name')->get();
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -400,7 +436,7 @@ class LeaveLedgerController extends Controller
             $row++;
         }
 
-        $filename = 'Leave_Balances_' . now()->format('Ymd') . '.xlsx';
+        $filename = DocumentName::leaveBalances(extension: 'xlsx');
         $tempPath = storage_path('app/temp/' . $filename);
 
         if (! is_dir(dirname($tempPath))) {

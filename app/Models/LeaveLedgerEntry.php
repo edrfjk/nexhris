@@ -7,6 +7,9 @@ class LeaveLedgerEntry extends Model
 {
     protected $fillable = [
         'user_id', 'period_from', 'period_to', 'year_label', 'remarks', 'type', 'ledger',
+        // Set only on accruals; the unique index uses it to refuse a second
+        // credit for the same month.
+        'accrual_period',
         'vl_earned', 'vl_used', 'vl_used_wop', 'vl_balance',
         'sl_earned', 'sl_used', 'sl_used_wop', 'sl_balance',
         'service_earned', 'service_used', 'service_balance',

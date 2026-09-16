@@ -9,7 +9,7 @@
     subtitle="View approved and pending employee leaves by month.">
 
     <x-slot:actions>
-        <a href="{{ route('admin.leave.calendar.export', ['month' => $month]) }}" target="_blank"
+        <a href="{{ route('admin.leave.calendar.export', ['month' => $month, 'filename' => \App\Support\DocumentName::leaveCalendar(\Carbon\Carbon::parse($month . '-01'))]) }}" target="_blank"
            class="btn btn-md btn-secondary">
             <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
             Export Month
@@ -144,17 +144,18 @@
     <div class="card p-5">
 
         {{-- Month navigation --}}
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between gap-2 mb-6">
             <a href="{{ route('admin.leave.calendar', ['month' => $current->copy()->subMonth()->format('Y-m'), 'college' => request('college')]) }}"
-               class="icon-btn icon-btn-round">
+               class="icon-btn icon-btn-round shrink-0"
+               aria-label="Previous month">
                 <x-heroicon-o-arrow-left class="w-4 h-4" />
             </a>
 
-            <div class="flex items-center gap-3">
+            <div class="flex min-w-0 flex-wrap items-center justify-center gap-2 sm:gap-3">
                 <!-- Jump straight to a month/year instead of clicking prev/next repeatedly -->
-                <form method="GET" action="{{ route('admin.leave.calendar') }}" class="flex items-center gap-2">
+                <form method="GET" action="{{ route('admin.leave.calendar') }}" class="flex min-w-0 flex-wrap items-center justify-center gap-2">
                     <input type="month" name="month" value="{{ $current->format('Y-m') }}" onchange="this.form.submit()"
-                           class="input sm:text-xl font-semibold cursor-pointer hover:bg-sand-50 -mx-1">
+                           class="input min-w-0 max-w-full sm:text-xl font-semibold cursor-pointer hover:bg-sand-50 -mx-1">
 
                     {{-- HR and the Campus Director may narrow to one college.
                          A Dean has no picker: their scope is fixed to their own. --}}
@@ -180,7 +181,8 @@
             </div>
 
             <a href="{{ route('admin.leave.calendar', ['month' => $current->copy()->addMonth()->format('Y-m'), 'college' => request('college')]) }}"
-               class="icon-btn icon-btn-round">
+               class="icon-btn icon-btn-round shrink-0"
+               aria-label="Next month">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
             </a>
         </div>

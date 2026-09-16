@@ -255,6 +255,23 @@ public function deanOfCollege()
 }
 
 /**
+ * Everyone who holds a leave ledger card and a PDS.
+ *
+ * Deans and the Campus Director are staff of the campus before they are
+ * reviewers: they accrue credits, file leave and print a ledger card like
+ * anyone else. Only the HR/system account sits outside this set, because it
+ * administers the records rather than owning one.
+ *
+ * Spelled out once here because listing the roles by hand at each call site
+ * is how the Dean and the Campus Director fell out of the balances report
+ * and the monthly accrual run.
+ */
+public function scopePersonnel($query)
+{
+    return $query->whereIn('role', ['employee', 'dean', 'campus_director']);
+}
+
+/**
  * Limits a User query to the records this viewer may see.
  *
  * A Dean sees only their own college; HR and the Campus Director see
@@ -290,7 +307,18 @@ public function nameParts(): array
         [$family, $rest] = array_map('trim', explode(',', $name, 2));
     } else {
         $words = preg_split('/\s+/', $name) ?: [];
-        $family = count($words) > 1 ? array_pop($words) : $name;
+        // A one-word name is all surname; leaving it in $words would print it
+        // in the first-name cell as well.
+        $family = array_pop($words) ?? $name;
+
+        // Filipino surnames often carry a particle: Sta. Ana, Dela Cruz,
+        // De Guzman, Del Rosario. Taking only the last word puts "ANA" in
+        // the FAMILY NAME cell and strands "Sta." as a middle initial, so
+        // pull any particle back onto the surname before splitting further.
+        while (count($words) > 1 && self::isSurnameParticle(end($words))) {
+            $family = array_pop($words) . ' ' . $family;
+        }
+
         $rest = implode(' ', $words);
     }
 
@@ -310,5 +338,18 @@ public function nameParts(): array
         'first' => strtoupper(implode(' ', $restWords)),
         'middle' => $middle,
     ];
+}
+
+/** Words that belong to the surname that follows them, not to a given name. */
+private static function isSurnameParticle(string $word): bool
+{
+    $word = strtolower(rtrim(trim($word), '.'));
+
+    return in_array($word, [
+        'sta', 'sto', 'santa', 'santo', 'san',
+        'de', 'del', 'dela', 'delas', 'delos', 'des', 'di', 'da',
+        'la', 'las', 'los', 'y',
+        'van', 'von', 'mac', 'mc',
+    ], true);
 }
 }

@@ -8,6 +8,7 @@ use App\Models\PdsTemplate;
 use App\Models\User;
 use App\Services\PdsSubmissionService;
 use App\Services\XlsxToPdfService;
+use App\Support\DocumentName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -140,13 +141,12 @@ class PdsReviewController extends Controller
             return back()->with('error', "{$employee->name} has not uploaded a PDS yet.");
         }
 
-        $filename = 'PDS_' . preg_replace('/[^A-Za-z0-9_]/', '_', $employee->name)
-            . '_' . $submission->applicable_year . '.pdf';
+        $filename = DocumentName::personalDataSheet($employee, $submission->applicable_year);
 
         if ($submission->pdfExists()) {
             return response()->file($submission->pdfPath(), [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                'Content-Disposition' => DocumentName::disposition($filename),
             ]);
         }
 
@@ -169,9 +169,9 @@ class PdsReviewController extends Controller
         abort_unless($submission && $submission->workbookExists(), 404,
             "{$employee->name} has not uploaded a PDS yet.");
 
-        return Storage::disk('public')->download(
+        return Storage::disk('local')->download(
             $submission->file_path,
-            $submission->file_original_name ?: 'PDS.xlsx'
+            DocumentName::personalDataSheet($employee, $submission->applicable_year, 'xlsx'),
         );
     }
 

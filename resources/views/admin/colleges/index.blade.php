@@ -163,54 +163,57 @@
                             </button>
                         </div>
                     @else
-                        <table class="w-full text-[13px]">
-                            <thead>
-                                <tr class="text-[11px] uppercase tracking-wide text-sand-500">
-                                    <th class="text-left font-semibold px-5 py-2 pl-14">Code</th>
-                                    <th class="text-left font-semibold px-4 py-2">Department / Programme</th>
-                                    <th class="text-right font-semibold px-4 py-2">People</th>
-                                    <th class="text-left font-semibold px-4 py-2 hidden md:table-cell">Head</th>
-                                    <th class="px-5 py-2"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-sand-200">
-                                @foreach ($college->departments as $department)
-                                    <tr class="hover:bg-white/70 transition-colors">
-                                        <td class="px-5 py-2.5 pl-14">
-                                            <span class="badge badge-slate">{{ $department->code }}</span>
-                                        </td>
-                                        <td class="px-4 py-2.5">
-                                            <span class="text-sand-900">{{ $department->name }}</span>
-                                            @unless ($department->is_active)
-                                                <span class="badge badge-slate ml-1.5">Inactive</span>
-                                            @endunless
-                                        </td>
-                                        <td class="px-4 py-2.5 text-right tabular text-sand-700">
-                                            {{ $department->employees_count }}
-                                        </td>
-                                        <td class="px-4 py-2.5 hidden md:table-cell text-sand-600">
-                                            {{ $department->head?->name ?? '—' }}
-                                        </td>
-                                        <td class="px-5 py-2.5 text-right whitespace-nowrap">
-                                            <button type="button" class="btn btn-xs btn-secondary"
-                                                    onclick="document.getElementById('edit-dept-{{ $department->id }}').showModal()">
-                                                Edit
-                                            </button>
-                                            <form method="POST" action="{{ route('admin.departments.destroy', $department) }}"
-                                                  class="inline"
-                                                  onsubmit="return confirm({{ $department->isDeletable()
-                                                      ? Js::from('Delete this empty department?')
-                                                      : Js::from('This department still has employees, so it will be deactivated instead. Continue?') }})">
-                                                @csrf @method('DELETE')
-                                                <button class="btn btn-xs btn-danger-soft">
-                                                    {{ $department->isDeletable() ? 'Delete' : 'Deactivate' }}
-                                                </button>
-                                            </form>
-                                        </td>
+                        {{-- A data table is wider than a phone. Without this the whole page scrolls sideways instead of the table. --}}
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-[13px]">
+                                <thead>
+                                    <tr class="text-[11px] uppercase tracking-wide text-sand-500">
+                                        <th class="text-left font-semibold px-5 py-2 pl-14">Code</th>
+                                        <th class="text-left font-semibold px-4 py-2">Department / Programme</th>
+                                        <th class="text-right font-semibold px-4 py-2">People</th>
+                                        <th class="text-left font-semibold px-4 py-2 hidden md:table-cell">Head</th>
+                                        <th class="px-5 py-2"></th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody class="divide-y divide-sand-200">
+                                    @foreach ($college->departments as $department)
+                                        <tr class="hover:bg-white/70 transition-colors">
+                                            <td class="px-5 py-2.5 pl-14">
+                                                <span class="badge badge-slate">{{ $department->code }}</span>
+                                            </td>
+                                            <td class="px-4 py-2.5">
+                                                <span class="text-sand-900">{{ $department->name }}</span>
+                                                @unless ($department->is_active)
+                                                    <span class="badge badge-slate ml-1.5">Inactive</span>
+                                                @endunless
+                                            </td>
+                                            <td class="px-4 py-2.5 text-right tabular text-sand-700">
+                                                {{ $department->employees_count }}
+                                            </td>
+                                            <td class="px-4 py-2.5 hidden md:table-cell text-sand-600">
+                                                {{ $department->head?->name ?? '—' }}
+                                            </td>
+                                            <td class="px-5 py-2.5 text-right whitespace-nowrap">
+                                                <button type="button" class="btn btn-xs btn-secondary"
+                                                        onclick="document.getElementById('edit-dept-{{ $department->id }}').showModal()">
+                                                    Edit
+                                                </button>
+                                                <form method="POST" action="{{ route('admin.departments.destroy', $department) }}"
+                                                      class="inline"
+                                                      onsubmit="return confirm({{ $department->isDeletable()
+                                                          ? Js::from('Delete this empty department?')
+                                                          : Js::from('This department still has employees, so it will be deactivated instead. Continue?') }})">
+                                                    @csrf @method('DELETE')
+                                                    <button class="btn btn-xs btn-danger-soft">
+                                                        {{ $department->isDeletable() ? 'Delete' : 'Deactivate' }}
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     @endif
                 </div>
             </div>

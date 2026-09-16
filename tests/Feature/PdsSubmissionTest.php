@@ -69,18 +69,20 @@ class PdsSubmissionTest extends TestCase
     public function test_employee_downloads_the_published_blank(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $template = $this->publishTemplate($hr);
 
         $this->actingAs($this->user('employee'))
             ->get(route('pds.template.download'))
             ->assertOk()
-            ->assertDownload($template->original_filename);
+            ->assertDownload('Personal Data Sheet Template v' . $template->version . '.xlsx');
     }
 
     public function test_a_workbook_with_the_wrong_sheets_is_rejected(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $this->publishTemplate($hr);
 
@@ -94,6 +96,7 @@ class PdsSubmissionTest extends TestCase
     public function test_a_non_workbook_is_rejected(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $this->publishTemplate($hr);
 
@@ -107,6 +110,7 @@ class PdsSubmissionTest extends TestCase
     public function test_a_valid_upload_is_stored_and_converted(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $template = $this->publishTemplate($hr);
         $employee = $this->user('employee');
@@ -147,6 +151,7 @@ class PdsSubmissionTest extends TestCase
     public function test_submitting_notifies_hr(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         Notification::fake();
 
         $hr = $this->user('admin');
@@ -164,6 +169,7 @@ class PdsSubmissionTest extends TestCase
     public function test_hr_approves_and_the_employee_is_notified(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $employee = $this->user('employee');
 
@@ -185,6 +191,7 @@ class PdsSubmissionTest extends TestCase
     public function test_returning_requires_remarks_and_notifies_the_employee(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $employee = $this->user('employee');
 
@@ -210,6 +217,7 @@ class PdsSubmissionTest extends TestCase
     public function test_a_submitted_pds_cannot_be_re_uploaded_until_it_is_returned(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $employee = $this->user('employee');
 
@@ -223,6 +231,7 @@ class PdsSubmissionTest extends TestCase
     public function test_re_uploading_after_a_return_archives_the_previous_version(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $employee = $this->user('employee');
 
@@ -256,6 +265,7 @@ class PdsSubmissionTest extends TestCase
     public function test_only_a_submitted_pds_can_be_approved(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $employee = $this->user('employee');
 
@@ -271,6 +281,7 @@ class PdsSubmissionTest extends TestCase
     public function test_only_hr_reviews_the_pds(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $employee = $this->user('employee');
 
@@ -300,6 +311,7 @@ class PdsSubmissionTest extends TestCase
     public function test_every_role_can_file_a_pds(string $role): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $applicant = $this->user($role);
 
@@ -317,6 +329,7 @@ class PdsSubmissionTest extends TestCase
     public function test_the_employee_can_export_their_own_pds_as_pdf(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $employee = $this->user('employee');
 
@@ -331,6 +344,7 @@ class PdsSubmissionTest extends TestCase
     public function test_hr_can_preview_the_submitted_pds(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $employee = $this->user('employee');
 
@@ -348,6 +362,7 @@ class PdsSubmissionTest extends TestCase
     public function test_a_submission_records_the_template_version_used(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $hr = $this->user('admin');
         $employee = $this->user('employee');
 

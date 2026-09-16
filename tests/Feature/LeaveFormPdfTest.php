@@ -30,7 +30,9 @@ class LeaveFormPdfTest extends TestCase
     {
         parent::setUp();
 
-        Storage::fake('public');
+        // Filed forms live on the private disk now: they carry the medical
+        // grounds an employee wrote down, so they are never web-readable.
+        Storage::fake('local');
 
         $this->cas = College::where('code', 'CAS')->firstOrFail();
         $this->employee = User::factory()->create([
@@ -54,7 +56,7 @@ class LeaveFormPdfTest extends TestCase
         (new XlsxWriter($spreadsheet))->save($path);
         $spreadsheet->disconnectWorksheets();
 
-        Storage::disk('public')->put('leave-applications/form.xlsx', file_get_contents($path));
+        Storage::disk('local')->put('leave-applications/form.xlsx', file_get_contents($path));
 
         return LeaveApplication::create(array_merge([
             'user_id' => $this->employee->id,
@@ -199,7 +201,7 @@ class LeaveFormPdfTest extends TestCase
     public function test_a_missing_file_is_reported_rather_than_crashing(): void
     {
         $application = $this->application();
-        Storage::disk('public')->delete('leave-applications/form.xlsx');
+        Storage::disk('local')->delete('leave-applications/form.xlsx');
 
         $this->actingAs($this->reviewer('admin'))
             ->get(route('admin.leave.review.form.pdf', $application))
@@ -210,7 +212,11 @@ class LeaveFormPdfTest extends TestCase
     {
         $application = $this->application();
 
-        $this->assertStringContainsString('Dela_Cruz', $application->formPdfName());
-        $this->assertStringEndsWith('.pdf', $application->formPdfName());
+        // Written the way a person would file it, not in underscores: the
+        // name has to make sense in a downloads folder next to everyone else's.
+        $this->assertSame(
+            "Dela Cruz, Juan's Leave Form (#" . $application->reference() . ').pdf',
+            $application->formPdfName(),
+        );
     }
 }

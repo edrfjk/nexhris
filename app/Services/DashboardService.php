@@ -263,42 +263,72 @@ class DashboardService
         ];
     }
 
-    /** Per-college leave volume, pending count and PDS compliance. */
+    /**
+     * Per-college leave volume, pending count and PDS compliance.
+     *
+     * Four grouped queries rather than four per college. This used to loop over
+     * the colleges and ask the database for each one's headcount, pending
+     * forms, leave days and PDS count separately: at four colleges that was
+     * twenty-three queries and a third of a second, and it grew with every
+     * college added. It is the first screen HR opens each morning.
+     */
     private function collegeBreakdown(): array
     {
         $year = now()->year;
 
-        return College::active()
-            ->withCount('employees')
-            ->orderBy('name')
-            ->get()
-            ->map(function (College $college) use ($year) {
-                $staffIds = User::where('college_id', $college->id)->pluck('id');
+        $colleges = College::active()->orderBy('name')->get();
 
-                $pending = LeaveApplication::whereIn('user_id', $staffIds)
-                    ->whereIn('status', self::IN_FLIGHT)->count();
+        if ($colleges->isEmpty()) {
+            return [];
+        }
 
-                $submitted = PdsSubmission::whereIn('user_id', $staffIds)
-                    ->where('applicable_year', $year)
-                    ->whereIn('status', ['submitted', 'approved'])
-                    ->count();
+        $collegeIds = $colleges->pluck('id')->all();
 
-                $headcount = $staffIds->count();
+        // Who belongs where, in one pass — the loop asked this per college.
+        $staff = User::whereIn('college_id', $collegeIds)
+            ->pluck('college_id', 'id');
 
-                return [
-                    'code' => $college->code,
-                    'name' => $college->name,
-                    'headcount' => $headcount,
-                    'pending' => $pending,
-                    'leaveDays' => round((float) LeaveApplication::whereIn('user_id', $staffIds)
-                        ->whereIn('status', ['cd_approved', 'completed'])
-                        ->whereYear('date_from', $year)
-                        ->sum('days'), 2),
-                    'compliance' => $headcount > 0 ? (int) round($submitted / $headcount * 100) : 0,
-                ];
-            })
-            ->values()
-            ->all();
+        $headcounts = $staff->countBy()->all();
+
+        $pending = LeaveApplication::query()
+            ->join('users', 'users.id', '=', 'leave_applications.user_id')
+            ->whereIn('users.college_id', $collegeIds)
+            ->whereIn('leave_applications.status', self::IN_FLIGHT)
+            ->groupBy('users.college_id')
+            ->selectRaw('users.college_id, COUNT(*) as total')
+            ->pluck('total', 'college_id');
+
+        $leaveDays = LeaveApplication::query()
+            ->join('users', 'users.id', '=', 'leave_applications.user_id')
+            ->whereIn('users.college_id', $collegeIds)
+            ->whereIn('leave_applications.status', ['cd_approved', 'completed'])
+            ->whereYear('leave_applications.date_from', $year)
+            ->groupBy('users.college_id')
+            ->selectRaw('users.college_id, SUM(leave_applications.days) as total')
+            ->pluck('total', 'college_id');
+
+        $submitted = PdsSubmission::query()
+            ->join('users', 'users.id', '=', 'pds_submissions.user_id')
+            ->whereIn('users.college_id', $collegeIds)
+            ->where('pds_submissions.applicable_year', $year)
+            ->whereIn('pds_submissions.status', ['submitted', 'approved'])
+            ->groupBy('users.college_id')
+            ->selectRaw('users.college_id, COUNT(*) as total')
+            ->pluck('total', 'college_id');
+
+        return $colleges->map(function (College $college) use ($headcounts, $pending, $leaveDays, $submitted) {
+            $headcount = (int) ($headcounts[$college->id] ?? 0);
+            $filed = (int) ($submitted[$college->id] ?? 0);
+
+            return [
+                'code' => $college->code,
+                'name' => $college->name,
+                'headcount' => $headcount,
+                'pending' => (int) ($pending[$college->id] ?? 0),
+                'leaveDays' => round((float) ($leaveDays[$college->id] ?? 0), 2),
+                'compliance' => $headcount > 0 ? (int) round($filed / $headcount * 100) : 0,
+            ];
+        })->values()->all();
     }
 
     /** Accounts created recently whose PDS is still outstanding. */
@@ -317,10 +347,21 @@ class DashboardService
             ->all();
     }
 
-    /** How much of the campus has acknowledged the newest policy. */
+    /**
+     * How much of the campus has acknowledged the newest policy that asks for it.
+     *
+     * Only a policy that requires acknowledgment has a compliance figure at
+     * all. Taking the newest published policy of any kind meant that the moment
+     * HR published an ordinary memo, the dashboard reported it as 0% complied
+     * with — nobody can acknowledge what does not ask to be acknowledged — and
+     * its link went to a compliance page that does not exist for that policy.
+     */
     private function policyTracker(int $totalStaff): ?array
     {
-        $policy = HrPolicy::where('is_published', true)->latest()->first();
+        $policy = HrPolicy::where('is_published', true)
+            ->where('requires_acknowledgment', true)
+            ->latest()
+            ->first();
 
         if (! $policy) {
             return null;

@@ -1,0 +1,425 @@
+/* NexHRIS mail theme.
+ *
+ * Laravel inlines this file into every markdown mail before sending, so it is
+ * the one place that decides how all of them look: two-factor codes, password
+ * resets, leave and PDS notices, announcements. Colours are the seal's —
+ * maroon #780000, gold #f0dc00, forest #145000 on a cream ground — matching
+ * the palette in tailwind.config.js.
+ *
+ * Written for mail clients, not browsers: no flexbox, no grid, no custom
+ * properties, no shorthand a 2007 renderer would drop. Outlook ignores
+ * border-radius and that is fine.
+ */
+
+/* Base */
+
+body {
+    background-color: #f5f5ee;
+    color: #3a382f;
+    height: 100%;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+    -webkit-text-size-adjust: none;
+}
+
+body,
+td,
+th,
+p,
+a {
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+a {
+    color: #8f1414;
+    text-decoration: underline;
+}
+
+a img {
+    border: none;
+}
+
+img {
+    max-width: 100%;
+}
+
+/* Typography */
+
+h1 {
+    color: #26251f;
+    font-size: 19px;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 14px;
+    text-align: left;
+}
+
+h2 {
+    color: #26251f;
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+p {
+    color: #514f43;
+    font-size: 14.5px;
+    line-height: 1.65;
+    margin-top: 0;
+    margin-bottom: 14px;
+    text-align: left;
+}
+
+p.sub {
+    font-size: 12px;
+}
+
+strong {
+    color: #26251f;
+    font-weight: 600;
+}
+
+img {
+    max-width: 100%;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #eceadf;
+    margin: 22px 0;
+}
+
+/* Layout */
+
+.wrapper {
+    background-color: #f5f5ee;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+}
+
+.content {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+}
+
+/* Masthead: the institution leads, the system follows — the same order the
+   sign-in screen reads in. The gold rule under it is the seal's third colour
+   and is what makes the band read as ISPSC rather than as generic maroon. */
+
+.header {
+    background-color: #780000;
+    border-bottom: 3px solid #f0dc00;
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+    padding: 24px 30px 20px 30px;
+    text-align: left;
+}
+
+.header a,
+.masthead-system {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-decoration: none;
+}
+
+.masthead-republic {
+    color: #f8e94a;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 1.6px;
+    margin: 0 0 4px 0;
+    text-transform: uppercase;
+}
+
+.masthead-institution {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    margin: 0;
+}
+
+.masthead-tagline {
+    color: #f5cccc;
+    font-size: 11.5px;
+    font-weight: 400;
+    letter-spacing: 0;
+    padding-left: 10px;
+}
+
+.masthead-campus {
+    color: #f5cccc;
+    font-size: 11.5px;
+    margin: 2px 0 0 0;
+}
+
+.masthead-rule {
+    border-top: 1px solid #a82c2c;
+    font-size: 0;
+    height: 1px;
+    line-height: 0;
+    padding: 13px 0 0 0;
+}
+
+/* Body */
+
+.body {
+    background-color: #f5f5ee;
+    border-bottom: 1px solid #f5f5ee;
+    border-top: 1px solid #f5f5ee;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+}
+
+.inner-body {
+    background-color: #ffffff;
+    border-color: #eceadf;
+    border-radius: 10px;
+    border-width: 1px;
+    border-style: solid;
+    margin: 0 auto;
+    padding: 0;
+    width: 570px;
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 570px;
+}
+
+/* Subcopy */
+
+.subcopy {
+    border-top: 1px solid #eceadf;
+    margin-top: 26px;
+    padding-top: 18px;
+}
+
+.subcopy p {
+    color: #8a8778;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.subcopy a {
+    color: #8a8778;
+    word-break: break-all;
+}
+
+/* Footer */
+
+.footer {
+    margin: 0 auto;
+    padding: 0;
+    text-align: center;
+    width: 570px;
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 570px;
+}
+
+.footer p {
+    color: #8a8778;
+    font-size: 11.5px;
+    line-height: 1.6;
+    text-align: center;
+}
+
+.footer a {
+    color: #8a8778;
+    text-decoration: underline;
+}
+
+/* Tables */
+
+.table table {
+    margin: 20px auto;
+    width: 100%;
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+}
+
+.table th {
+    border-bottom: 1px solid #dbd8c8;
+    color: #26251f;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    margin: 0;
+    padding-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.table td {
+    color: #514f43;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5ee;
+}
+
+.content-cell {
+    max-width: 100vw;
+    padding: 30px;
+}
+
+/* Buttons */
+
+.action {
+    margin: 26px auto;
+    padding: 0;
+    text-align: center;
+    width: 100%;
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+}
+
+.button {
+    border-radius: 6px;
+    color: #ffffff;
+    display: inline-block;
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    overflow: hidden;
+    text-decoration: none;
+    -webkit-text-size-adjust: none;
+}
+
+/* Every mail sent by the system uses the primary button. The other two exist
+   because MailMessage::error() and ::success() reach for them. */
+
+.button-primary,
+.button-blue {
+    background-color: #780000;
+    border-bottom: 8px solid #780000;
+    border-left: 20px solid #780000;
+    border-right: 20px solid #780000;
+    border-top: 8px solid #780000;
+}
+
+.button-success,
+.button-green {
+    background-color: #145000;
+    border-bottom: 8px solid #145000;
+    border-left: 20px solid #145000;
+    border-right: 20px solid #145000;
+    border-top: 8px solid #145000;
+}
+
+.button-error,
+.button-red {
+    background-color: #8f1414;
+    border-bottom: 8px solid #8f1414;
+    border-left: 20px solid #8f1414;
+    border-right: 20px solid #8f1414;
+    border-top: 8px solid #8f1414;
+}
+
+/* Panels — used for a quoted detail, and for the two-factor code. */
+
+.panel {
+    border-left: 3px solid #780000;
+    margin: 20px 0;
+}
+
+.panel-content {
+    background-color: #fbfbf7;
+    color: #514f43;
+    padding: 16px;
+}
+
+.panel-content p {
+    color: #514f43;
+    margin-bottom: 0;
+}
+
+.panel-item {
+    padding: 0;
+}
+
+.panel-item p:last-of-type {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Verification code. Monospaced and widely tracked so that a digit read off
+   a phone cannot be confused with the one beside it. */
+
+.code {
+    margin: 22px auto;
+    width: 100%;
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+}
+
+.code-cell {
+    background-color: #fdf5f5;
+    border: 1px solid #f5cccc;
+    border-radius: 8px;
+    padding: 18px 10px;
+    text-align: center;
+}
+
+.code-value {
+    color: #780000;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 31px;
+    font-weight: 700;
+    letter-spacing: 9px;
+    line-height: 1.2;
+    margin: 0;
+    text-align: center;
+}
+
+.code-label {
+    color: #8a8778;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+    margin: 0 0 8px 0;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+/* Utilities */
+
+.align-right {
+    text-align: right;
+}
+
+.align-left {
+    text-align: left;
+}
+
+.align-center {
+    text-align: center;
+}

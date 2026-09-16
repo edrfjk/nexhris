@@ -33,9 +33,12 @@ class TwoFactorController extends Controller
             return redirect()->route('login');
         }
 
+        // Whole seconds remaining, not timestamps. The page counts down from
+        // these, so a visitor whose own clock is wrong still sees the right
+        // numbers — only the length of each second is taken from the browser.
         return view('auth.two-factor-challenge', [
             'user' => $challenge->user,
-            'expiresAt' => $challenge->expires_at,
+            'expiresIn' => max(0, (int) ceil(now()->diffInSeconds($challenge->expires_at, false))),
             'cooldown' => $this->twoFactor->cooldownRemaining($challenge),
         ]);
     }

@@ -7,6 +7,7 @@ use App\Models\LeaveApplication;
 use App\Models\Department;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -27,6 +28,12 @@ class AdminScreensTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // The suite must not write into the real storage folders: these
+        // tests publish templates and file leave forms, and without this
+        // every run left its fixtures behind on disk.
+        Storage::fake('public');
+        Storage::fake('local');
 
         $this->hr = User::factory()->create(['role' => 'admin', 'status' => 'active']);
         $this->cas = College::where('code', 'CAS')->firstOrFail();

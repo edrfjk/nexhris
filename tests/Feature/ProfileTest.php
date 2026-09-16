@@ -112,8 +112,8 @@ class ProfileTest extends TestCase
 
         $this->actingAs($user)->put(route('profile.password.update'), [
             'current_password' => 'not-the-password',
-            'password' => 'brand-new-password',
-            'password_confirmation' => 'brand-new-password',
+            'password' => 'brand-new-password9',
+            'password_confirmation' => 'brand-new-password9',
         ])->assertSessionHasErrors('current_password');
 
         $this->assertTrue(Hash::check('original-password', $user->fresh()->password));
@@ -125,11 +125,11 @@ class ProfileTest extends TestCase
 
         $this->actingAs($user)->put(route('profile.password.update'), [
             'current_password' => 'original-password',
-            'password' => 'brand-new-password',
-            'password_confirmation' => 'brand-new-password',
+            'password' => 'brand-new-password9',
+            'password_confirmation' => 'brand-new-password9',
         ])->assertRedirect();
 
-        $this->assertTrue(Hash::check('brand-new-password', $user->fresh()->password));
+        $this->assertTrue(Hash::check('brand-new-password9', $user->fresh()->password));
     }
 
     public function test_mismatched_new_passwords_are_rejected(): void
@@ -138,7 +138,7 @@ class ProfileTest extends TestCase
 
         $this->actingAs($user)->put(route('profile.password.update'), [
             'current_password' => 'original-password',
-            'password' => 'brand-new-password',
+            'password' => 'brand-new-password9',
             'password_confirmation' => 'different-password',
         ])->assertSessionHasErrors('password');
 
@@ -148,6 +148,7 @@ class ProfileTest extends TestCase
     public function test_a_person_replaces_their_own_photo(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $user = $this->person('campus_director');
 
         $this->actingAs($user)->post(route('profile.photo.update'), [
@@ -202,10 +203,10 @@ class ProfileTest extends TestCase
 
         $this->actingAs($hr)->put(route('profile.password.update'), [
             'current_password' => 'original-password',
-            'password' => 'brand-new-password',
-            'password_confirmation' => 'brand-new-password',
+            'password' => 'brand-new-password9',
+            'password_confirmation' => 'brand-new-password9',
         ])->assertRedirect();
 
-        $this->assertTrue(Hash::check('brand-new-password', $hr->fresh()->password));
+        $this->assertTrue(Hash::check('brand-new-password9', $hr->fresh()->password));
     }
 }

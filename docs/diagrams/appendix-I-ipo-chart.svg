@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 660" width="640" height="660">
+<title>Input-Process-Output Chart &#8212; NexHRIS, ISPSC Tagudin Campus</title>
+<rect x="0" y="0" width="640" height="660" fill="#ffffff"/>
+
+        <defs>
+          <marker id="mi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M0,0.8 L9.2,5 L0,9.2 z" fill="#000"/>
+          </marker>
+        </defs>
+
+        <rect x="40" y="20" width="520" height="180" fill="#fff" stroke="#000" stroke-width="1.4"/>
+        <path d="M40,46 H560" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="300" y="38" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11" font-weight="bold">I N P U T</text>
+        <g fill="#000">
+          <rect x="62" y="60" width="5" height="5"/><rect x="62" y="78" width="5" height="5"/>
+          <rect x="62" y="96" width="5" height="5"/><rect x="62" y="114" width="5" height="5"/>
+          <rect x="62" y="132" width="5" height="5"/><rect x="62" y="150" width="5" height="5"/>
+          <rect x="62" y="168" width="5" height="5"/>
+        </g>
+        <text x="78" y="65" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Sign-in credentials and emailed one-time code</text>
+        <text x="78" y="83" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Employee record, college and department</text>
+        <text x="78" y="101" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Blank CS Form 212 and blank leave form (.xlsx)</text>
+        <text x="78" y="119" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Filled PDS and leave workbooks uploaded</text>
+        <text x="78" y="137" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Approve or return decision, with remarks</text>
+        <text x="78" y="155" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Days to charge and which ledger card</text>
+        <text x="78" y="173" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Policy and announcement text</text>
+
+        <rect x="40" y="232" width="520" height="180" fill="#fff" stroke="#000" stroke-width="1.4"/>
+        <path d="M40,258 H560" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="300" y="250" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11" font-weight="bold">P R O C E S S</text>
+        <g fill="#000">
+          <rect x="62" y="272" width="5" height="5"/><rect x="62" y="290" width="5" height="5"/>
+          <rect x="62" y="308" width="5" height="5"/><rect x="62" y="326" width="5" height="5"/>
+          <rect x="62" y="344" width="5" height="5"/><rect x="62" y="362" width="5" height="5"/>
+          <rect x="62" y="380" width="5" height="5"/>
+        </g>
+        <text x="78" y="277" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Authenticate, mail a code, attach the role scope</text>
+        <text x="78" y="295" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Validate the uploaded workbook against the template</text>
+        <text x="78" y="313" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Derive the approval chain from who is applying</text>
+        <text x="78" y="331" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Record each approval in sequence; restart on a return</text>
+        <text x="78" y="349" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Post the days and replay the running balance</text>
+        <text x="78" y="367" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Convert the workbook to an A4 PDF</text>
+        <text x="78" y="385" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Aggregate figures per role and append the audit log</text>
+
+        <rect x="40" y="444" width="520" height="180" fill="#fff" stroke="#000" stroke-width="1.4"/>
+        <path d="M40,470 H560" fill="none" stroke="#000" stroke-width="1"/>
+        <text x="300" y="462" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11" font-weight="bold">O U T P U T</text>
+        <g fill="#000">
+          <rect x="62" y="484" width="5" height="5"/><rect x="62" y="502" width="5" height="5"/>
+          <rect x="62" y="520" width="5" height="5"/><rect x="62" y="538" width="5" height="5"/>
+          <rect x="62" y="556" width="5" height="5"/><rect x="62" y="574" width="5" height="5"/>
+          <rect x="62" y="592" width="5" height="5"/>
+        </g>
+        <text x="78" y="489" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Authorised, role-scoped session</text>
+        <text x="78" y="507" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Versioned Personal Data Sheet with a review status</text>
+        <text x="78" y="525" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Fully approved leave form with the complete trail</text>
+        <text x="78" y="543" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Leave ledger card and service credit ledger card</text>
+        <text x="78" y="561" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">A4 PDF of every campus form</text>
+        <text x="78" y="579" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Digital ID with a QR verification page</text>
+        <text x="78" y="597" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="11">Per-role dashboards, email notices and audit trail</text>
+
+        <path d="M300,200 V228" marker-end="url(#mi)" stroke-width="1.6" fill="none" stroke="#000"/>
+        <path d="M300,412 V440" marker-end="url(#mi)" stroke-width="1.6" fill="none" stroke="#000"/>
+
+        <path d="M560,600 H600 V70 H564" marker-end="url(#mi)" stroke-width="1.4" fill="none" stroke="#000"/>
+        <text x="594" y="322" text-anchor="middle" transform="rotate(-90 594 322)" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10" font-weight="bold">F E E D B A C K</text>
+      
+
+</svg>

@@ -30,12 +30,12 @@
     @if ($submission->file_path)
         <div class="card p-5 mb-6">
             <div class="flex items-start justify-between flex-wrap gap-4">
-                <div class="flex items-center gap-3">
+                <div class="flex min-w-0 items-center gap-3">
                     <div class="w-11 h-11 rounded-lg bg-forest-50 text-forest-600 flex items-center justify-center flex-shrink-0">
                         <x-heroicon-o-check-circle class="w-5 h-5" />
                     </div>
-                    <div>
-                        <p class="font-medium text-sand-800">{{ $submission->file_original_name ?? 'My PDS.xlsx' }}</p>
+                    <div class="min-w-0">
+                        <p class="font-medium text-sand-800 break-all">{{ $submission->file_original_name ?? 'My PDS.xlsx' }}</p>
                         <p class="text-xs text-sand-400">
                             Uploaded {{ optional($submission->uploaded_at)->format('M d, Y g:i A') ?? '—' }}
                         </p>
@@ -49,11 +49,11 @@
             </div>
 
             <div class="flex items-center gap-2 flex-wrap mt-4 pt-4 border-t border-sand-100">
-                <a href="{{ route('pds.export') }}" target="_blank"
-                   class="inline-flex items-center gap-1.5 bg-sand-700 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-sand-800 transition">
+                <a href="{{ route('pds.export', [\App\Support\DocumentName::personalDataSheet(auth()->user(), $submission->applicable_year ?? null)]) }}" target="_blank"
+                   class="btn btn-sm btn-primary">
                     View as PDF
                 </a>
-                <a href="{{ asset('storage/' . $submission->file_path) }}" download
+                <a href="{{ route('pds.workbook') }}" download
                    class="btn btn-sm btn-secondary">
                     Download My Excel File
                 </a>
@@ -72,15 +72,29 @@
                 <div class="w-11 h-11 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
                 </div>
-                <div>
+                <div class="min-w-0">
                     <p class="font-medium text-sand-800">{{ $template->label }}</p>
-                    <p class="text-xs text-sand-400">{{ $template->original_filename }}</p>
+                    <p class="text-xs text-sand-400 break-all">{{ $template->original_filename }}</p>
                 </div>
             </div>
-            <p class="text-sm text-sand-500 mb-4">
-                Download this file and open it in Excel, LibreOffice Calc, or Google Sheets. Fill in your details directly in the cells — do not rename sheets or change the layout.
+            {{-- This used to recommend Google Sheets. Google Sheets, Excel in a
+                 browser, WPS and phone spreadsheet apps drop the form's tick
+                 boxes when they save, and the uploaded sheet then prints with
+                 every checkbox missing. Desktop Excel and LibreOffice Calc keep
+                 them; LibreOffice was checked by saving the template through it. --}}
+            <p class="text-sm text-sand-500 mb-3">
+                Download this file and open it in <strong class="font-medium text-sand-700">Microsoft Excel</strong>
+                on a computer, or <strong class="font-medium text-sand-700">LibreOffice Calc</strong>.
+                Fill in your details directly in the cells — do not rename sheets or change the layout.
             </p>
-            <a href="{{ asset('storage/' . $template->file_path) }}" download
+            <div class="alert alert-warning mb-4 text-[13px]">
+                <x-heroicon-o-exclamation-triangle />
+                <span>
+                    Do not fill it in with Google Sheets, Excel in a web browser, WPS, or a phone app.
+                    They remove the form's tick boxes when they save, and your sheet will print without them.
+                </span>
+            </div>
+            <a href="{{ route('pds.template.download') }}" download
                class="inline-flex items-center gap-1.5 bg-sky-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-sky-700 transition">
                 Download Template
             </a>

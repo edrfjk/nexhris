@@ -126,12 +126,12 @@ class LeaveReviewController extends Controller
         }
 
         abort_unless(
-            $application->file_path && Storage::disk('public')->exists($application->file_path),
+            $application->file_path && Storage::disk('local')->exists($application->file_path),
             404,
             'The uploaded form is no longer available.'
         );
 
-        return Storage::disk('public')->response(
+        return Storage::disk('local')->response(
             $application->file_path,
             $application->file_original_name ?: basename($application->file_path)
         );
@@ -154,13 +154,13 @@ class LeaveReviewController extends Controller
         }
 
         abort_unless(
-            $application->file_path && Storage::disk('public')->exists($application->file_path),
+            $application->file_path && Storage::disk('local')->exists($application->file_path),
             404,
             'The uploaded form is no longer available.'
         );
 
         return $converter->stream(
-            Storage::disk('public')->path($application->file_path),
+            Storage::disk('local')->path($application->file_path),
             $application->formPdfName(),
             cacheKey: 'leave-form:' . $application->id,
         );

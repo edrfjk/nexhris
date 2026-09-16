@@ -96,7 +96,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0">
-                        <a href="{{ route('admin.leave.review.form.pdf', $application) }}" target="_blank"
+                        <a href="{{ route('admin.leave.review.form.pdf', [$application, $application->formPdfName()]) }}" target="_blank"
                            class="btn btn-sm btn-primary">
                             <x-heroicon-o-document-text class="w-4 h-4" />
                             View as PDF
@@ -113,7 +113,7 @@
                      chain can read it here rather than downloading it first. --}}
                 <iframe src="{{ $ext === 'pdf'
                         ? route('admin.leave.review.form', $application)
-                        : route('admin.leave.review.form.pdf', $application) }}"
+                        : route('admin.leave.review.form.pdf', [$application, $application->formPdfName()]) }}"
                         class="w-full h-[560px] rounded-lg border border-sand-200 bg-sand-50"
                         title="Uploaded leave form"></iframe>
 

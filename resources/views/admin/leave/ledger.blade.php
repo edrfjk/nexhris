@@ -19,13 +19,33 @@
         </a>
         {{-- The official card, laid out from the campus template and
              rendered from the posted ledger entries. --}}
-        <a href="{{ route('admin.leave.ledger.pdf', $employee) }}" target="_blank"
+        <a href="{{ route('admin.leave.ledger.pdf', [$employee, \App\Support\DocumentName::ledgerCard($employee)]) }}" target="_blank"
            class="btn btn-md btn-primary">
             <x-heroicon-o-printer />
             Print ledger card
         </a>
     </x-slot:actions>
 </x-page-header>
+
+{{-- The official card has a "First day of government service" line. With no
+     date on the record it prints blank, and a card with a blank header is not
+     something the campus will accept — better to say so here than to let it
+     reach the printer. --}}
+@unless ($employee->first_day_of_service ?? $employee->date_hired)
+    <div class="rounded border border-gold-200 bg-gold-50 p-4 mb-6 flex items-start gap-3">
+        <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-gold-700 shrink-0 mt-0.5" />
+        <div class="text-sm leading-relaxed">
+            <p class="font-semibold text-gold-900">This card cannot print its header yet</p>
+            <p class="text-gold-800 mt-0.5">
+                {{ $employee->name }} has no first day of government service on record, so
+                that line comes out blank on the printed card.
+                <a href="{{ route('admin.employees.edit', $employee) }}"
+                   class="font-semibold underline">Add the date</a>
+                before issuing it.
+            </p>
+        </div>
+    </div>
+@endunless
 
 {{-- ------------------------------------------------------------------
      Balances
@@ -200,19 +220,27 @@
                         @if ($isHr)<th class="text-right">Correct</th>@endif
                     </tr>
                 </thead>
-                <tbody>
-                    @php $lastYear = null; @endphp
-                    @foreach ($ledger->reject->isOnServiceCard() as $row)
-                        @php $year = $row->year_label ?: $row->period_from?->format('Y'); @endphp
+                {{-- One <tbody> per line, not one for the whole card. A line and
+                     its correction form are two sibling rows, and Alpine scope
+                     reaches only descendants: with the state on the first row,
+                     the form row could not see it, so "Correct" opened nothing
+                     and every line threw "editing is not defined". <tbody> is
+                     the one element HTML allows to group rows. --}}
+                @php $lastYear = null; @endphp
+                @foreach ($ledger->reject->isOnServiceCard() as $row)
+                    @php $year = $row->year_label ?: $row->period_from?->format('Y'); @endphp
 
-                        @if ($year && $year !== $lastYear)
+                    @if ($year && $year !== $lastYear)
+                        <tbody>
                             <tr class="bg-sand-100">
                                 <td colspan="{{ $isHr ? 12 : 11 }}">{{ $year }}</td>
                             </tr>
-                            @php $lastYear = $year; @endphp
-                        @endif
+                        </tbody>
+                        @php $lastYear = $year; @endphp
+                    @endif
 
-                        <tr x-data="{ editing: false }" class="hover:bg-sand-50/70 transition">
+                    <tbody x-data="{ editing: false }">
+                        <tr class="hover:bg-sand-50/70 transition">
                             <td class="whitespace-nowrap">{{ $row->period_from?->format('M j, Y') }}</td>
                             <td class="whitespace-nowrap">
                                 {{ $row->period_to && ! $row->period_to->eq($row->period_from) ? $row->period_to->format('M j, Y') : '' }}
@@ -312,8 +340,8 @@
                                 </td>
                             </tr>
                         @endif
-                    @endforeach
-                </tbody>
+                    </tbody>
+                @endforeach
             </table>
         </div>
     @endif
@@ -341,7 +369,7 @@
         </div>
         @if ($isHr)
             <button @click="adding = !adding" class="btn btn-sm btn-primary">
-                <span x-text="adding ? 'Cancel' : 'Record credits'"></span>
+                <span x-text="adding ? 'Cancel' : 'Record credits'">Record credits</span>
             </button>
         @endif
     </div>

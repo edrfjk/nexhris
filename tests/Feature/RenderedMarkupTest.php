@@ -123,17 +123,27 @@ class RenderedMarkupTest extends TestCase
         $heading = trim(html_entity_decode(strip_tags($m[1][0])));
         $this->assertNotSame('', $heading, "{$route} rendered an empty page title.");
 
-        // The application bar's title slot must not echo the same words back.
-        // Only that slot is inspected: the bar also carries the notification
-        // bell, whose dropdown legitimately says "Notifications".
-        preg_match('/<div data-app-bar-title[^>]*>(.*?)<\/div>/s', $html, $slot);
+        // The heading belongs to the application bar. Only that slot is
+        // inspected: the bar also carries the notification bell, whose
+        // dropdown legitimately says "Notifications".
+        preg_match('/<div data-app-bar-title[^>]*>(.*?)<\/div>\s*<\/div>/s', $html, $slot);
 
-        if ($slot) {
-            $bar = trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags($slot[1]))));
+        $this->assertNotEmpty($slot,
+            "{$route} has no application bar title slot.");
 
-            $this->assertStringNotContainsString($heading, $bar,
-                "{$route} repeats the page heading in the application bar.");
-        }
+        $bar = trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags($slot[1]))));
+
+        $this->assertStringContainsString($heading, $bar,
+            "{$route} does not put the page heading in the application bar.");
+
+        // And the content below must not say it again — the two stacked
+        // headings are what this rule exists to prevent.
+        $body = substr($html, strpos($html, '</header>') ?: 0);
+        $body = preg_replace('/<h1.*?<\/h1>/s', '', $body);
+
+        $this->assertSame(0, preg_match_all(
+            '/<h1[^>]*class="[^"]*page-title/', $body),
+            "{$route} repeats the page heading below the application bar.");
     }
 
     public function test_every_role_renders_its_own_sidebar(): void

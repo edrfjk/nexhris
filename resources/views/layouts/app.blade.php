@@ -15,7 +15,8 @@
     <meta charset="UTF-8">
     <title>@yield('title', 'NexHRIS') | ISPSC Tagudin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js"></script>
+    {{-- Alpine is bundled into resources/js/app.js. Loading it from a CDN as
+         well would start it twice. --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,9 +24,10 @@
     @stack('styles')
 </head>
 <body>
-<div class="flex min-h-screen" x-data="{ sidebarOpen: false }" x-cloak>
+<div class="flex min-h-screen" x-data="{ sidebarOpen: false }"
+     @keydown.escape.window="sidebarOpen = false" x-cloak>
 
-    <!-- Mobile overlay -->
+    <!-- Mobile overlay: Escape closes the drawer as well as a tap outside it. -->
     <div x-show="sidebarOpen" @click="sidebarOpen = false"
          class="fixed inset-0 bg-sand-900/50 backdrop-blur-sm z-30 lg:hidden" x-transition.opacity></div>
 
@@ -38,8 +40,11 @@
 
         {{-- Seal, system name, campus — the standard institutional lockup. --}}
         <div class="shrink-0 flex items-center gap-3 px-5 h-16 border-b border-white/10">
+            {{-- The seal's own transparency does the work: no white disc behind
+                 it, and object-contain so the maroon ground shows through the
+                 corners instead of cropping them off. --}}
             <img src="{{ asset('images/ispsc-logo.png') }}" alt="ISPSC Seal"
-                 class="w-10 h-10 rounded-full object-cover bg-white p-0.5 shadow-soft">
+                 class="w-10 h-10 object-contain shrink-0">
             <div class="min-w-0 leading-tight">
                 <p class="text-sm font-bold tracking-wide">NexHRIS</p>
                 <p class="text-[10px] text-white/60 truncate">ISPSC Tagudin Campus</p>
@@ -227,18 +232,23 @@
         {{-- Fixed-height application bar: page title on the left, the signed-in
              account on the right. Same height as the sidebar's brand block. --}}
         <header class="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border-b border-sand-200">
-            <div class="h-16 px-4 sm:px-6 flex justify-between items-center gap-4">
+            {{-- Taller than a plain bar because it now carries the page
+                 heading and its line of explanation, not just a label. --}}
+            <div class="min-h-[4.5rem] px-4 sm:px-6 py-3 flex justify-between items-center gap-4">
 
                 <div class="flex items-center gap-3 min-w-0">
                     <button @click="sidebarOpen = !sidebarOpen"
-                            class="lg:hidden text-sand-500 hover:text-sand-900 shrink-0">
+                            class="lg:hidden text-sand-500 hover:text-sand-900 shrink-0"
+                            :aria-expanded="sidebarOpen"
+                            aria-label="Open the navigation menu">
                         <x-heroicon-o-bars-3 class="w-6 h-6" />
                     </button>
 
-                    {{-- Marked so the duplicate-heading test can inspect just
-                         this slot, rather than the whole bar (which also holds
-                         the notification bell's own dropdown). --}}
-                    <div data-app-bar-title class="min-w-0">
+                    {{-- The page heading lives here, once. Marked so the
+                         duplicate-heading test can inspect just this slot,
+                         rather than the whole bar (which also holds the
+                         notification bell's own dropdown). --}}
+                    <div data-app-bar-title class="min-w-0 leading-tight">
                         @stack('page-title')
                     </div>
                 </div>

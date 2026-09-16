@@ -45,6 +45,7 @@ class AuthenticationTest extends TestCase
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'correct-horse-battery',
+            'terms' => '1',
         ])->assertRedirect('/dashboard');
 
         $this->assertAuthenticatedAs($user);
@@ -58,6 +59,7 @@ class AuthenticationTest extends TestCase
         $response = $this->post('/login', [
             'email' => $user->email,
             'password' => 'wrong',
+            'terms' => '1',
         ]);
 
         $response->assertSessionHasErrors('email');
@@ -79,6 +81,7 @@ class AuthenticationTest extends TestCase
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'correct-horse-battery',
+            'terms' => '1',
         ])->assertRedirect('/login');
 
         $this->assertGuest();
@@ -89,7 +92,7 @@ class AuthenticationTest extends TestCase
         $user = $this->user('employee');
 
         for ($i = 0; $i < 5; $i++) {
-            $this->post('/login', ['email' => $user->email, 'password' => 'wrong']);
+            $this->post('/login', ['email' => $user->email, 'password' => 'wrong', 'terms' => '1']);
         }
 
         $this->assertNotNull($user->fresh()->locked_until);
@@ -118,6 +121,7 @@ class AuthenticationTest extends TestCase
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'correct-horse-battery',
+            'terms' => '1',
         ])->assertRedirect(route('two-factor.challenge'));
 
         Mail::assertSent(TwoFactorCodeMail::class, fn ($m) => $m->hasTo($user->email));
@@ -140,6 +144,7 @@ class AuthenticationTest extends TestCase
         $response = $this->post('/login', [
             'email' => $user->email,
             'password' => 'correct-horse-battery',
+            'terms' => '1',
         ]);
 
         $response->assertRedirect(route('login'));
@@ -158,7 +163,7 @@ class AuthenticationTest extends TestCase
         Mail::fake();
         $user = $this->user('employee');
 
-        $this->post('/login', ['email' => $user->email, 'password' => 'correct-horse-battery']);
+        $this->post('/login', ['email' => $user->email, 'password' => 'correct-horse-battery', 'terms' => '1']);
 
         Mail::assertNothingSent();
         $this->assertDatabaseCount('two_factor_challenges', 0);
@@ -170,7 +175,7 @@ class AuthenticationTest extends TestCase
         $code = null;
         Mail::fake();
 
-        $this->post('/login', ['email' => $user->email, 'password' => 'correct-horse-battery']);
+        $this->post('/login', ['email' => $user->email, 'password' => 'correct-horse-battery', 'terms' => '1']);
 
         Mail::assertSent(TwoFactorCodeMail::class, function ($mail) use (&$code) {
             $code = $mail->code;
@@ -179,6 +184,95 @@ class AuthenticationTest extends TestCase
         });
 
         return $code;
+    }
+
+    /**
+     * One typo must not cost the person their code.
+     *
+     * On MySQL and MariaDB the expiry column carried ON UPDATE
+     * CURRENT_TIMESTAMP, so the attempt counter's update after a wrong code
+     * reset the expiry to that moment and the correct code was then refused
+     * as expired. SQLite cannot reproduce that, so this pins the behaviour the
+     * fix restores; the schema itself is guarded by the migration and by
+     * test_no_timestamp_rewrites_itself_on_update below.
+     */
+    public function test_a_wrong_code_does_not_expire_the_right_one(): void
+    {
+        $user = $this->user('admin');
+        $code = $this->startChallenge($user);
+
+        $wrong = $code === '000000' ? '111111' : '000000';
+
+        $this->post(route('two-factor.verify'), ['code' => $wrong])
+            ->assertSessionHasErrors('code');
+
+        // Still held at the challenge: the wrong code opened nothing.
+        $this->get('/admin/dashboard')->assertRedirect(route('two-factor.challenge'));
+
+        $this->assertFalse(
+            TwoFactorChallenge::latest('id')->first()->isExpired(),
+            'a wrong attempt expired the code',
+        );
+
+        $this->post(route('two-factor.verify'), ['code' => $code])
+            ->assertRedirect('/admin/dashboard');
+
+        $this->assertAuthenticatedAs($user);
+    }
+
+    /**
+     * The database must never rewrite a timestamp the application set.
+     *
+     * Only meaningful against MySQL or MariaDB, which is what production runs;
+     * SQLite has no ON UPDATE clause to attach. Run the suite against a MySQL
+     * connection to exercise it.
+     */
+    public function test_no_timestamp_rewrites_itself_on_update(): void
+    {
+        if (! in_array(\DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            $this->markTestSkipped('ON UPDATE CURRENT_TIMESTAMP only exists on MySQL and MariaDB.');
+        }
+
+        $offenders = \DB::select(
+            "SELECT TABLE_NAME AS t, COLUMN_NAME AS c FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = DATABASE()
+                AND EXTRA LIKE '%on update%'
+                AND COLUMN_NAME <> 'updated_at'"
+        );
+
+        $this->assertSame(
+            [],
+            array_map(fn ($row) => "{$row->t}.{$row->c}", $offenders),
+            'these columns are silently rewritten to now() on every update',
+        );
+    }
+
+    /**
+     * The timers are handed to the page as whole seconds for a script to count
+     * down. They were once printed as prose by the server and never moved, so
+     * the page said "Resend in 58s" indefinitely and the button stayed off.
+     */
+    public function test_the_challenge_page_hands_its_timers_to_the_countdown(): void
+    {
+        $user = $this->user('admin');
+        $this->startChallenge($user);
+
+        $page = $this->get(route('two-factor.challenge'))->assertOk();
+
+        $page->assertSee('data-resend', false)
+            ->assertSee('data-expiry', false)
+            ->assertSee('setInterval', false);
+
+        preg_match('/data-expiry data-seconds="(\d+)"/', $page->getContent(), $expiry);
+        preg_match('/data-resend data-seconds="(\d+)"/', $page->getContent(), $resend);
+
+        $this->assertNotEmpty($expiry, 'the expiry was not given to the page as seconds');
+        $this->assertNotEmpty($resend, 'the resend cooldown was not given to the page as seconds');
+
+        // A fresh code has its full ten minutes and a full minute's cooldown.
+        $this->assertGreaterThan(590, (int) $expiry[1]);
+        $this->assertLessThanOrEqual(600, (int) $expiry[1], 'the page promised more time than the email');
+        $this->assertGreaterThan(55, (int) $resend[1]);
     }
 
     public function test_correct_code_completes_sign_in(): void

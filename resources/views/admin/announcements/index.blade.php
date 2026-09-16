@@ -20,53 +20,56 @@
                        icon="megaphone" />
     @else
         <div class="table-wrap">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th class="hidden md:table-cell">Audience</th>
-                        <th class="hidden lg:table-cell">Posted</th>
-                        <th>Status</th>
-                        <th class="text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($announcements as $announcement)
+            {{-- A data table is wider than a phone. Without this the whole page scrolls sideways instead of the table. --}}
+            <div class="overflow-x-auto">
+                <table class="table">
+                    <thead>
                         <tr>
-                            <td>
-                                <span class="block font-medium text-sand-900">{{ $announcement->title }}</span>
-                                <span class="block text-xs text-sand-500 truncate max-w-md">
-                                    {{ $announcement->excerpt(14) }}
-                                </span>
-                            </td>
-                            <td class="hidden md:table-cell">
-                                {{ $announcement->college->code ?? 'Campus-wide' }}
-                            </td>
-                            <td class="hidden lg:table-cell text-xs text-sand-500">
-                                {{ $announcement->published_at?->format('M j, Y') }}<br>
-                                {{ $announcement->author->name ?? 'HR' }}
-                            </td>
-                            <td>
-                                <div class="flex flex-wrap gap-1">
-                                    <span class="badge {{ $announcement->is_published ? 'badge-green' : 'badge-slate' }}">
-                                        {{ $announcement->is_published ? 'Published' : 'Draft' }}
-                                    </span>
-                                    @if ($announcement->is_pinned)
-                                        <span class="badge badge-maroon">Pinned</span>
-                                    @endif
-                                </div>
-                            </td>
-                            <td class="text-right">
-                                <form method="POST" action="{{ route('admin.announcements.destroy', $announcement) }}"
-                                      onsubmit="return confirm('Delete this announcement?')">
-                                    @csrf @method('DELETE')
-                                    <button class="btn btn-xs btn-danger-soft">Delete</button>
-                                </form>
-                            </td>
+                            <th>Title</th>
+                            <th class="hidden md:table-cell">Audience</th>
+                            <th class="hidden lg:table-cell">Posted</th>
+                            <th>Status</th>
+                            <th class="text-right">Actions</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach ($announcements as $announcement)
+                            <tr>
+                                <td>
+                                    <span class="block font-medium text-sand-900">{{ $announcement->title }}</span>
+                                    <span class="block text-xs text-sand-500 truncate max-w-md">
+                                        {{ $announcement->excerpt(14) }}
+                                    </span>
+                                </td>
+                                <td class="hidden md:table-cell">
+                                    {{ $announcement->college->code ?? 'Campus-wide' }}
+                                </td>
+                                <td class="hidden lg:table-cell text-xs text-sand-500">
+                                    {{ $announcement->published_at?->format('M j, Y') }}<br>
+                                    {{ $announcement->author->name ?? 'HR' }}
+                                </td>
+                                <td>
+                                    <div class="flex flex-wrap gap-1">
+                                        <span class="badge {{ $announcement->is_published ? 'badge-green' : 'badge-slate' }}">
+                                            {{ $announcement->is_published ? 'Published' : 'Draft' }}
+                                        </span>
+                                        @if ($announcement->is_pinned)
+                                            <span class="badge badge-maroon">Pinned</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="text-right">
+                                    <form method="POST" action="{{ route('admin.announcements.destroy', $announcement) }}"
+                                          onsubmit="return confirm('Delete this announcement?')">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-xs btn-danger-soft">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="card-footer">{{ $announcements->links() }}</div>

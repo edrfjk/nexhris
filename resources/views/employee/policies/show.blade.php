@@ -4,26 +4,14 @@
 @section('content')
 @php
     $status = $policy->statusLabel();
-    $catMeta = $policy->categoryMeta();
-    // categoryMeta() falls back to config('policy_categories.default'), but guard here too
-    // in case that config key is missing a color for a given category.
-    $catColor = $catMeta['color'] ?? 'gray';
-    $colorMap = [
-        'gray' => ['bg' => 'bg-sand-700'],
-        'blue' => ['bg' => 'bg-sky-700'],
-        'green' => ['bg' => 'bg-forest-700'],
-        'yellow' => ['bg' => 'bg-gold-600'],
-        'red' => ['bg' => 'bg-red-700'],
-        'purple' => ['bg' => 'bg-violet-700'],
-        'maroon' => ['bg' => 'bg-maroon-800'],
-    ];
-    $theme = $colorMap[$catColor] ?? $colorMap['gray'];
+    // Category is shown as a chip on the maroon band, so the page no
+    // longer needs a colour per category.
 @endphp
 
 {{-- Slim reading-progress bar, only meaningful for long text policies --}}
 @if ($policy->type === 'text')
     <div class="fixed top-0 left-0 right-0 h-1 bg-sand-100 z-40 print:hidden">
-        <div id="reading-progress" class="h-full {{ $theme['bg'] }} transition-all duration-150" style="width: 0%"></div>
+        <div id="reading-progress" class="h-full bg-maroon-800 transition-all duration-150" style="width: 0%"></div>
     </div>
 @endif
 
@@ -46,46 +34,51 @@
 
 
 @if ($status === 'expired')
-    <div class="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 text-red-800 text-sm rounded-lg px-4 py-3 print:hidden">
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
-        This policy expired on {{ $policy->expiry_date->format('M d, Y') }} and may no longer be in effect.
+    <div class="alert alert-error mb-4 print:hidden">
+        <x-heroicon-o-exclamation-triangle />
+        <span>This policy expired on {{ $policy->expiry_date->format('M j, Y') }} and may no longer be in effect.</span>
     </div>
 @elseif ($status === 'upcoming')
-    <div class="mb-4 flex items-center gap-2 bg-sky-50 border border-sky-200 text-sky-800 text-sm rounded-lg px-4 py-3 print:hidden">
-        <x-heroicon-o-clock class="w-4 h-4 flex-shrink-0" />
-        This policy becomes effective on {{ $policy->effective_date->format('M d, Y') }}.
+    <div class="alert alert-info mb-4 print:hidden">
+        <x-heroicon-o-clock />
+        <span>This policy becomes effective on {{ $policy->effective_date->format('M j, Y') }}.</span>
     </div>
 @endif
 
-{{-- Hero banner, colored by category --}}
-<div class="rounded overflow-hidden shadow-soft border border-sand-100 mb-6 print:hidden">
-    <div class="{{ $theme['bg'] }} px-6 py-8 relative overflow-hidden">
-        <div class="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/5"></div>
-        <div class="absolute right-16 bottom-0 w-24 h-24 rounded-full bg-white/5"></div>
-        <div class="relative flex items-start justify-between flex-wrap gap-3">
-            <div>
+{{-- The policy's standing, on a maroon band like every other header in the
+     system. The title is not repeated here: the page header above already
+     carries it, and printing it twice is the doubled heading this component
+     exists to prevent. --}}
+<div class="card overflow-hidden mb-6 print:hidden">
+    <div class="bg-maroon-800 border-b-[3px] border-gold-400 px-6 py-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
                 @if ($policy->category)
-                    <span class="inline-block text-xs font-semibold uppercase tracking-wider text-white/70 mb-2">{{ $policy->category }}</span>
+                    <span class="chip chip-onbrand">{{ $policy->category }}</span>
                 @endif
-                <h1 class="text-2xl font-bold text-white leading-tight">{{ $policy->title }}</h1>
-            </div>
-            <div class="flex items-center gap-2">
+
                 @if ($policy->isNew())
                     <span class="chip chip-onbrand">New</span>
                 @endif
+
                 @if ($policy->is_pinned)
                     <span class="chip chip-onbrand">
-                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M16 3l5 5-5.5 1.5L12 14l-2-2 4.5-4.5L13 6l3-3z"/></svg>
+                        <x-heroicon-o-bookmark class="w-3 h-3" />
                         Pinned
                     </span>
                 @endif
+
                 @if ($policy->requires_acknowledgment)
                     <span class="chip chip-onbrand">
                         <x-heroicon-o-check-circle class="w-3 h-3" />
-                        Acknowledgment Required
+                        Acknowledgment required
                     </span>
                 @endif
             </div>
+
+            <p class="text-[13px] text-white/70">
+                {{ $policy->readingTime() ?: 'Policy document' }}
+            </p>
         </div>
     </div>
 
@@ -103,7 +96,7 @@
         @endif
         @if ($policy->expiry_date && $status !== 'expired')
             <span class="inline-flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5 text-sand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+                <x-heroicon-o-exclamation-triangle class="w-3.5 h-3.5 text-sand-400" />
                 Expires {{ $policy->expiry_date->format('M d, Y') }}
             </span>
         @endif
@@ -154,9 +147,9 @@
                         <div class="w-16 h-16 mx-auto rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center mb-4">
                             <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
                         </div>
-                        <p class="text-sm font-semibold text-sand-700 mb-1">{{ $policy->file_original_name }}</p>
+                        <p class="text-sm font-semibold text-sand-700 mb-1 break-all">{{ $policy->file_original_name }}</p>
                         <p class="text-xs text-sand-400 mb-5">Click below to view or download this document.</p>
-                        <a href="{{ asset('storage/' . $policy->file_path) }}" target="_blank" rel="noopener"
+                        <a href="{{ route('policies.attachment', $policy) }}" target="_blank" rel="noopener"
                            class="btn btn-lg btn-primary">
                             <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
                             Open Document

@@ -92,14 +92,25 @@
        Form controls
        --------------------------------------------------------------- */
 
+    /* The border width has to be stated. Tailwind's preflight sets
+       `border-width: 0` on every element, so a colour on its own draws
+       nothing — which left every field on the system as a white box on a
+       white card, held together by a 5% inner shadow.
+
+       sand-400 is the resting boundary: light enough that a long form does
+       not read as a grid of heavy boxes, dark enough to find at a glance.
+       It deepens on hover and turns maroon on focus, so the field the cursor
+       is in is the one that stands out, rather than all of them at once. */
+
     .input,
     .select,
     .textarea {
-        @apply block w-full rounded-lg border-sand-300 bg-white
-               text-sm text-sand-900 placeholder:text-sand-400
+        @apply block w-full rounded-lg border border-sand-400 bg-white
+               text-sm text-sand-900 placeholder:text-sand-500
                shadow-inset transition-all duration-200 ease-smooth
-               focus:border-maroon-500 focus:ring-4 focus:ring-maroon-500/10
-               disabled:bg-sand-100 disabled:text-sand-500;
+               hover:border-sand-500
+               focus:border-maroon-700 focus:ring-4 focus:ring-maroon-500/10
+               disabled:border-sand-300 disabled:bg-sand-100 disabled:text-sand-500;
     }
 
     .input { @apply px-3.5 py-2.5; }
@@ -107,7 +118,7 @@
     .textarea { @apply px-3.5 py-2.5 leading-relaxed; }
 
     .input-sm, .select-sm { @apply py-1.5 text-[13px]; }
-    .input-error { @apply border-red-300 focus:border-red-500 focus:ring-red-500/10; }
+    .input-error { @apply border-red-500 hover:border-red-600 focus:border-red-600 focus:ring-red-500/10; }
 
     .label { @apply block text-[13px] font-medium text-sand-700 mb-1.5; }
     .label-required::after { content: "*"; @apply text-red-500 ml-0.5; }
@@ -116,7 +127,10 @@
     .error-text { @apply mt-1.5 block text-xs font-medium text-red-600; }
 
     .file-input {
-        @apply block w-full text-sm text-sand-600
+        @apply block w-full rounded-lg border border-sand-400 bg-white
+               p-1.5 text-sm text-sand-700
+               transition-colors hover:border-sand-500
+               focus-within:border-maroon-700 focus-within:ring-4 focus-within:ring-maroon-500/10
                file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
                file:text-[13px] file:font-medium file:cursor-pointer
                file:bg-maroon-50 file:text-maroon-800
@@ -169,7 +183,11 @@
                hover:bg-maroon-50/40;
     }
 
-    .table tbody tr:last-child { @apply border-b-0; }
+    /* Only the table's very last row loses its rule. A table split into one
+       <tbody> per record — which the ledger card needs, so a line and its
+       correction form share one Alpine scope — would otherwise lose the rule
+       under every record. */
+    .table tbody:last-child tr:last-child { @apply border-b-0; }
     .table tbody td { @apply px-5 py-3.5 align-middle text-sand-700; }
 
     .table .num { @apply text-right tabular-nums font-medium text-sand-900; }
@@ -230,6 +248,89 @@
                px-4 py-3 border-t border-sand-200 bg-sand-50;
     }
 
+    /* ---------------------------------------------------------------
+       Sign-in shell
+
+       The first and only screen a visitor sees before the system proper,
+       so it carries the institution rather than the product. Depth comes
+       from one hue and a rule of gold, the way a printed letterhead does —
+       no glass, no second palette.
+       --------------------------------------------------------------- */
+    /* Flat, as the rest of the system is. Depth comes from the seal behind
+       the lockup and a hairline of gold, not from a gradient — those were
+       the decorations that made the earlier design look generated. */
+    .auth-brand {
+        @apply relative isolate overflow-hidden bg-maroon-900 text-white;
+        border-right: 3px solid theme('colors.gold.400');
+    }
+
+    /* The seal, very faint, sitting behind the lockup like a watermark on
+       campus stationery. */
+    .auth-watermark {
+        @apply pointer-events-none absolute -z-10 select-none opacity-[0.07];
+    }
+
+    /* The seal is a transparent PNG and carries its own white field inside
+       the gear ring. Sitting it on a white disc added a second, larger
+       circle that is not part of the mark. */
+    .auth-seal {
+        filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.35));
+    }
+
+    /* A hairline of gold, the seal's second colour, used sparingly. */
+    .auth-rule {
+        @apply h-px w-16 rounded-full bg-gold-400/80;
+    }
+
+    /* What the system holds, set as tiles rather than a list: the panel is
+       wide and a single column of text left it looking empty. Flat fills and
+       hairline borders, so it reads as structure and not as decoration. */
+    .auth-tile {
+        @apply rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3.5;
+    }
+
+    .auth-tile svg {
+        @apply mb-2 h-[18px] w-[18px] text-gold-400;
+    }
+
+    .auth-tile-title {
+        @apply block text-[13px] font-semibold leading-snug text-white;
+    }
+
+    .auth-tile-note {
+        @apply mt-1 block text-[11.5px] leading-relaxed text-white/55;
+    }
+
+    /* A hairline across the panel, separating the institution from the
+       system it runs. */
+    .auth-divider {
+        @apply h-px w-full bg-white/10;
+    }
+
+    /* The form sits on a card headed by a maroon rule — the same device the
+       campus uses on its printed forms. */
+    .auth-card {
+        @apply card overflow-hidden;
+        border-top: 3px solid theme('colors.maroon.800');
+    }
+
+    /* Warm paper behind the form, a shade off the card so the card lifts. */
+    .auth-page {
+        @apply bg-sand-100;
+    }
+
+    /* The shell fills the viewport exactly. Only the form column may scroll,
+       and only when a short screen makes it necessary — the page itself
+       never does. */
+    .auth-shell {
+        @apply flex h-screen overflow-hidden;
+    }
+
+    .auth-scroll {
+        @apply overflow-y-auto;
+        scrollbar-width: thin;
+    }
+
     /* A floating panel — a dropdown or a menu — on the same surface as a
        card so it does not read as a different material. */
     .popover {
@@ -254,6 +355,17 @@
     .rich-text ul { @apply list-disc pl-5 space-y-1 marker:text-sand-400; }
     .rich-text ol { @apply list-decimal pl-5 space-y-1 marker:text-sand-400; }
     .rich-text li { @apply text-sand-700; }
+
+    /* Quill 2 writes a bullet list as <ol><li data-list="bullet">. Without this
+       the <ol> above numbers it, so an employee reading a policy saw 1, 2, 3
+       where HR had typed bullet points. Employee pages do not load Quill's own
+       stylesheet, so its markup has to be understood here. */
+    .rich-text li[data-list="bullet"] { list-style-type: disc; }
+    .rich-text li[data-list="ordered"] { list-style-type: decimal; }
+
+    .rich-text .ql-align-center { @apply text-center; }
+    .rich-text .ql-align-right { @apply text-right; }
+    .rich-text .ql-align-justify { @apply text-justify; }
 
     .rich-text a {
         @apply text-maroon-800 underline underline-offset-2

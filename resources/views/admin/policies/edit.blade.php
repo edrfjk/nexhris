@@ -34,10 +34,19 @@
 
     <div class="card">
 
+        <div class="border-b border-sand-100 px-6 py-4">
+            <h3 class="font-semibold text-sand-800">Edit HR Policy</h3>
+            <p class="mt-0.5 text-xs text-sand-400">Changes are visible to staff as soon as they are saved.</p>
+        </div>
+
         <div class="p-6 space-y-6">
 
             {{-- Title + Category --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p class="section-label mb-3">Policy details</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 -mt-3">
 
                 {{-- Title --}}
                 <div>
@@ -91,9 +100,7 @@
             {{-- Policy Type --}}
             <div class="border-t border-sand-100 pt-4">
 
-                <label class="block text-sm font-medium text-sand-700 mb-3">
-                    Policy Format
-                </label>
+                <p class="section-label mb-3">Policy format</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
@@ -189,7 +196,7 @@
 
                 {{-- Quill Editor --}}
                 <div id="editor"
-                     class="card overflow-hidden"
+                     class="overflow-hidden rounded-lg border border-sand-400 bg-white shadow-inset"
                      style="height:300px;">
                 </div>
 
@@ -210,8 +217,11 @@
 
 
             {{-- File Section --}}
+            {{-- The attribute is emitted only when it carries something.
+                 A ternary that falls through to '' leaves class="" in the
+                 markup, which RenderedMarkupTest exists to keep out. --}}
             <div id="file-section"
-                 class="{{ old('type', $policy->type) !== 'file' ? 'hidden' : '' }}">
+                 @if (old('type', $policy->type) !== 'file') class="hidden" @endif>
 
                 <label class="label">
                     Upload File
@@ -222,7 +232,7 @@
                     <p class="text-sm text-sand-500 mb-2">
                         Current file:
 
-                        <span class="font-medium text-sand-700">
+                        <span class="font-medium text-sand-700 break-all">
                             {{ $policy->file_original_name }}
                         </span>
                     </p>

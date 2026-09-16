@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NexHRIS Manuscript Chapters 1-3</title>
+<style>
+  @page { size: A4; margin: 2.54cm 2.54cm 2.54cm 3.81cm; }
+
+  body {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 12pt;
+    line-height: 2;
+    text-align: justify;
+    margin: 0;
+  }
+
+  h1 {
+    font-size: 12pt; font-weight: bold; text-align: center;
+    text-transform: uppercase; margin: 0 0 24pt; page-break-before: always;
+  }
+  h1.first { page-break-before: avoid; }
+
+  h2 { font-size: 12pt; font-weight: bold; text-align: center; margin: 18pt 0 6pt; }
+  h3 { font-size: 12pt; font-weight: bold; text-align: left; margin: 14pt 0 4pt; }
+  h4 { font-size: 12pt; font-style: italic; font-weight: normal; margin: 12pt 0 4pt; }
+
+  p { margin: 0 0 0; text-indent: 0.5in; }
+  p.flush { text-indent: 0; }
+
+  .center { text-align: center; text-indent: 0; }
+
+  ol.objectives, ol.plain { margin: 0 0 0 0.5in; padding-left: 0.25in; }
+  ol.objectives li, ol.plain li { margin-bottom: 6pt; text-align: justify; }
+
+  table.data {
+    border-collapse: collapse; width: 100%; margin: 6pt 0 12pt;
+    font-size: 11pt; line-height: 1.3;
+  }
+  table.data th, table.data td {
+    border: 1px solid #000; padding: 4pt 6pt; text-align: left; vertical-align: top;
+  }
+  table.data th { font-weight: bold; }
+  table.data td.num { text-align: center; }
+
+  .caption { text-align: center; text-indent: 0; font-size: 11pt; margin: 4pt 0 14pt; }
+  .caption b { font-weight: bold; }
+
+  /* Where a screenshot goes. Replace the box with the image, keep the caption. */
+  .plate {
+    border: 1px dashed #777; background: #f6f6f6; color: #444;
+    text-align: center; text-indent: 0; padding: 26pt 12pt; margin: 10pt 0 2pt;
+    font-size: 10.5pt; font-style: italic; line-height: 1.4;
+  }
+  .plate .what { font-style: normal; font-weight: bold; display: block; margin-bottom: 3pt; }
+  .plate .where { font-family: "Courier New", monospace; font-size: 9.5pt; font-style: normal; }
+
+  .note {
+    border-left: 3px solid #777; background: #f9f9f9; padding: 8pt 12pt;
+    margin: 10pt 0; font-size: 11pt; line-height: 1.45; text-indent: 0;
+  }
+  .note b { font-weight: bold; }
+
+  .formula { text-align: center; text-indent: 0; margin: 8pt 0; font-style: italic; }
+</style>
+</head>
+<body>
+
+<!-- ==================================================================== -->
+<h1 class="first">Abstract</h1>
+
+<p>The Human Resource (HR) Office of Ilocos Sur Polytechnic State College (ISPSC)
+Tagudin Campus maintained its employee records on paper and in Excel workbooks,
+keeping a Personal Data Sheet for every employee, a separate form for every leave
+application, and two handwritten ledger cards per person, while leave approval
+required physically routing a printed form between three offices. This study
+developed <i>NexHRIS: A Smart and Next-Generation Human Resource Information
+System for Ilocos Sur Polytechnic State College</i>, a web-based system that moves
+this workflow online while preserving the Civil Service forms exactly as the campus
+uses them. The system was developed using the Laravel framework, MySQL, and Blade
+with Tailwind CSS, and follows the Rapid Application Development (RAD) model.
+NexHRIS provides employee records management, Personal Data Sheet submission and
+review, a role-derived leave approval chain, leave and service credit ledger cards,
+versioned publication of the official blank forms, HR policies with acknowledgement
+tracking, announcements, a digital identification card, role-based dashboards,
+printable management reports, and an audit trail. A distinguishing feature of the
+system is that official documents are produced by converting the actual uploaded
+workbook rather than rebuilding the form from database values, preserving the exact
+format of the campus's Civil Service forms. Access is governed by four roles &mdash;
+HR Administrator, Campus Director, Dean, and Employee &mdash; with data boundaries
+enforced at the query level. The acceptability of the system was evaluated using the
+Technology Acceptance Model (TAM) in terms of Perceived Usefulness and Perceived
+Ease of Use, and the Wilcoxon Signed-Rank Test was used to determine whether a
+significant difference existed between the existing manual process and the developed
+system.</p>
+
+<p class="flush" style="margin-top:12pt"><b>Keywords:</b> Human Resource Information
+System, Personal Data Sheet, Leave Management, Role-Based Access Control, Technology
+Acceptance Model, ISPSC</p>
+
+<!-- ==================================================================== -->
+<h1>Chapter 1<br>Introduction</h1>
+
+<h2>Background of the Study</h2>
+
+<p>The rapid advancement of technology has fundamentally transformed the way
+organizations manage their human resources. Across the globe, institutions are
+shifting away from manual, paper-based administrative processes toward integrated
+digital platforms that offer efficiency, accuracy, and accessibility. In government
+higher education institutions, Human Resource (HR) offices are primarily responsible
+for maintaining, organizing, and safeguarding the employment records of all
+personnel. These records, collectively known as the 201 files, contain an employee's
+complete employment history, including personal information, appointment papers,
+service records, certificates of eligibility, and other official employment
+documents. The proper management and accessibility of these records are critical to
+the effective administration of human resources within any institution.</p>
+
+<p>Internationally, several studies confirm the urgent need for digital employee
+document management systems in organizations. Wahdaniah et al. (2023) demonstrated
+that human resource management transformation in the digital age results in more
+organized recordkeeping, reduced document retrieval time, and improved overall HR
+operational efficiency across diverse institutional settings. Similarly, Abaci and
+Medeni (2022) conducted a case study on the efficiency of electronic document
+management systems and established that digitizing employee records reduces
+retrieval time, minimizes physical storage requirements, and enhances organizational
+transparency. Orioque et al. (2024) further affirmed that an online contextualized
+document management system aligned with an organization's operational environment
+significantly enhances information access and reduces misplaced documentation. Dres
+and Rabut (2025) developed eDOCS, a web-based file management system, and found it
+to be highly effective in improving document organization, accessibility, and
+retrieval speed compared to traditional manual filing methods. Furthermore,
+Panfilova et al. (2024) noted that the integration of automated document management
+systems into institutional workflows facilitates diagnostic monitoring, reduces
+human error, and improves documentation lifecycle management, all of which are
+directly relevant to the employee file management needs of human resource offices in
+academic institutions.</p>
+
+<p>In the Philippines, the digitalization of employee and institutional records has
+similarly gained traction among higher education institutions. Purcia and Selarde
+(2022) conducted a study on student registration and records management in private
+universities and found that the majority of institutions still rely on paper-based
+processes, highlighting a persistent gap in digital adoption and the urgent need for
+electronic records systems. Pagayonan (2022) developed an Electronic Document
+Management System (eDMS) for a higher education institution and found that the
+system improved the organization, storage, and retrieval of institutional records
+while reducing dependency on physical filing systems. Encarnacion et al. (2024)
+developed a web-based document management system for an educational office in
+Pagadian City that streamlined the dissemination, submission, and collection of
+pertinent documents, addressing challenges typically experienced by office employees
+in managing paper-based records. More recently, Rabulan and Glina (2025) developed a
+web-based file management system for the Office of National Service Training Program
+at Sorsogon State University, which effectively centralized student information and
+office records, resulting in a more secure, accurate, and faster file management
+process that directly reduced the burden on office personnel.</p>
+
+<p>At the regional and provincial level, the need for digital records management has
+been consistently identified, particularly at ISPSC Tagudin Campus itself. Angala et
+al. (2023) developed and implemented a web-based Document Management System (DMS) at
+ISPSC Tagudin Campus and found that respondents were generally very satisfied with
+how the system was used to arrange, store, track, and manage documents within the
+campus, affirming that digital document systems are well-received at the
+institution. Bulong et al. (2025) similarly focused on ISPSC Tagudin Campus and
+developed DocuTrack, a web-based document management system featuring role-based
+access control, cloud storage integration, and an activity log system, confirming
+that paper-based document management remains a critical challenge for the
+institution as it continues to grow in terms of personnel, programs, and
+administrative responsibilities. Beyond ISPSC, Sebucao-Orias (2023) examined records
+management practices of a state university in the Philippines and identified
+significant deficiencies in documentation processes, while Taguiam (2024) established
+that non-compliance with proper records management protocols in state universities
+leads to operational inefficiencies, both underscoring the need for structured
+digital records management systems in similar institutions. The Ilocos Regional
+Development Plan 2023&ndash;2028 further identifies the enhancement of institutional
+efficiency and the adoption of digital governance tools as priority directions for
+all government agencies and institutions in the region (Regional Development
+Council, 2023). The Data Privacy Act of 2012 (Republic Act 10173) likewise mandates
+that all government institutions, including state colleges in Ilocos Sur, ensure the
+confidentiality, integrity, and availability of personal data in their custody, which
+directly necessitates the adoption of secure digital systems for managing sensitive
+employee records. Furthermore, the national directive on digital transformation
+articulated in the Philippine Development Plan 2023&ndash;2028 reinforces the
+importance of transitioning from paper-based to digital HR record management systems
+in institutions such as ISPSC (Department of Information and Communications
+Technology, 2023).</p>
+
+<p>The implementation of NexHRIS at Ilocos Sur Polytechnic State College, Tagudin
+Campus is particularly justified by the institution's current state of HR document
+management. The ISPSC HR Office presently maintains all employee 201 files on paper
+and in Excel workbooks, keeping a Personal Data Sheet per employee, a separate form
+per leave application, and two handwritten ledger cards per person. Leave approval
+requires physically routing a printed form between three offices for signature. These
+manual systems are prone to document loss, physical deterioration, unauthorized
+access, and delays in document retrieval. As the institution continues to grow in
+terms of personnel and administrative responsibilities, the volume of employee
+records that must be managed likewise increases, making traditional paper-based
+processes increasingly inefficient and difficult to sustain. The absence of a
+centralized digital repository for employee files requires HR personnel to spend
+considerable time locating, reproducing, and verifying documents that could otherwise
+be accessed instantly through a secure electronic system. Employees, on their end,
+must still physically visit the HR Office just to update their Personal Data Sheet or
+to check their leave credits and file a leave application, adding to the workload of
+HR personnel who have to manually retrieve records and compute balances for every
+request.</p>
+
+<p>A review of the systems cited above reveals a consistent limitation: all of them
+are document management systems, not human resource systems. The eDMS of Pagayonan
+(2022), eDOCS of Dres and Rabut (2025), the contextualized system of Orioque et al.
+(2024), the web-based system of Encarnacion et al. (2024), and the file management
+system of Rabulan and Glina (2025) are each designed to store, categorize, track, and
+retrieve files. The same is true of the two systems developed for ISPSC Tagudin
+Campus itself: the DMS of Angala et al. (2023) and DocuTrack by Bulong et al. (2025)
+both centralize institutional documents, and DocuTrack adds role-based access and
+activity logging, but both stop at document handling. In every one of these systems,
+a document is treated as a file to be uploaded and found again, and none of them
+process the transaction that the document represents.</p>
+
+<p>NexHRIS differs from all of them in four specific ways. First, none of the
+reviewed systems handle the Personal Data Sheet as a governed submission with a
+review-and-return cycle and retained versions; they would treat a PDS as one more
+uploaded file. Second, none of them route a document through a multi-level approval
+chain in which the route is determined by the rank of the applicant, nor do they
+record which approvals were skipped and why. Third, none of them maintain a
+running-balance record such as the campus's leave and service credit ledger cards,
+where correcting one entry must replay every balance below it. Fourth, none of them
+are concerned with preserving the exact printed format of an official government
+form, because a document management system stores the file the user uploaded and
+never has to regenerate it. These are precisely the day-to-day HR transactions that
+ISPSC employees still complete manually, even though the campus already has a working
+document management system. The gap, therefore, is not the digitization of storage,
+which the literature has addressed thoroughly, but the digitization of the HR
+transactions themselves &mdash; which is what NexHRIS is designed to fill.</p>
+
+<p>Recognizing this gap, NexHRIS: A Smart and Next-Generation Human Resource
+Information System for Ilocos Sur Polytechnic State College is conceptualized to go
+beyond the storage-and-retrieval model demonstrated by existing systems. Rather than
+covering the entire employee 201 file, the study focuses specifically on the
+components employees interact with most directly and repeatedly &mdash; the Personal
+Data Sheet, leave records, personal information, and HR policies and guidelines
+&mdash; allowing employees to take part in managing their own HR transactions and
+staying informed of institutional policies, instead of relying solely on manual,
+HR-mediated processes. Through the development of NexHRIS, the study seeks to address
+the limitations of existing manual practices, strengthen records security and
+accessibility, improve operational efficiency, and support compliance with government
+policies on digital transformation and data privacy. Ultimately, the study aims to
+contribute to the modernization of human resource management practices in ISPSC and
+provide a model for the implementation of HR-focused information systems in higher
+education institutions.</p>
+
+<h2>Conceptual Framework of the Study</h2>
+
+<p>The conceptual framework of this study is anchored on the Input&ndash;Process&ndash;Output
+(IPO) model, which provides a systematic representation of how data is transformed
+into meaningful outputs through the proposed system.</p>
+
+<p>The <b>Input</b> consists of the employee 201 files, specifically the Personal Data
+Sheet (PDS) and leave records, together with employees' personal information and the
+HR policies and guidelines maintained by the Human Resource (HR) Office. These
+constitute the primary data required for managing employee records and facilitating
+HR-related transactions within the system.</p>
+
+<p>The <b>Process</b> involves the design, development, and implementation of NexHRIS.
+During this stage, the system validates and updates employee information, routes
+leave applications through a role-derived approval chain, records approved leave
+against the appropriate ledger card, organizes employee data, and manages HR policies
+and guidelines through a centralized digital platform. These processes transform the
+input data into accurate, organized, and readily accessible information.</p>
+
+<p>The <b>Output</b> consists of a centralized digital employee records repository,
+online Personal Data Sheet management, digital leave records and leave application
+management, maintained leave and service credit ledger cards, a digital employee
+identification record, and accessible HR policies and guidelines. Collectively, these
+outputs enhance the security, accessibility, and efficiency of employee records
+management while improving the delivery of HR services.</p>
+
+<p>Overall, the IPO model illustrates how NexHRIS transforms manually managed employee
+records and HR information into an integrated digital system that supports efficient
+record management, facilitates HR transactions, and promotes effective human resource
+administration at Ilocos Sur Polytechnic State College.</p>
+
+<div class="plate">
+  <span class="what">Figure 1. Research Paradigm</span>
+  Input &ndash; Process &ndash; Output diagram
+</div>
+<p class="caption"><b>Figure 1.</b> Research Paradigm</p>
+
+<h2>Objectives of the Study</h2>
+
+<p>The main objective of this study is to develop NexHRIS: A Smart and
+Next-Generation Human Resource Information System for Ilocos Sur Polytechnic State
+College to support the secure and efficient digital management of employee Personal
+Data Sheets (PDS) and leave records at ISPSC Tagudin Campus. Specifically, this study
+aims:</p>
+
+<ol class="objectives">
+  <li>To analyze the current employee file management processes of the ISPSC HR
+  Office to serve as the basis for the system design and development;</li>
+  <li>To determine the system requirements for the development of NexHRIS, a
+  web-based Human Resource Information System for the secure management of employee
+  Personal Data Sheets, leave records, and personal information at ISPSC Tagudin
+  Campus;</li>
+  <li>To evaluate the level of acceptability of NexHRIS using the Technology
+  Acceptance Model (TAM); and</li>
+  <li>To determine whether there is a significant difference between the existing
+  manual employee file management process and the developed NexHRIS system in terms
+  of perceived usefulness and perceived ease of use.</li>
+</ol>
+
+<h2>Hypothesis</h2>
+
+<p><b>H<sub>0</sub>:</b> There is no significant difference between the existing manual
+employee file management process and the developed NexHRIS system in terms of
+perceived usefulness and perceived ease of use.</p>
+
+<h2>Scope and Limitation of the Study</h2>
+
+<p>This study covers the design, development, and implementation of NexHRIS for ISPSC
+Tagudin Campus, focusing on four components of the employee 201 file: the Personal
+Data Sheet, leave records, personal information, and HR policies. The HR
+Administrator publishes the official Civil Service forms; employees download, fill,
+and upload them, and the HR Administrator reviews each submission and either approves
+it or returns it with remarks, retaining every version. Leave applications are routed
+through an approval chain determined by the rank of the applicant, since no user
+signs their own leave: an employee's application goes from the Dean, to the HR
+Administrator, to the Campus Director; a Dean's skips the Dean stage; and the Campus
+Director's goes to the HR Administrator alone, as no role outranks the Campus
+Director. Skipped stages still appear on the printed trail, marked not applicable.
+Once an application is fully approved, the HR Administrator records the days against
+either the leave ledger or the service credit ledger. The system serves four roles
+&mdash; HR Administrator, Campus Director, Dean, and Employee &mdash; whose data
+boundaries are enforced at the query level rather than in the interface, so a user
+cannot reach records outside their authority by modifying a web address. It also
+provides each employee a digital identification card with a QR code, published HR
+policies with acknowledgement tracking, announcements, role-based dashboards,
+printable management reports, and an audit trail. NexHRIS is web-based and accessible
+from any internet-connected device.</p>
+
+<p>The study is limited in the following respects. It does not digitize the rest of
+the 201 file &mdash; appointment papers, service records, performance ratings, and
+similar documents remain in the manual custody of the HR Office. The system does not
+perform optical character recognition or extract data from uploaded documents, and
+does not verify the accuracy or authenticity of what an employee encodes, which
+remains the responsibility of the HR Administrator on review. Leave credits and
+ledger balances are encoded and maintained by the HR Administrator; the system
+neither computes credits from attendance or biometric data nor decides which of the
+two ledger cards an approved leave is recorded on. The policies module supports
+viewing and acknowledgement only, without a facility for employees to comment on or
+request revisions to a policy. The digital identification card is viewable and
+printable within the system and carries no RFID functionality. NexHRIS does not
+integrate with external government systems such as the Civil Service Commission,
+Government Service Insurance System, or Department of Budget and Management; is
+intended for ISPSC Tagudin Campus alone and does not support multi-campus deployment;
+has no dedicated mobile application, though it may be opened in a mobile browser; and
+requires an internet connection, with no offline operation.</p>
+
+<p>A further limitation concerns document conversion. The fidelity of the printed
+output depends on what the hosting environment supports. Where a document converter
+is installed on the server, every official form is rendered as a PDF that reproduces
+the campus's own layout. On shared hosting, where no such converter may be installed,
+the system detects that a particular workbook cannot be reproduced faithfully &mdash;
+the leave form is built from drawing shapes, form controls, and an embedded document
+rather than from spreadsheet cells &mdash; and issues the original workbook instead
+of a partially rendered PDF, on the reasoning that an incomplete official form is
+more damaging than one opened in a spreadsheet application.</p>
+
+<h2>Importance of the Study</h2>
+
+<p>The development of NexHRIS is expected to provide significant benefits to various
+stakeholders by improving the management, accessibility, and security of employee
+records. The beneficiaries of this study are discussed as follows:</p>
+
+<p><b>To the HR Office of ISPSC Tagudin Campus.</b> The NexHRIS system will provide a
+centralized and secure platform for managing employee 201 files and personnel
+records. It will reduce the time and effort required to store, retrieve, and verify
+employee documents, and it automates the routing of leave applications and the
+maintenance of ledger cards, thereby improving operational efficiency and supporting
+more effective human resource management.</p>
+
+<p><b>To the Employees of ISPSC Tagudin Campus.</b> The system will provide employees
+with a transparent and accessible platform where they can independently submit and
+print their own Personal Data Sheet, file and monitor their leave applications, view
+their own ledger cards, and view their own personal information, reducing the need
+for repeated visits to the HR Office for these routine transactions.</p>
+
+<p><b>To Ilocos Sur Polytechnic State College (ISPSC).</b> The institution will
+benefit from improved records security, reduced risk of document loss or damage, and a
+more organized employee records management process. The system will also support
+compliance with the Data Privacy Act of 2012 and the institution's digital
+transformation initiatives.</p>
+
+<p><b>To the Researchers.</b> The study will provide practical experience in
+designing, developing, and implementing a web-based information system that addresses
+an actual institutional need. It will also enhance the researchers' knowledge and
+skills in system development, document processing, and system evaluation.</p>
+
+<p><b>To Future Researchers.</b> This study may serve as a valuable reference for
+future researchers who intend to develop similar human resource information systems or
+employee records management solutions. The findings and methodologies presented may
+contribute to further research and innovation in the field of HR technology.</p>
+
+<!-- ==================================================================== -->
+<h1>Chapter 2<br>Methodology</h1>
+
+<p>This chapter presents the methodology to be employed in the development of
+NexHRIS: A Smart and Next-Generation Human Resource Information System for Ilocos Sur
+Polytechnic State College. It discusses the research design, software development
+model, project timeline, project assignments, target population and locale, research
+instruments, and the methods of data analysis to be used in the study.</p>
+
+<h2>Research Design</h2>
+
+<p>This study will use a descriptive developmental research design. The descriptive
+component will involve gathering data on the current employee file management
+practices and challenges of the ISPSC HR Office through interviews and observations,
+which will serve as the basis for identifying the required system features and design
+specifications. The developmental component will focus on the actual design,
+development, and implementation of NexHRIS as a functional web-based employee file
+management system tailored to the needs of the HR Office and employees of ISPSC
+Tagudin Campus.</p>
+
+<p>According to Kosie and Lew-Williams (2022), developmental research is the
+systematic process of designing, developing, and evaluating programs or systems to
+ensure internal consistency and effectiveness. The descriptive component documents
+each stage of development, while the developmental component emphasizes iterative
+enhancement and continuous refinement based on user needs and system testing results.
+This design framework will guide the entire research process from the initial
+requirements-gathering phase through system development, testing, and final
+evaluation.</p>
+
+<p>In the context of this study, the descriptive developmental design will begin with
+an analysis of the current HR document management process at ISPSC Tagudin Campus,
+followed by the identification of the specific features required in NexHRIS based on
+the actual needs of the HR Administrator and employees. The system will then be
+designed, developed, and iteratively tested, with refinements made based on user
+feedback, until the final version is deployed and formally evaluated.</p>
+
+<h2>Software Model</h2>
+
+<p>This study will adopt the Rapid Application Development (RAD) Model as the software
+development methodology. RAD is an incremental development model that prioritizes
+rapid prototyping, iterative delivery, and continuous user feedback over lengthy
+planning and documentation phases. It is particularly well-suited for developing
+institutional systems where user requirements are well-defined and where the scope
+allows for modular development and frequent user involvement in the refinement process
+(Pressman, 2020).</p>
+
+<p>In the context of this study, the RAD model will support the fast-paced development
+of NexHRIS by allowing each component &mdash; employee PDS management, the leave
+application and approval chain, ledger card maintenance, and personal information
+management &mdash; to be built and tested in stages, with feedback from the HR
+Administrator incorporated at each phase before proceeding to the next.</p>
+
+<div class="plate">
+  <span class="what">Figure 2. Rapid Application Development</span>
+  The four phases of the RAD model
+</div>
+<p class="caption"><b>Figure 2.</b> Rapid Application Development</p>
+
+<h3>Requirements Planning</h3>
+
+<p>The researchers will conduct structured interviews and consultations with the ISPSC
+HR Administrator to identify the current challenges in employee file management and
+define the functional requirements of NexHRIS. These requirements will include the
+need for a centralized repository for PDS and leave records, a secure role-based
+access system, a multi-level leave filing and monitoring feature, and the faithful
+reproduction of the campus's official Civil Service forms.</p>
+
+<h3>User Design</h3>
+
+<p>A user-centered approach will be applied to design wireframes and interface layouts
+for all system modules. The HR Administrator's feedback will guide the design of the
+PDS review panel, the leave application review interface, the ledger card maintenance
+interface, and the employee account management panel, while employee user experience
+will be considered in the design of the PDS submission dashboard, the leave filing and
+monitoring interface, and the personal information view.</p>
+
+<h3>Construction</h3>
+
+<p>The system will be built using the Laravel PHP framework for the backend, Blade
+with Tailwind CSS and Alpine.js for the frontend interface, and MySQL as the
+relational database management system. PhpSpreadsheet is used to read the uploaded
+Civil Service workbooks, while document conversion to PDF is handled by LibreOffice
+where it is available and by a pure-PHP path using PhpSpreadsheet and Dompdf where it
+is not. Chart.js is used for dashboard visualizations. Modules will be developed
+sequentially, with each module tested and refined before integration with the rest of
+the system.</p>
+
+<p>Correctness is maintained through an automated test suite that is executed after
+every change. At the time of writing, the suite comprises 466 automated tests
+covering the approval chain, the ledger balance calculations, role boundaries,
+document conversion fidelity, and the confidentiality of stored personnel records.</p>
+
+<h3>Cutover</h3>
+
+<p>The completed NexHRIS system will be deployed on a shared hosting environment.
+Development was carried out on a local server environment running PHP 8.2 and MySQL,
+and the deployment target is a cPanel shared hosting environment running the same
+versions. Uploaded personnel records are stored on the server's own private storage,
+outside the web-accessible directory, and are served only through the application so
+that every request passes the role check; only the blank official forms are served
+directly. The system is designed to run in either environment because the document
+renderer is selected from configuration, with automatic detection of what the host
+supports. This phase will include system testing, user orientation and training for
+the HR Administrator and selected employee respondents, final adjustments based on
+evaluation feedback, and the formal administration of the Technology Acceptance Model
+(TAM) questionnaire.</p>
+
+<h2>Project Plan</h2>
+
+<p>The development of NexHRIS will follow the four phases of the Rapid Application
+Development (RAD) Model. The project is planned across a period covering June 2026 to
+September 2026, with each phase assigned specific milestones and deliverables to
+ensure timely and organized system development.</p>
+
+<div class="plate">
+  <span class="what">Figure 3. Project Schedule</span>
+  Gantt chart of the four RAD phases, June&ndash;September 2026
+</div>
+<p class="caption"><b>Figure 3.</b> Project Schedule</p>
+
+<h2>Project Assignment</h2>
+
+<p>The roles and responsibilities of the project team for NexHRIS: A Smart and
+Next-Generation Human Resource Information System for Ilocos Sur Polytechnic State
+College are presented in Table 1. Each member is assigned specific tasks based on
+their skills and areas of specialization to ensure proper development and completion
+of the system.</p>
+
+<p class="caption"><b>Table 1.</b> Project Assignment</p>
+
+<table class="data">
+  <thead>
+    <tr><th style="width:20%">Roles</th><th style="width:33%">Name</th><th>Function</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Project Manager</td>
+      <td>Eidref Jake S. Manalansan</td>
+      <td>Responsible for coordinating with the project team; maintains open communication with all the members.</td>
+    </tr>
+    <tr>
+      <td>System Analyst and Designer</td>
+      <td>Eidref Jake S. Manalansan; Diana Sofia L. Sta. Ana</td>
+      <td>Coordinate the technical team's efforts in resolving challenges and ensuring that solutions are practical and consistent.</td>
+    </tr>
+    <tr>
+      <td>Programmer and Developer</td>
+      <td>Eidref Jake S. Manalansan</td>
+      <td>Manage the systems planning and design team and build the project.</td>
+    </tr>
+    <tr>
+      <td>QA / Tester</td>
+      <td>Diana Sofia L. Sta. Ana; Sheran S. Leal</td>
+      <td>Responsible for checking the debugging queries of the project; evaluate software needs and communicate findings to the project team.</td>
+    </tr>
+    <tr>
+      <td>Documenter / Technical Writer</td>
+      <td>Eidref Jake S. Manalansan; Diana Sofia L. Sta. Ana; Sheran S. Leal; Yuri Bib P. Somera; Arvie Keith M. Manzano</td>
+      <td>Publish documents to the respective parties; overall project status reporting.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Population and Locale of the Study</h2>
+
+<p>The study will be conducted at Ilocos Sur Polytechnic State College (ISPSC),
+Tagudin Campus, located in Tagudin, Ilocos Sur. This institution serves as the locale
+of the study, as NexHRIS is specifically developed to address the employee file
+management needs of the ISPSC HR Office.</p>
+
+<p>The respondents of this study will consist of two groups. The first group is
+composed of the two (2) authorized users of the NexHRIS system within the HR Office,
+the HR Administrator and the HR Assistant, both of whom operate the system on behalf
+of the HR Office. Since the total number of HR Office users is only two (2), total
+enumeration will be applied for this group.</p>
+
+<p>The second group consists of the teaching and non-teaching personnel of ISPSC
+Tagudin Campus with a total population of 142 employees. The researchers used Slovin's
+Formula to determine the appropriate sample size for this group. From a population
+size of 142, a sample size of 105 employees was chosen to represent the population
+with a 5% margin of error.</p>
+
+<p class="formula">n = N &divide; [ 1 + N(e<sup>2</sup>) ]</p>
+
+<p class="flush">Where <i>n</i> = number of samples; <i>N</i> = total population;
+<i>e</i> = margin of error.</p>
+
+<p class="formula">n = 142 &divide; [ 1 + 142(0.05)<sup>2</sup> ] = 142 &divide; 1.355
+= 104.79 &asymp; 105</p>
+
+<p>The 105 employee-respondents will be selected through simple random sampling,
+wherein each of the 142 employees will be given an equal chance of being selected
+until the required sample size is reached.</p>
+
+<p class="caption"><b>Table 2.</b> Distribution of All Respondents</p>
+
+<table class="data">
+  <thead><tr><th>Respondents</th><th style="width:25%">Sample Size</th></tr></thead>
+  <tbody>
+    <tr><td>HR Administrator</td><td class="num">1</td></tr>
+    <tr><td>HR Assistant</td><td class="num">1</td></tr>
+    <tr><td>Employees</td><td class="num">105</td></tr>
+    <tr><td><b>TOTAL</b></td><td class="num"><b>107</b></td></tr>
+  </tbody>
+</table>
+
+<p>Table 2 presents the distribution of all respondents. This study will involve a
+total of 107 respondents, composed of two (2) HR Office personnel, the HR
+Administrator and HR Assistant who will serve as the primary system operators, and
+105 teaching and non-teaching personnel of ISPSC Tagudin Campus who will serve as
+employee-users of NexHRIS. The respondents were identified based on their direct
+involvement with or as intended users of the NexHRIS system, ensuring that both the
+administrative and employee perspectives are represented in the system evaluation.</p>
+
+<h2>Research Instruments</h2>
+
+<p>The data for this study will be collected through two methods. First, structured
+interviews will be conducted with the ISPSC HR Administrator prior to system
+development to determine the current employee file management processes, challenges,
+and requirements that will form the basis for the NexHRIS feature design. Second,
+after system deployment, the Technology Acceptance Model (TAM) questionnaire will be
+administered to all respondents &mdash; the HR Administrator, HR Assistant, and
+selected employee-users &mdash; to evaluate the acceptability of the system.</p>
+
+<p>The Technology Acceptance Model (TAM), originally developed by Davis (1989), is a
+widely validated and widely used theoretical framework for evaluating user acceptance
+of information systems. TAM posits that two primary constructs, Perceived Usefulness
+(PU) and Perceived Ease of Use (PEOU), determine a user's attitude toward using a
+system and, ultimately, their behavioral intention to use it. Perceived Usefulness
+refers to the degree to which a user believes that using the system will enhance their
+job performance, while Perceived Ease of Use refers to the degree to which a user
+believes that the system will be free of effort. The TAM questionnaire to be used in
+this study will assess both constructs using a five-point Likert scale, with 1
+indicating strong disagreement and 5 indicating strong agreement with each
+statement.</p>
+
+<p>The TAM instrument is particularly appropriate for this study because NexHRIS is a
+new system being introduced to users who have no prior experience with a digital
+employee file management system. Evaluating the system through TAM will allow the
+researchers to determine whether the users find NexHRIS useful for their HR document
+management tasks and whether they find it easy to operate, which are the two most
+critical determinants of system adoption and continued use in institutional
+settings.</p>
+
+<h2>Data Analysis</h2>
+
+<p>The researchers will use appropriate statistical and qualitative tools to analyze
+the data gathered for each objective of the study. The following presents the data
+analysis methods to be applied per objective.</p>
+
+<p>For <b>Objective 1</b>, which aims to analyze the current employee file management
+processes of the ISPSC HR Office, the qualitative data gathered through structured
+pre-development interviews with the HR Administrator and HR Assistant will be analyzed
+using thematic analysis. This involves systematically organizing and categorizing the
+responses into recurring themes related to the current HR document management
+workflow, the challenges and inefficiencies experienced by the HR Office, and the
+specific system features and requirements identified by the HR personnel. The themes
+derived from this analysis will directly serve as the basis for the system design,
+feature prioritization, and functional requirements of NexHRIS.</p>
+
+<p>For <b>Objective 2</b>, which aims to determine the system requirements for the
+development of NexHRIS, the functional and non-functional requirements identified
+during the requirements-planning interviews and consultations will be documented and
+organized into system specifications. These requirements will be validated with the HR
+Administrator and translated into the modules, user roles, and workflows of the
+system, ensuring that the developed system directly addresses the needs identified in
+Objective 1.</p>
+
+<p>For <b>Objective 3</b>, which aims to evaluate the level of acceptability of
+NexHRIS based on the responses of the HR Administrator and the employees of ISPSC
+Tagudin Campus using the Technology Acceptance Model (TAM), the researchers will use
+mean and standard deviation to analyze the quantitative data gathered from the TAM
+questionnaire. These descriptive statistical tools will be used to determine the level
+of acceptability of NexHRIS as perceived by the HR Administrator, HR Assistant, and
+employee-users of ISPSC Tagudin Campus in terms of Perceived Usefulness (PU) and
+Perceived Ease of Use (PEOU). Each item in the TAM questionnaire will be rated by the
+respondents using a five-point Likert scale as presented in Table 3.</p>
+
+<p class="caption"><b>Table 3.</b> Likert Scale for the TAM Evaluation of NexHRIS</p>
+
+<table class="data">
+  <thead><tr><th style="width:20%">Scale</th><th>Verbal Interpretation</th></tr></thead>
+  <tbody>
+    <tr><td class="num">5</td><td>Strongly Agree</td></tr>
+    <tr><td class="num">4</td><td>Agree</td></tr>
+    <tr><td class="num">3</td><td>Neutral</td></tr>
+    <tr><td class="num">2</td><td>Disagree</td></tr>
+    <tr><td class="num">1</td><td>Strongly Disagree</td></tr>
+  </tbody>
+</table>
+
+<p>The computed mean scores for each TAM construct, particularly Perceived Usefulness
+and Perceived Ease of Use, will be interpreted using the mean range scale presented in
+Table 4. This interpretation will help determine the respondents' level of agreement
+with each construct and assess the overall acceptability of the proposed system.</p>
+
+<p class="caption"><b>Table 4.</b> Mean Range Interpretation for TAM Evaluation of NexHRIS</p>
+
+<table class="data">
+  <thead><tr><th style="width:30%">Mean Range</th><th>Interpretation</th></tr></thead>
+  <tbody>
+    <tr><td class="num">4.21 &ndash; 5.00</td><td>Strongly Agree</td></tr>
+    <tr><td class="num">3.41 &ndash; 4.20</td><td>Agree</td></tr>
+    <tr><td class="num">2.61 &ndash; 3.40</td><td>Neutral</td></tr>
+    <tr><td class="num">1.81 &ndash; 2.60</td><td>Disagree</td></tr>
+    <tr><td class="num">1.00 &ndash; 1.80</td><td>Strongly Disagree</td></tr>
+  </tbody>
+</table>
+
+<p>For <b>Objective 4</b>, which aims to determine whether there is a significant
+difference between the existing manual employee file management process and the
+developed NexHRIS system in terms of perceived usefulness and perceived ease of use,
+the researchers will use the Wilcoxon Signed-Rank Test. This non-parametric
+statistical test is appropriate for comparing two related conditions &mdash; the
+manual process and the NexHRIS system &mdash; using the same group of respondents,
+particularly when the data is ordinal in nature, as in the case of Likert-scale
+responses. The respondents will be asked to rate both the current manual process and
+the NexHRIS system using the same TAM-based items on Perceived Usefulness and
+Perceived Ease of Use. The Wilcoxon Signed-Rank Test will then be applied to determine
+whether a statistically significant difference exists between the two sets of ratings.
+A significance level of 0.05 will be used as the decision threshold. If the computed
+p-value is less than 0.05, the null hypothesis &mdash; that there is no significant
+difference between the manual process and NexHRIS &mdash; will be rejected, indicating
+that a significant difference exists in favor of the developed system.</p>
+
+<!-- ==================================================================== -->
+<h1>Chapter 3<br>Results and Discussion</h1>
+
+<p>This chapter presents the findings of the study, focusing on the evaluation of the
+current employee management practices at the institution, the key features of the
+developed NexHRIS system, and the assessment of its acceptability. The results
+highlight how NexHRIS enhanced record security, streamlined HR transactions, and
+supported better accessibility and efficiency within the HR setting.</p>
+
+<h2>Findings</h2>
+
+<p>The following were the findings in relation to the interview that led to the
+conduct of the study:</p>
+
+<h3>The Current Process of Employee Records and HR Data Handling</h3>
+
+<p>The current HR process at ISPSC Tagudin Campus relied entirely on manual,
+paper-based and spreadsheet-based procedures. Employee 201 files, including the
+Personal Data Sheet, leave records, and other personnel documents, were kept and
+organized physically by the HR Office, with a Personal Data Sheet per employee, a
+separate form per leave application, and two handwritten ledger cards per person.
+Whenever an employee needed to update their Personal Data Sheet, they had to
+personally visit the HR Office, retrieve their physical file, and manually revise the
+necessary entries before having it re-filed. Leave applications followed a manual
+route in which a printed form was physically carried between three offices for
+signature, and employees were required to check their leave credits and file their
+requests in person, relying entirely on the HR personnel to locate their records,
+compute their balances, and process their applications by hand. This heavy reliance on
+physical filing made records vulnerable to loss, damage, and unauthorized access,
+while the absence of a centralized digital repository required HR personnel to spend
+considerable time locating, reproducing, and verifying documents for every
+transaction. As the volume of personnel and administrative responsibilities at the
+institution continued to grow, this traditional method made the process
+time-consuming, prone to errors, and increasingly difficult to sustain and manage
+efficiently.</p>
+
+<h2>Features of the Developed System</h2>
+
+<p>NexHRIS moves the campus's HR transactions online while preserving the official
+Civil Service forms exactly as the campus uses them. The system is presented below by
+module, and where a module behaves differently for each role, the corresponding
+interfaces are shown separately. Each plate is captioned with the interface it shows
+and, where useful, the role for which it is shown.</p>
+
+<h3>Authentication and Role-Based Access</h3>
+
+<p>Users sign in with an email address and password. Accounts that administer or
+approve on behalf of others &mdash; the HR Administrator, the Deans, and the Campus
+Director &mdash; are additionally challenged with a six-digit verification code sent
+to their registered email address, while ordinary employee accounts sign in with a
+password alone. Repeated failed attempts are throttled and the account is temporarily
+locked, and both the failure and the lockout are written to the audit trail. After
+sign-in, each account is taken to the interface appropriate to its role.</p>
+
+<p>The four roles share one interface and differ only in what they may do. Their data
+boundaries are enforced in the query rather than in the interface, so a Dean who edits
+a web address to reach another college's records receives a refusal rather than data.
+The same applies to administrative functions: creating a staff account and publishing
+a policy are reserved to the HR Administrator, and a reviewer who reaches those
+addresses directly is refused, because the role field determines who signs whose leave
+and writing it would amount to granting authority.</p>
+
+<div class="plate">
+  <span class="what">Plate 1. Sign-in Page</span>
+  <span class="where">/login</span>
+</div>
+<p class="caption"><b>Plate 1.</b> Sign-in Page</p>
+
+<div class="plate">
+  <span class="what">Plate 2. Two-Factor Verification</span>
+  <span class="where">/two-factor</span> &mdash; shown for the HR Administrator, Deans and the Campus Director
+</div>
+<p class="caption"><b>Plate 2.</b> Two-Factor Verification</p>
+
+<div class="plate">
+  <span class="what">Plate 3. Refusal on Reaching Beyond Authority</span>
+  the 403 page a Dean receives when opening a record outside their college
+</div>
+<p class="caption"><b>Plate 3.</b> Refusal on Reaching Beyond Authority</p>
+
+<h3>Dashboards</h3>
+
+<p>Each role opens to a different set of figures. The HR Administrator sees
+campus-wide counts of pending reviews, submissions, and recent activity, together with
+a per-college breakdown of leave volume and Personal Data Sheet compliance; the Campus
+Director sees campus-wide leave figures awaiting final signature; the Dean sees only
+the college they hold, with the applications awaiting their first signature; and the
+Employee sees the status of their own leave, Personal Data Sheet, and ledger
+balances.</p>
+
+<div class="plate">
+  <span class="what">Plate 4. HR Administrator Dashboard</span>
+  <span class="where">/admin/dashboard</span>
+</div>
+<p class="caption"><b>Plate 4.</b> HR Administrator Dashboard</p>
+
+<div class="plate">
+  <span class="what">Plate 5. Campus Director Dashboard</span>
+  <span class="where">/admin/dashboard</span>
+</div>
+<p class="caption"><b>Plate 5.</b> Campus Director Dashboard</p>
+
+<div class="plate">
+  <span class="what">Plate 6. Dean Dashboard</span>
+  <span class="where">/admin/dashboard</span>
+</div>
+<p class="caption"><b>Plate 6.</b> Dean Dashboard</p>
+
+<div class="plate">
+  <span class="what">Plate 7. Employee Dashboard</span>
+  <span class="where">/dashboard</span>
+</div>
+<p class="caption"><b>Plate 7.</b> Employee Dashboard</p>
+
+<h3>Employee Accounts, Colleges, and Departments</h3>
+
+<p>The HR Administrator creates and maintains staff accounts, assigning each employee
+a college and a department, where a department belongs to exactly one college. The
+college an employee is assigned to determines who signs that employee's leave.
+Employee number, position, college, department, and role remain with the HR
+Administrator, while every user edits their own name, email address, contact number,
+photograph, and password from My Profile. Accounts are deactivated rather than
+deleted, so the history attached to a person survives their departure. Deans and the
+Campus Director may browse the staff list &mdash; a Dean sees only their own college
+&mdash; but cannot create or amend an account.</p>
+
+<div class="plate">
+  <span class="what">Plate 8. Employee Accounts</span>
+  <span class="where">/admin/employees</span>
+</div>
+<p class="caption"><b>Plate 8.</b> Employee Accounts</p>
+
+<div class="plate">
+  <span class="what">Plate 9. Creating a Staff Account</span>
+  <span class="where">/admin/employees/create</span>
+</div>
+<p class="caption"><b>Plate 9.</b> Creating a Staff Account</p>
+
+<div class="plate">
+  <span class="what">Plate 10. Employee Record</span>
+  <span class="where">/admin/employees/{id}</span>
+</div>
+<p class="caption"><b>Plate 10.</b> Employee Record</p>
+
+<div class="plate">
+  <span class="what">Plate 11. Colleges and Departments</span>
+  <span class="where">/admin/colleges</span>
+</div>
+<p class="caption"><b>Plate 11.</b> Colleges and Departments</p>
+
+<div class="plate">
+  <span class="what">Plate 12. My Profile</span>
+  <span class="where">/profile</span>
+</div>
+<p class="caption"><b>Plate 12.</b> My Profile</p>
+
+<h3>Publication of the Official Forms</h3>
+
+<p>The blank Civil Service forms are held in the system rather than circulated by
+hand. The HR Administrator uploads the official Personal Data Sheet and leave form,
+and each upload becomes a new numbered version while the previous one is retired
+rather than overwritten, so a submission can always be read against the version it was
+filled on. A published form can be previewed as a PDF from the same screen before it
+is issued to staff, and the original workbook remains downloadable for editing.</p>
+
+<div class="plate">
+  <span class="what">Plate 13. Published Forms and Their Versions</span>
+  <span class="where">/admin/leave-form-templates</span>
+</div>
+<p class="caption"><b>Plate 13.</b> Published Forms and Their Versions</p>
+
+<h3>Personal Data Sheet</h3>
+
+<p>The HR Administrator publishes the blank Civil Service form. An employee downloads
+it, fills it in, and uploads the completed workbook; the HR Administrator then reads
+the submission and either approves it or returns it with remarks, and every version
+submitted is kept. Deans and the Campus Director submit their own Personal Data Sheet
+through the same employee interface. The exported document is a conversion of the
+workbook the employee actually uploaded rather than a form rebuilt from stored values,
+so the printed sheet is the campus's own form.</p>
+
+<div class="plate">
+  <span class="what">Plate 14. Employee Personal Data Sheet Workspace</span>
+  <span class="where">/pds</span>
+</div>
+<p class="caption"><b>Plate 14.</b> Employee Personal Data Sheet Workspace</p>
+
+<div class="plate">
+  <span class="what">Plate 15. Personal Data Sheet Review List</span>
+  <span class="where">/admin/pds</span>
+</div>
+<p class="caption"><b>Plate 15.</b> Personal Data Sheet Review List</p>
+
+<div class="plate">
+  <span class="what">Plate 16. Reviewing a Submission</span>
+  <span class="where">/admin/pds/{employee}</span>
+</div>
+<p class="caption"><b>Plate 16.</b> Reviewing a Submission</p>
+
+<div class="plate">
+  <span class="what">Plate 17. Converted Personal Data Sheet</span>
+  the uploaded workbook rendered on A4, page 1 of 4
+</div>
+<p class="caption"><b>Plate 17.</b> Converted Personal Data Sheet</p>
+
+<h3>Leave Application and Approval Chain</h3>
+
+<p>An employee downloads the blank leave form, fills it in, and uploads it. The
+application is then routed according to the rank of the applicant, since no user signs
+their own leave. Each reviewer in turn reads the application as a PDF in the browser
+and either approves it or returns it with remarks, and a returned form restarts from
+the first stage. The Dean signs first for members of their own college, the HR
+Administrator second, and the Campus Director last; a Dean's own application skips the
+Dean stage, and the Campus Director's is signed by the HR Administrator alone. Each
+reviewer is notified by email and by the notification bell when an application reaches
+them. Once fully approved, the HR Administrator records the days against a ledger card
+and the employee may print the approval sheet.</p>
+
+<div class="plate">
+  <span class="what">Plate 18. Filing a Leave Application</span>
+  <span class="where">/leave</span>
+</div>
+<p class="caption"><b>Plate 18.</b> Filing a Leave Application</p>
+
+<div class="plate">
+  <span class="what">Plate 19. Tracking an Application</span>
+  <span class="where">/leave</span> &mdash; the stage-by-stage timeline
+</div>
+<p class="caption"><b>Plate 19.</b> Tracking an Application</p>
+
+<div class="plate">
+  <span class="what">Plate 20. Dean Review Queue</span>
+  <span class="where">/admin/leave/review</span>
+</div>
+<p class="caption"><b>Plate 20.</b> Dean Review Queue</p>
+
+<div class="plate">
+  <span class="what">Plate 21. HR Administrator Review Queue</span>
+  <span class="where">/admin/leave/review</span>
+</div>
+<p class="caption"><b>Plate 21.</b> HR Administrator Review Queue</p>
+
+<div class="plate">
+  <span class="what">Plate 22. Campus Director Final Approval</span>
+  <span class="where">/admin/leave/review/{id}</span>
+</div>
+<p class="caption"><b>Plate 22.</b> Campus Director Final Approval</p>
+
+<div class="plate">
+  <span class="what">Plate 23. Returning an Application with Remarks</span>
+  <span class="where">/admin/leave/review/{id}</span>
+</div>
+<p class="caption"><b>Plate 23.</b> Returning an Application with Remarks</p>
+
+<div class="plate">
+  <span class="what">Plate 24. Printed Approval Trail with a Skipped Stage</span>
+  a Dean's own application, with the Dean stage marked not applicable
+</div>
+<p class="caption"><b>Plate 24.</b> Printed Approval Trail with a Skipped Stage</p>
+
+<h3>Leave Calendar</h3>
+
+<p>The calendar shows who is on leave on a given date, scoped to the role viewing it.
+The Dean sees only their own college, while the HR Administrator and Campus Director
+see the whole campus. The month displayed can be printed as an A4 sheet for posting.</p>
+
+<div class="plate">
+  <span class="what">Plate 25. Leave Calendar, Dean's Own College</span>
+  <span class="where">/admin/leave/calendar</span>
+</div>
+<p class="caption"><b>Plate 25.</b> Leave Calendar, Dean's Own College</p>
+
+<div class="plate">
+  <span class="what">Plate 26. Leave Calendar, Campus-Wide</span>
+  <span class="where">/admin/leave/calendar</span>
+</div>
+<p class="caption"><b>Plate 26.</b> Leave Calendar, Campus-Wide</p>
+
+<h3>Leave and Service Credit Ledger Cards</h3>
+
+<p>The campus keeps two cards per employee on the same official form. A day taken is
+charged either against the vacation or sick balance on the leave ledger, or against
+service credits on the service credit ledger, and the HR Administrator decides which
+card an approved leave is written on. A line on one card never appears on the other,
+and the leave card is kept to two decimal places while the service credit card is kept
+to three, as the campus's own forms require. Each line stores the balance as it stood
+after it, so correcting a line in the middle replays every balance below it. Monthly
+credits may be posted to all staff in one action, and a period already credited is
+skipped rather than credited twice. The HR Administrator maintains all cards;
+employees read their own.</p>
+
+<div class="plate">
+  <span class="what">Plate 27. Ledger Cards by Employee</span>
+  <span class="where">/admin/leave</span>
+</div>
+<p class="caption"><b>Plate 27.</b> Ledger Cards by Employee</p>
+
+<div class="plate">
+  <span class="what">Plate 28. Maintaining a Ledger Card</span>
+  <span class="where">/admin/leave/{employee}/ledger</span>
+</div>
+<p class="caption"><b>Plate 28.</b> Maintaining a Ledger Card</p>
+
+<div class="plate">
+  <span class="what">Plate 29. Posting Monthly Credits to All Staff</span>
+  <span class="where">/admin/leave</span>
+</div>
+<p class="caption"><b>Plate 29.</b> Posting Monthly Credits to All Staff</p>
+
+<div class="plate">
+  <span class="what">Plate 30. My Ledger</span>
+  <span class="where">/leave/my-ledger</span> &mdash; the employee's own card, read-only
+</div>
+<p class="caption"><b>Plate 30.</b> My Ledger</p>
+
+<div class="plate">
+  <span class="what">Plate 31. Printed Leave Ledger Card</span>
+  the official card on A4, showing the running balance
+</div>
+<p class="caption"><b>Plate 31.</b> Printed Leave Ledger Card</p>
+
+<div class="plate">
+  <span class="what">Plate 32. Printed Service Credit Ledger Card</span>
+  the same official form, kept to three decimal places
+</div>
+<p class="caption"><b>Plate 32.</b> Printed Service Credit Ledger Card</p>
+
+<h3>Management Reports</h3>
+
+<p>Alongside the individual documents, the system produces campus-wide reports for the
+HR Office: the leave balances of all personnel as a PDF or as a spreadsheet, the
+employee directory as a PDF that respects whatever filter is on screen, and the leave
+calendar for a chosen month. Every generated document is named for the person or the
+period it covers, so a saved file can be identified without opening it.</p>
+
+<div class="plate">
+  <span class="what">Plate 33. Leave Balances Report</span>
+  all personnel with their vacation, sick and service credit balances
+</div>
+<p class="caption"><b>Plate 33.</b> Leave Balances Report</p>
+
+<div class="plate">
+  <span class="what">Plate 34. Employee Directory Report</span>
+  <span class="where">/admin/employees</span> &mdash; exported as a PDF
+</div>
+<p class="caption"><b>Plate 34.</b> Employee Directory Report</p>
+
+<h3>HR Policies and Announcements</h3>
+
+<p>The HR Administrator publishes policies with acknowledgement tracking and posts
+announcements that reach users through a notification bell and by email. Employees,
+Deans, and the Campus Director read published policies and acknowledge them, and the
+HR Administrator can see at a glance who has not yet done so. Publishing and editing a
+policy are reserved to the HR Administrator; every other role reads them.</p>
+
+<div class="plate">
+  <span class="what">Plate 35. Policy Management</span>
+  <span class="where">/admin/policies</span>
+</div>
+<p class="caption"><b>Plate 35.</b> Policy Management</p>
+
+<div class="plate">
+  <span class="what">Plate 36. Acknowledgement Tracking</span>
+  <span class="where">/admin/policies/{id}/compliance</span>
+</div>
+<p class="caption"><b>Plate 36.</b> Acknowledgement Tracking</p>
+
+<div class="plate">
+  <span class="what">Plate 37. Employee Policy View</span>
+  <span class="where">/policies/{id}</span>
+</div>
+<p class="caption"><b>Plate 37.</b> Employee Policy View</p>
+
+<div class="plate">
+  <span class="what">Plate 38. Announcements</span>
+  <span class="where">/admin/announcements</span>
+</div>
+<p class="caption"><b>Plate 38.</b> Announcements</p>
+
+<div class="plate">
+  <span class="what">Plate 39. Notifications</span>
+  <span class="where">/notifications</span>
+</div>
+<p class="caption"><b>Plate 39.</b> Notifications</p>
+
+<h3>Digital Identification Card</h3>
+
+<p>Each employee is issued a printable digital identification card bearing a QR code
+that resolves to a public verification page, so a card presented off campus can be
+checked without an account.</p>
+
+<div class="plate">
+  <span class="what">Plate 40. Digital Identification Card</span>
+  <span class="where">/my-id</span>
+</div>
+<p class="caption"><b>Plate 40.</b> Digital Identification Card</p>
+
+<div class="plate">
+  <span class="what">Plate 41. Public Verification Page</span>
+  <span class="where">/verify/{token}</span> &mdash; what the QR code resolves to
+</div>
+<p class="caption"><b>Plate 41.</b> Public Verification Page</p>
+
+<h3>Audit Trail</h3>
+
+<p>Every sign-in, approval, policy publication, template publication, and record
+change is recorded with the account and the IP address behind it. Changes to a ledger
+card are recorded in the same trail together with the values a line previously held,
+so a disputed balance can be traced to the person who altered it and to the figure it
+replaced. This gives the HR Administrator a reliable trail for accountability.</p>
+
+<div class="plate">
+  <span class="what">Plate 42. Audit Trail</span>
+  <span class="where">/admin/activity-logs</span>
+</div>
+<p class="caption"><b>Plate 42.</b> Audit Trail</p>
+
+<h3>Data Security</h3>
+
+<p>To ensure data security, the system applies role-based access control that
+distinguishes the permissions of the HR Administrator, Campus Director, Dean, and
+Employee, and enforces these boundaries at the query level. Uploaded personnel records
+&mdash; completed Personal Data Sheets, filed leave forms, and policy attachments
+&mdash; are held outside the web-accessible directory and are released only through
+the application, so each request is checked against the role of the person making it.
+Only the blank official forms, which contain no personal data, are served directly.
+Passwords are stored hashed and must contain both letters and numerals wherever they
+are set. With these functions, NexHRIS enhances the security, accessibility, and
+efficiency of employee records management at ISPSC Tagudin Campus.</p>
+
+<h2>Acceptability of the Developed System</h2>
+
+<p>This section presents the results of the Technology Acceptance Model (TAM)
+evaluation of NexHRIS in terms of Perceived Usefulness and Perceived Ease of Use, as
+well as the results of the Wilcoxon Signed-Rank Test comparing the existing manual
+process with the developed system.</p>
+
+<p class="flush"><i>The tables in this section are to be completed after the TAM
+questionnaire has been administered and the data analyzed.</i></p>
+
+<p class="caption"><b>Table 5.</b> Perceived Usefulness of NexHRIS</p>
+<div class="plate">
+  <span class="what">Table 5</span>
+  Mean and standard deviation per Perceived Usefulness item, with verbal interpretation
+</div>
+
+<p class="caption"><b>Table 6.</b> Perceived Ease of Use of NexHRIS</p>
+<div class="plate">
+  <span class="what">Table 6</span>
+  Mean and standard deviation per Perceived Ease of Use item, with verbal interpretation
+</div>
+
+<p class="caption"><b>Table 7.</b> Wilcoxon Signed-Rank Test Results</p>
+<div class="plate">
+  <span class="what">Table 7</span>
+  Z-value and p-value comparing the manual process with NexHRIS, per construct
+</div>
+
+</body>
+</html>

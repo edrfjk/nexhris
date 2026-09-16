@@ -11,47 +11,115 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen">
-<div class="flex min-h-screen">
+<body class="h-screen overflow-hidden">
+<div class="auth-shell">
 
-    {{-- Branding panel --}}
-    <div class="hidden lg:flex lg:w-[45%] bg-maroon-900 flex-col items-center justify-center text-white px-12 relative">
-        <div class="flex flex-col items-center text-center max-w-sm">
-            <img src="{{ asset('images/ispsc-logo.png') }}" alt="ISPSC Seal"
-                 class="w-28 h-28 rounded-full bg-white p-1.5 shadow-lift mb-7">
+    {{-- ------------------------------------------------------------------
+         Branding panel. The institution leads and the system follows, which
+         is the order a college portal is read in.
+         ------------------------------------------------------------------ --}}
+    <div class="auth-brand hidden lg:flex lg:w-[58%] xl:w-[60%] flex-col px-16 py-12">
 
-            <h1 class="text-3xl font-bold tracking-tight mb-2">NexHRIS</h1>
-            <p class="text-sm text-white/70 leading-relaxed">
-                Human Resource Information System
-            </p>
+        {{-- The seal as a watermark, running off the edge so only half of it
+             sits on the panel — a mark behind the page, not a picture on it. --}}
+        <img src="{{ asset('images/ispsc-logo.png') }}" alt=""
+             class="auth-watermark -right-[19rem] top-1/2 w-[38rem] -translate-y-1/2">
 
-            <div class="w-12 h-0.5 bg-gold-400 my-7 rounded-full"></div>
+        {{-- The institutional lockup: seal and name side by side, as a
+             letterhead carries them. --}}
+        <div class="flex items-center gap-5">
+            <img src="{{ asset('images/ispsc-logo.png') }}" alt="ISPSC seal"
+                 class="auth-seal h-[72px] w-[72px] shrink-0">
 
-            <p class="text-sm text-white/60 leading-relaxed">
-                Ilocos Sur Polytechnic State College<br>
-                Tagudin Campus, Ilocos Sur
-            </p>
+            <div>
+                <p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-400">
+                    Republic of the Philippines
+                </p>
+                <h1 class="mt-1 text-xl font-bold leading-tight tracking-tight">
+                    Ilocos Sur Polytechnic State College
+                </h1>
+                <p class="mt-0.5 text-[13px] text-white/70">Tagudin Campus, Ilocos Sur</p>
+            </div>
         </div>
 
-        <p class="absolute bottom-8 text-xs text-white/40">
-            &copy; {{ date('Y') }} ISPSC Tagudin Campus
+        <div class="auth-divider my-8"></div>
+
+        {{-- The system, and what it holds. Centred in what is left so the
+             panel has a middle to read from instead of two far edges. --}}
+        <div class="flex flex-1 flex-col justify-center">
+            <div class="mb-4 flex items-center gap-3">
+                <span class="auth-rule"></span>
+                <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
+                    Official Campus System
+                </span>
+            </div>
+
+            <div class="flex items-baseline gap-4">
+                <h2 class="text-[42px] font-bold leading-none tracking-tight">NexHRIS</h2>
+                <span class="text-[13px] text-white/50">Human Resource Information System</span>
+            </div>
+
+            {{-- No database query on this page: the sign-in screen has to
+                 render even when the database is unreachable. --}}
+            <p class="mt-4 max-w-xl text-[14.5px] leading-relaxed text-white/70">
+                Employee records, leave and service credits for the staff of the
+                campus — filed, approved and kept on the official forms.
+            </p>
+
+            <div class="mt-8 grid max-w-2xl grid-cols-2 gap-3">
+                <div class="auth-tile">
+                    <x-heroicon-o-document-text />
+                    <span class="auth-tile-title">Personal Data Sheet</span>
+                    <span class="auth-tile-note">Filed online and reviewed by HR</span>
+                </div>
+
+                <div class="auth-tile">
+                    <x-heroicon-o-check-badge />
+                    <span class="auth-tile-title">Leave approvals</span>
+                    <span class="auth-tile-note">Dean, HR and the Campus Director</span>
+                </div>
+
+                <div class="auth-tile">
+                    <x-heroicon-o-book-open />
+                    <span class="auth-tile-title">Ledger cards</span>
+                    <span class="auth-tile-note">Leave and service credits, to the official form</span>
+                </div>
+
+                <div class="auth-tile">
+                    <x-heroicon-o-identification />
+                    <span class="auth-tile-title">Digital ID</span>
+                    <span class="auth-tile-note">With a QR code anyone can verify</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="auth-divider mb-5 mt-8"></div>
+
+        <p class="text-xs text-white/40">
+            &copy; {{ date('Y') }} ISPSC Tagudin Campus · Human Resource Management Office
         </p>
     </div>
 
-    {{-- Form panel --}}
-    <div class="w-full lg:w-[55%] flex items-center justify-center bg-sand-100 px-5 py-10 sm:px-12">
-        <div class="w-full max-w-[26rem]">
+    {{-- ------------------------------------------------------------------
+         Form panel
+         ------------------------------------------------------------------ --}}
+    <div class="auth-page auth-scroll flex w-full justify-center px-5 py-10 sm:px-12 lg:w-[42%] xl:w-[40%]">
+        <div class="my-auto w-full max-w-[26rem]">
 
-            {{-- Compact branding for small screens --}}
-            <div class="flex lg:hidden flex-col items-center mb-8">
-                <img src="{{ asset('images/ispsc-logo.png') }}" alt="ISPSC Seal" class="w-16 h-16 mb-3">
-                <h1 class="text-lg font-bold text-maroon-800">NexHRIS</h1>
-                <p class="text-xs text-sand-500">ISPSC Tagudin Campus</p>
+            {{-- Compact lockup for small screens, where the panel is hidden. --}}
+            <div class="mb-8 flex flex-col items-center text-center lg:hidden">
+                <img src="{{ asset('images/ispsc-logo.png') }}" alt="ISPSC seal"
+                     class="mb-3 h-16 w-16">
+                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-maroon-700">
+                    ISPSC Tagudin Campus
+                </p>
+                <h1 class="mt-1 text-lg font-bold text-sand-900">NexHRIS</h1>
+                <p class="text-xs text-sand-500">Human Resource Information System</p>
             </div>
 
-            <div class="card p-7 sm:p-8">
+            <div class="auth-card p-7 sm:p-8">
                 <h2 class="text-xl font-semibold text-sand-900">@yield('heading')</h2>
-                <p class="text-[13px] text-sand-500 mt-1.5 mb-6">@yield('subheading')</p>
+                <p class="mb-6 mt-1.5 text-[13px] text-sand-500">@yield('subheading')</p>
 
                 @if (session('success'))
                     <div class="alert alert-success mb-5">
@@ -70,11 +138,15 @@
                 @yield('form')
             </div>
 
-            @hasSection("footer")
-                <div class="mt-5 text-center text-[13px] text-sand-500">
+            @hasSection('footer')
+                <div class="mt-5 text-center text-[13px] leading-relaxed text-sand-500">
                     @yield('footer')
                 </div>
             @endif
+
+            <p class="mt-6 text-center text-[11px] text-sand-400 lg:hidden">
+                &copy; {{ date('Y') }} ISPSC Tagudin Campus
+            </p>
         </div>
     </div>
 </div>

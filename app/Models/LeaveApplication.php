@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\DocumentName;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
@@ -41,11 +42,24 @@ class LeaveApplication extends Model
     }
 
     /** What the converted copy should be called when it is downloaded. */
+    /** The padded id printed on the form and used to name its PDF. */
+    public function reference(): string
+    {
+        return str_pad((string) $this->id, 5, '0', STR_PAD_LEFT);
+    }
+
     public function formPdfName(): string
     {
-        $name = preg_replace('/[^A-Za-z0-9_]/', '_', $this->user?->name ?? 'Employee');
+        return $this->user
+            ? DocumentName::leaveForm($this->user, $this->reference())
+            : DocumentName::clean('Leave Form (#' . $this->reference() . ')');
+    }
 
-        return 'Leave_Form_' . $name . '_' . str_pad((string) $this->id, 5, '0', STR_PAD_LEFT) . '.pdf';
+    public function approvalSheetName(): string
+    {
+        return $this->user
+            ? DocumentName::forPerson($this->user, 'Approved Leave Form (#' . $this->reference() . ')')
+            : DocumentName::clean('Approved Leave Form (#' . $this->reference() . ')');
     }
 
     // ------------------------------------------------------------------
@@ -230,11 +244,6 @@ class LeaveApplication extends Model
     // ------------------------------------------------------------------
     // Uploaded form file
     // ------------------------------------------------------------------
-
-    public function employeeFormUrl(): ?string
-    {
-        return $this->file_path ? Storage::disk('public')->url($this->file_path) : null;
-    }
 
     public function formExtension(): ?string
     {

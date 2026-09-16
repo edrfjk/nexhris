@@ -26,35 +26,38 @@
 </div>
 
 <div class="card overflow-hidden">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Employee</th>
-                <th>Viewed</th>
-                <th>Acknowledged</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($employees as $employee)
-                @php $view = $employee->policyViews->first(); @endphp
-                <tr class="border-t border-sand-100">
-                    <td>
-                        <p class="font-medium text-sand-800">{{ $employee->name }}</p>
-                        <p class="text-xs text-sand-400">{{ $employee->employee_number }}</p>
-                    </td>
-                    <td>{{ $view ? $view->viewed_at->format('M d, Y') : '—' }}</td>
-                    <td>
-                        @if ($view?->acknowledged_at)
-                            <x-badge color="green">Acknowledged {{ $view->acknowledged_at->format('M d, Y') }}</x-badge>
-                        @else
-                            <x-badge color="gray">Pending</x-badge>
-                        @endif
-                    </td>
+    {{-- A data table is wider than a phone. Without this the whole page scrolls sideways instead of the table. --}}
+    <div class="overflow-x-auto">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Viewed</th>
+                    <th>Acknowledged</th>
                 </tr>
-            @empty
-                <tr><td colspan="3"><x-empty-state message="No active employees found." /></td></tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @forelse ($employees as $employee)
+                    @php $view = $employee->policyViews->first(); @endphp
+                    <tr class="border-t border-sand-100">
+                        <td>
+                            <p class="font-medium text-sand-800">{{ $employee->name }}</p>
+                            <p class="text-xs text-sand-400">{{ $employee->employee_number }}</p>
+                        </td>
+                        <td>{{ $view ? $view->viewed_at->format('M d, Y') : '—' }}</td>
+                        <td>
+                            @if ($view?->acknowledged_at)
+                                <x-badge color="green">Acknowledged {{ $view->acknowledged_at->format('M d, Y') }}</x-badge>
+                            @else
+                                <x-badge color="gray">Pending</x-badge>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="3"><x-empty-state message="No active employees found." /></td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
 @endsection

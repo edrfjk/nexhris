@@ -1,0 +1,1420 @@
+<title>NexHRIS System Models</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@600;700&display=swap">
+<style>
+:root{
+  --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans",-apple-system,"Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+
+  --paper:#f7f6ef;
+  --surface:#fdfdf9;
+  --surface-2:#f0efe4;
+  --ink:#24231d;
+  --ink-2:#4e4c40;
+  --ink-3:#77745f;
+  --rule:#d8d5c3;
+  --rule-soft:#e8e6d9;
+  --maroon:#780000;
+  --maroon-ink:#780000;
+  --maroon-tint:#f9eeee;
+  --forest:#245e12;
+  --forest-tint:#eef5ea;
+  --gold:#7a6d00;
+  --gold-mark:#e8d400;
+  --fig-bg:#fdfdf9;
+  --shadow:0 1px 2px rgba(36,35,29,.06),0 8px 24px -12px rgba(36,35,29,.18);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#16150f;
+    --surface:#1e1d16;
+    --surface-2:#2a281f;
+    --ink:#f2f0e4;
+    --ink-2:#cdc9b6;
+    --ink-3:#9c9884;
+    --rule:#3c3930;
+    --rule-soft:#2e2c24;
+    --maroon:#e79a9a;
+    --maroon-ink:#f0b6b6;
+    --maroon-tint:#33201f;
+    --forest:#9ccb8a;
+    --forest-tint:#1f2a1a;
+    --gold:#e0cf5a;
+    --gold-mark:#e0cf5a;
+    --fig-bg:#1e1d16;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#16150f;
+  --surface:#1e1d16;
+  --surface-2:#2a281f;
+  --ink:#f2f0e4;
+  --ink-2:#cdc9b6;
+  --ink-3:#9c9884;
+  --rule:#3c3930;
+  --rule-soft:#2e2c24;
+  --maroon:#e79a9a;
+  --maroon-ink:#f0b6b6;
+  --maroon-tint:#33201f;
+  --forest:#9ccb8a;
+  --forest-tint:#1f2a1a;
+  --gold:#e0cf5a;
+  --gold-mark:#e0cf5a;
+  --fig-bg:#1e1d16;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.62;
+  margin:0;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1300px;margin:0 auto;padding:0 28px 120px}
+.col{max-width:70ch}
+
+/* ---------- masthead ---------- */
+.mast{border-bottom:1px solid var(--rule);padding:64px 0 34px}
+.eyebrow{
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap
+}
+.eyebrow .tick{width:26px;height:3px;background:var(--gold-mark);display:inline-block;border-radius:2px}
+h1{
+  font-family:var(--serif);font-weight:700;font-size:clamp(34px,5.4vw,58px);line-height:1.04;
+  letter-spacing:-.02em;margin:0 0 16px;text-wrap:balance;color:var(--ink)
+}
+h1 .qual{display:block;font-size:.36em;font-weight:600;letter-spacing:.005em;color:var(--maroon-ink);margin-top:16px;font-family:var(--sans);line-height:1.3}
+.lede{font-size:17px;line-height:1.6;color:var(--ink-2);max-width:64ch;margin:0 0 30px}
+.meta{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--surface)}
+.meta div{padding:11px 18px;border-right:1px solid var(--rule-soft);flex:1 1 auto;min-width:150px}
+.meta div:last-child{border-right:0}
+.meta dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 3px}
+.meta dd{margin:0;font-size:13.5px;font-weight:500;color:var(--ink)}
+
+/* ---------- nav ---------- */
+nav.toc{
+  position:sticky;top:0;z-index:20;background:var(--paper);
+  border-bottom:1px solid var(--rule);margin-bottom:56px;
+}
+nav.toc ol{list-style:none;display:flex;gap:2px;margin:0;padding:0;overflow-x:auto}
+nav.toc a{
+  display:block;white-space:nowrap;padding:13px 15px;text-decoration:none;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--ink-3);
+  border-bottom:2px solid transparent;transition:color .15s,border-color .15s
+}
+nav.toc a:hover{color:var(--maroon-ink);border-bottom-color:var(--maroon)}
+nav.toc a b{color:var(--ink);font-weight:500}
+:focus-visible{outline:2px solid var(--maroon);outline-offset:3px;border-radius:3px}
+
+/* ---------- sections ---------- */
+section{margin:0 0 88px;scroll-margin-top:62px}
+.shead{display:flex;gap:20px;align-items:baseline;margin:0 0 8px;border-top:2px solid var(--ink);padding-top:14px}
+.shead .num{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--maroon-ink);flex:0 0 auto;padding-top:6px}
+h2{font-family:var(--serif);font-weight:600;font-size:clamp(25px,3.2vw,34px);line-height:1.16;letter-spacing:-.015em;margin:0;text-wrap:balance}
+.sdek{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:2px 0 22px 33px}
+h3{font-family:var(--sans);font-weight:600;font-size:17px;letter-spacing:-.005em;margin:38px 0 10px}
+p{margin:0 0 15px}
+strong{font-weight:600;color:var(--ink)}
+code,.m{font-family:var(--mono);font-size:.88em;background:var(--surface-2);padding:1.5px 5px;border-radius:4px;color:var(--ink)}
+a{color:var(--maroon-ink)}
+
+ul.tight{margin:0 0 16px;padding-left:0;list-style:none}
+ul.tight li{padding-left:20px;position:relative;margin-bottom:7px}
+ul.tight li::before{content:"";position:absolute;left:3px;top:.62em;width:6px;height:6px;border-radius:1px;background:var(--gold-mark)}
+
+/* ---------- figure plates ---------- */
+.fig{margin:26px 0 10px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+.fig .plate{padding:26px 22px 14px;overflow-x:auto}
+.fig svg{display:block;width:100%;height:auto;min-width:660px;color:var(--ink-2)}
+figcaption{
+  border-top:1px solid var(--rule-soft);background:var(--surface-2);
+  padding:13px 22px;font-size:13px;line-height:1.5;color:var(--ink-2)
+}
+figcaption b{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--maroon-ink);margin-right:9px;font-weight:600}
+
+/* svg primitives */
+.fig .ent{fill:var(--surface-2);stroke:var(--ink-3);stroke-width:1.5}
+.fig .proc{fill:var(--maroon-tint);stroke:var(--maroon);stroke-width:1.8}
+.fig .storebar{fill:var(--forest-tint);stroke:none}
+.fig .storeline{stroke:var(--forest);stroke-width:1.6;fill:none}
+.fig .flow{fill:none;stroke:currentColor;stroke-width:1.35;stroke-linejoin:round}
+.fig .flow.dash{stroke-dasharray:5 4}
+.fig .bnd{fill:none;stroke:var(--ink-3);stroke-width:1.3;stroke-dasharray:7 5}
+.fig .uc{fill:var(--surface);stroke:var(--maroon);stroke-width:1.5}
+.fig .uc2{fill:var(--surface-2);stroke:var(--ink-3);stroke-width:1.3}
+.fig .actor{stroke:var(--ink);stroke-width:1.6;fill:none;stroke-linecap:round}
+.fig text{font-family:var(--mono);fill:var(--ink)}
+.fig .tt{font-size:12.5px;font-weight:500;fill:var(--ink)}
+.fig .tt.sm{font-size:11.5px}
+.fig .sub{font-size:10.5px;fill:var(--ink-3)}
+.fig .pid{font-size:12px;font-weight:600;fill:var(--maroon-ink)}
+.fig .did{font-size:11px;font-weight:600;fill:var(--forest)}
+.fig .big{font-family:var(--serif);font-size:21px;font-weight:700;fill:var(--ink)}
+.fig .lbl{
+  font-size:10.5px;fill:var(--ink-3);
+  paint-order:stroke;stroke:var(--fig-bg);stroke-width:4.5px;stroke-linejoin:round
+}
+.fig .lbl.on{fill:var(--maroon-ink)}
+.fig .grp{font-size:10px;letter-spacing:.14em;fill:var(--ink-3)}
+
+/* ---------- tables ---------- */
+.tblwrap{overflow-x:auto;margin:24px 0 10px;border:1px solid var(--rule);border-radius:10px;background:var(--surface);box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;min-width:660px;font-size:13.5px}
+th{
+  text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600;padding:12px 16px;border-bottom:1.5px solid var(--rule);
+  background:var(--surface-2);vertical-align:bottom;white-space:nowrap
+}
+td{padding:11px 16px;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.5;color:var(--ink-2)}
+tr:last-child td{border-bottom:0}
+td.k{font-family:var(--mono);font-size:12px;color:var(--ink);white-space:nowrap;font-weight:500}
+td.k.d{color:var(--forest)}
+td.k.p{color:var(--maroon-ink)}
+td strong{color:var(--ink)}
+.tblcap{font-size:12.5px;color:var(--ink-3);margin:-2px 0 0;padding-left:2px}
+.tblcap b{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--maroon-ink);margin-right:8px}
+
+/* ---------- legend / callout ---------- */
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;border:1px solid var(--rule);border-radius:10px;background:var(--surface);overflow:hidden;margin:24px 0}
+.legend > div{padding:16px 18px;border-right:1px solid var(--rule-soft);border-bottom:1px solid var(--rule-soft);display:flex;gap:13px;align-items:flex-start}
+.legend svg{width:48px;height:34px;flex:0 0 48px;min-width:0;color:var(--ink-2)}
+.legend h4{margin:0 0 2px;font-size:13.5px;font-weight:600;font-family:var(--sans)}
+.legend p{margin:0;font-size:12.5px;line-height:1.45;color:var(--ink-3)}
+
+.note{
+  border-left:3px solid var(--gold-mark);background:var(--surface);
+  padding:15px 20px;margin:24px 0;border-radius:0 8px 8px 0;font-size:14px;color:var(--ink-2)
+}
+.note b{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+
+footer{border-top:1px solid var(--rule);padding-top:26px;margin-top:20px;font-size:13px;color:var(--ink-3)}
+footer p{margin:0 0 6px}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:720px){
+  .wrap{padding:0 18px 80px}
+  .mast{padding-top:40px}
+  .shead{gap:12px}
+  .sdek{margin-left:0}
+}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow"><span class="tick"></span> Capstone system documentation &nbsp;·&nbsp; ISPSC Tagudin Campus</p>
+  <h1>NexHRIS System Models
+    <span class="qual">Context diagram, data flow diagrams, use case diagram and IPO chart</span>
+  </h1>
+  <p class="lede">Every diagram on this page was drawn from the working codebase &mdash; its routes, services,
+  models and migrations &mdash; not from a wish list. Process numbers, data stores and use cases map to
+  files you can open.</p>
+  <dl class="meta">
+    <div><dt>System</dt><dd>NexHRIS</dd></div>
+    <div><dt>Institution</dt><dd>ISPSC Tagudin Campus</dd></div>
+    <div><dt>Stack</dt><dd>Laravel 12 &middot; PHP 8.2 &middot; MySQL</dd></div>
+    <div><dt>Scale</dt><dd>111 routes &middot; 41 tables &middot; 33 models</dd></div>
+    <div><dt>Notation</dt><dd>Yourdon&ndash;DeMarco &middot; UML 2.5</dd></div>
+  </dl>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <ol>
+    <li><a href="#notation"><b>Notation</b></a></li>
+    <li><a href="#ctx"><b>1</b> &nbsp;Context Diagram &middot; DFD Level 0</a></li>
+    <li><a href="#dfd1"><b>2</b> &nbsp;DFD Level 1</a></li>
+    <li><a href="#dfd2"><b>3</b> &nbsp;DFD Level 2 &middot; Leave Chain</a></li>
+    <li><a href="#uc"><b>4</b> &nbsp;Use Case Diagram</a></li>
+    <li><a href="#ipo"><b>5</b> &nbsp;IPO Chart</a></li>
+    <li><a href="#dict"><b>6</b> &nbsp;Dictionaries</a></li>
+  </ol>
+</nav>
+
+<section id="notation">
+  <div class="shead"><span class="num">§</span><h2>Reading the notation</h2></div>
+  <p class="sdek">Yourdon&ndash;DeMarco for the data flow diagrams &middot; UML 2.5 for the use cases</p>
+
+  <div class="col">
+    <p>Four symbols carry the whole of sections 1&ndash;3. A <strong>process</strong> transforms data and is
+    numbered so a lower level can decompose it &mdash; process <span class="m">4.0</span> in the Level&nbsp;1
+    diagram opens up as <span class="m">4.1&ndash;4.7</span> in the Level&nbsp;2 diagram. An
+    <strong>external entity</strong> sits outside the system boundary: it is a source or a sink, never
+    something the system stores. A <strong>data store</strong> is data at rest; a <strong>data flow</strong>
+    is data in motion, and is named for what it carries, not for the verb that moves it.</p>
+  </div>
+
+  <div class="legend">
+    <div>
+      <svg viewBox="0 0 48 34" role="img" aria-label="Rectangle symbol for an external entity">
+        <rect class="ent" x="4" y="8" width="40" height="18" rx="2"/>
+      </svg>
+      <div><h4>External entity</h4><p>A person or service outside the boundary. Employees, the three approvers, the mail relay.</p></div>
+    </div>
+    <div>
+      <svg viewBox="0 0 48 34" role="img" aria-label="Circle symbol for a process">
+        <circle class="proc" cx="24" cy="17" r="14"/>
+      </svg>
+      <div><h4>Process</h4><p>Numbered work the system performs. The number is its address across levels.</p></div>
+    </div>
+    <div>
+      <svg viewBox="0 0 48 34" role="img" aria-label="Open-ended rectangle symbol for a data store">
+        <rect class="storebar" x="3" y="9" width="42" height="16"/>
+        <path class="storeline" d="M3,9 H45 M3,25 H45 M14,9 V25"/>
+      </svg>
+      <div><h4>Data store</h4><p>Data at rest &mdash; one or more database tables, or the file store on disk.</p></div>
+    </div>
+    <div>
+      <svg viewBox="0 0 48 34" role="img" aria-label="Arrow symbol for a data flow">
+        <defs><marker id="lg-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0.6 L9.4,5 L0,9.4 z" fill="currentColor"/></marker></defs>
+        <path class="flow" d="M5,17 H40" marker-end="url(#lg-ah)"/>
+      </svg>
+      <div><h4>Data flow</h4><p>Named data in motion. Every arrow says <em>what</em> travels, not merely that two things are connected.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="ctx">
+  <div class="shead"><span class="num">01</span><h2>Context Diagram &mdash; DFD Level&nbsp;0</h2></div>
+  <p class="sdek">The whole system as one process, and everyone it exchanges data with</p>
+
+  <div class="col">
+    <p>The context diagram fixes the <strong>scope</strong>: NexHRIS is a single process, and everything that
+    talks to it is outside. Six external entities appear. Four are people &mdash; the Employee and the three
+    approvers in the leave chain. Two are not: the campus <strong>mail relay</strong>, which carries
+    one-time sign-in codes and status notices, and a <strong>public verifier</strong> &mdash; anyone who scans
+    the QR code on a printed digital ID and reaches the public verification page without signing in.</p>
+    <p>The HR Administrator is drawn as a separate entity rather than a kind of employee because in this
+    system it is a <em>system account</em>: it holds no leave, no ledger card and no Personal Data Sheet of
+    its own.</p>
+  </div>
+
+  <figure class="fig">
+    <div class="plate">
+      <svg viewBox="0 0 1040 700" role="img" aria-label="Context diagram: NexHRIS as a single process exchanging named data flows with the Employee, Dean, HR Administrator, Campus Director, a public verifier and the campus mail relay.">
+        <defs>
+          <marker id="c-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0.6 L9.4,5 L0,9.4 z" fill="currentColor"/>
+          </marker>
+        </defs>
+
+        <circle class="proc" cx="520" cy="340" r="104"/>
+        <path d="M427,294 H613" fill="none" stroke="var(--maroon)" stroke-width="1.6"/>
+        <text class="pid" x="520" y="284" text-anchor="middle">0</text>
+        <text class="big" x="520" y="330" text-anchor="middle">NexHRIS</text>
+        <text class="sub" x="520" y="350" text-anchor="middle">Human Resource</text>
+        <text class="sub" x="520" y="364" text-anchor="middle">Information System</text>
+
+        <rect class="ent" x="52" y="152" width="176" height="56" rx="3"/>
+        <text class="tt" x="140" y="177" text-anchor="middle">Employee</text>
+        <text class="sub" x="140" y="193" text-anchor="middle">faculty and staff</text>
+
+        <rect class="ent" x="52" y="472" width="176" height="56" rx="3"/>
+        <text class="tt" x="140" y="497" text-anchor="middle">Dean</text>
+        <text class="sub" x="140" y="513" text-anchor="middle">first approval</text>
+
+        <rect class="ent" x="812" y="152" width="176" height="56" rx="3"/>
+        <text class="tt" x="900" y="177" text-anchor="middle">HR Administrator</text>
+        <text class="sub" x="900" y="193" text-anchor="middle">second approval</text>
+
+        <rect class="ent" x="812" y="472" width="176" height="56" rx="3"/>
+        <text class="tt" x="900" y="497" text-anchor="middle">Campus Director</text>
+        <text class="sub" x="900" y="513" text-anchor="middle">final approval</text>
+
+        <rect class="ent" x="432" y="32" width="176" height="56" rx="3"/>
+        <text class="tt" x="520" y="57" text-anchor="middle">Public Verifier</text>
+        <text class="sub" x="520" y="73" text-anchor="middle">scans the ID QR code</text>
+
+        <rect class="ent" x="432" y="602" width="176" height="56" rx="3"/>
+        <text class="tt" x="520" y="627" text-anchor="middle">Mail Relay</text>
+        <text class="sub" x="520" y="643" text-anchor="middle">campus SMTP</text>
+
+        <path class="flow" d="M227,232 L419,313" marker-end="url(#c-ah)"/>
+        <path class="flow" d="M430,287 L238,206" marker-end="url(#c-ah)"/>
+        <text class="lbl" x="314" y="296" text-anchor="middle">credentials, PDS workbook,</text>
+        <text class="lbl" x="314" y="308" text-anchor="middle">leave form, acknowledgement</text>
+        <text class="lbl" x="342" y="214" text-anchor="middle">PDF documents, leave status,</text>
+        <text class="lbl" x="342" y="226" text-anchor="middle">leave balances, notices</text>
+
+        <path class="flow" d="M238,474 L430,393" marker-end="url(#c-ah)"/>
+        <path class="flow" d="M419,367 L227,448" marker-end="url(#c-ah)"/>
+        <text class="lbl" x="342" y="458" text-anchor="middle">first approval</text>
+        <text class="lbl" x="342" y="470" text-anchor="middle">and remarks</text>
+        <text class="lbl" x="314" y="375" text-anchor="middle">college leave queue,</text>
+        <text class="lbl" x="314" y="387" text-anchor="middle">form rendered as PDF</text>
+
+        <path class="flow" d="M803,207 L611,288" marker-end="url(#c-ah)"/>
+        <path class="flow" d="M621,313 L813,232" marker-end="url(#c-ah)"/>
+        <text class="lbl" x="698" y="214" text-anchor="middle">staff records, blank templates,</text>
+        <text class="lbl" x="698" y="226" text-anchor="middle">ledger postings, policies</text>
+        <text class="lbl" x="722" y="296" text-anchor="middle">review queues, ledger cards,</text>
+        <text class="lbl" x="722" y="308" text-anchor="middle">audit trail</text>
+
+        <path class="flow" d="M813,448 L621,367" marker-end="url(#c-ah)"/>
+        <path class="flow" d="M611,393 L803,474" marker-end="url(#c-ah)"/>
+        <text class="lbl" x="726" y="375" text-anchor="middle">final approval</text>
+        <text class="lbl" x="726" y="387" text-anchor="middle">or return with remarks</text>
+        <text class="lbl" x="722" y="458" text-anchor="middle">campus-wide figures,</text>
+        <text class="lbl" x="722" y="470" text-anchor="middle">forms awaiting approval</text>
+
+        <path class="flow" d="M504,92 V234" marker-end="url(#c-ah)"/>
+        <path class="flow" d="M536,234 V92" marker-end="url(#c-ah)"/>
+        <text class="lbl" x="494" y="155" text-anchor="end">verification token</text>
+        <text class="lbl" x="494" y="167" text-anchor="end">read from the ID QR</text>
+        <text class="lbl" x="546" y="155">name, position,</text>
+        <text class="lbl" x="546" y="167">employment validity</text>
+
+        <path class="flow" d="M520,444 V598" marker-end="url(#c-ah)"/>
+        <text class="lbl" x="534" y="508">one-time sign-in code,</text>
+        <text class="lbl" x="534" y="520">leave and PDS status notice</text>
+      </svg>
+    </div>
+    <figcaption><b>Figure 1</b> Every flow that crosses the boundary of NexHRIS. The mail relay only receives &mdash;
+    nothing flows back from it into the system, which is why a failed send makes the second factor fail closed
+    rather than let the sign-in through.</figcaption>
+  </figure>
+</section>
+
+<style>
+.fig .pl{font-size:11px;fill:var(--ink);font-weight:500}
+.fig .rl{font-size:10px;fill:var(--ink-3);paint-order:stroke;stroke:var(--fig-bg);stroke-width:4.5px;stroke-linejoin:round}
+.fig .stt{font-size:11.5px;font-weight:500;fill:var(--ink)}
+.fig .li{font-size:10.5px;fill:var(--ink-2)}
+.fig .hd-i{fill:var(--ink-2)}
+.fig .hd-p{fill:var(--maroon-ink)}
+.fig .hd-o{fill:var(--forest)}
+</style>
+
+<section id="dfd1">
+  <div class="shead"><span class="num">02</span><h2>Data Flow Diagram &mdash; Level&nbsp;1</h2></div>
+  <p class="sdek">Process 0 opened up into eight processes and ten data stores</p>
+
+  <div class="col">
+    <p>Level&nbsp;1 explodes the single bubble of Figure&nbsp;1 without adding or losing a single boundary
+    flow &mdash; the diagram is <strong>balanced</strong>. What appears for the first time is the inside:
+    the eight processes the campus actually performs, and the ten places data comes to rest.</p>
+    <p>Two things in this drawing are worth reading closely. First, <strong>D3 Blank Form Templates appears
+    twice</strong> &mdash; once feeding PDS management, once feeding document rendering. A store drawn twice is
+    the same store; the doubled left edge marks the repeat. It is repeated because the campus form is the
+    source of truth in two different ways: as the file an employee downloads, and as the geometry the ledger
+    card is rebuilt from. Second, <strong>D10 Document Store is a file system, not a table.</strong> Uploaded
+    workbooks and their converted PDFs live on disk under <span class="m">storage/app</span>; the database
+    holds only the path and the metadata.</p>
+  </div>
+
+  <figure class="fig">
+    <div class="plate">
+      <svg viewBox="0 0 1340 1240" role="img" aria-label="Level 1 data flow diagram: six external entities on the left exchange named flows with eight numbered processes in the centre, which read from and write to ten data stores on the right.">
+        <defs>
+          <marker id="d1-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0.6 L9.4,5 L0,9.4 z" fill="currentColor"/>
+          </marker>
+        </defs>
+
+        <!-- ============ EXTERNAL ENTITIES ============ -->
+        <rect class="ent" x="24" y="60" width="180" height="200" rx="3"/>
+        <text class="tt" x="114" y="88" text-anchor="middle">Employee</text>
+        <text class="sub" x="114" y="104" text-anchor="middle">faculty and staff</text>
+
+        <rect class="ent" x="24" y="300" width="180" height="160" rx="3"/>
+        <text class="tt" x="114" y="328" text-anchor="middle">HR Administrator</text>
+        <text class="sub" x="114" y="344" text-anchor="middle">system account</text>
+
+        <rect class="ent" x="24" y="480" width="180" height="120" rx="3"/>
+        <text class="tt" x="114" y="508" text-anchor="middle">Dean</text>
+        <text class="sub" x="114" y="524" text-anchor="middle">first approval</text>
+
+        <rect class="ent" x="24" y="640" width="180" height="100" rx="3"/>
+        <text class="tt" x="114" y="668" text-anchor="middle">Campus Director</text>
+        <text class="sub" x="114" y="684" text-anchor="middle">final approval</text>
+
+        <rect class="ent" x="24" y="900" width="180" height="80" rx="3"/>
+        <text class="tt" x="114" y="928" text-anchor="middle">Public Verifier</text>
+        <text class="sub" x="114" y="944" text-anchor="middle">QR scan, no sign-in</text>
+
+        <rect class="ent" x="24" y="1030" width="180" height="100" rx="3"/>
+        <text class="tt" x="114" y="1058" text-anchor="middle">Mail Relay</text>
+        <text class="sub" x="114" y="1074" text-anchor="middle">campus SMTP</text>
+
+        <!-- ============ PROCESSES ============ -->
+        <circle class="proc" cx="680" cy="100" r="62"/>
+        <text class="pid" x="680" y="80" text-anchor="middle">1.0</text>
+        <text class="pl" x="680" y="100" text-anchor="middle">Sign-in &amp;</text>
+        <text class="pl" x="680" y="114" text-anchor="middle">Access Control</text>
+
+        <circle class="proc" cx="680" cy="250" r="62"/>
+        <text class="pid" x="680" y="222" text-anchor="middle">2.0</text>
+        <text class="pl" x="680" y="242" text-anchor="middle">Employee &amp;</text>
+        <text class="pl" x="680" y="256" text-anchor="middle">Organisation</text>
+        <text class="pl" x="680" y="270" text-anchor="middle">Records</text>
+
+        <circle class="proc" cx="680" cy="400" r="62"/>
+        <text class="pid" x="680" y="372" text-anchor="middle">3.0</text>
+        <text class="pl" x="680" y="392" text-anchor="middle">Personal Data</text>
+        <text class="pl" x="680" y="406" text-anchor="middle">Sheet</text>
+        <text class="pl" x="680" y="420" text-anchor="middle">Management</text>
+
+        <circle class="proc" cx="680" cy="550" r="62"/>
+        <text class="pid" x="680" y="530" text-anchor="middle">4.0</text>
+        <text class="pl" x="680" y="550" text-anchor="middle">Leave Application</text>
+        <text class="pl" x="680" y="564" text-anchor="middle">&amp; Approval Chain</text>
+
+        <circle class="proc" cx="680" cy="700" r="62"/>
+        <text class="pid" x="680" y="680" text-anchor="middle">5.0</text>
+        <text class="pl" x="680" y="700" text-anchor="middle">Ledger</text>
+        <text class="pl" x="680" y="714" text-anchor="middle">Maintenance</text>
+
+        <circle class="proc" cx="680" cy="850" r="62"/>
+        <text class="pid" x="680" y="830" text-anchor="middle">6.0</text>
+        <text class="pl" x="680" y="850" text-anchor="middle">Policies &amp;</text>
+        <text class="pl" x="680" y="864" text-anchor="middle">Announcements</text>
+
+        <circle class="proc" cx="680" cy="1000" r="62"/>
+        <text class="pid" x="680" y="972" text-anchor="middle">7.0</text>
+        <text class="pl" x="680" y="992" text-anchor="middle">Document</text>
+        <text class="pl" x="680" y="1006" text-anchor="middle">Rendering</text>
+        <text class="pl" x="680" y="1020" text-anchor="middle">&amp; Delivery</text>
+
+        <circle class="proc" cx="680" cy="1150" r="62"/>
+        <text class="pid" x="680" y="1130" text-anchor="middle">8.0</text>
+        <text class="pl" x="680" y="1150" text-anchor="middle">Dashboards, ID</text>
+        <text class="pl" x="680" y="1164" text-anchor="middle">&amp; Audit Trail</text>
+
+        <!-- ============ DATA STORES ============ -->
+        <g>
+          <rect class="storebar" x="900" y="48" width="390" height="44"/>
+          <path class="storeline" d="M900,48 H1290 M900,92 H1290 M940,48 V92"/>
+          <text class="did" x="912" y="76">D2</text>
+          <text class="stt" x="952" y="76">Session &amp; Auth Records</text>
+          <text class="sub" x="1278" y="76" text-anchor="end">sessions · 2fa · tokens</text>
+        </g>
+        <g>
+          <rect class="storebar" x="900" y="112" width="390" height="44"/>
+          <path class="storeline" d="M900,112 H1290 M900,156 H1290 M940,112 V156 M906,112 V156"/>
+          <text class="did" x="916" y="140">D1</text>
+          <text class="stt" x="952" y="140">Users &amp; Organisation Units</text>
+          <text class="sub" x="1278" y="140" text-anchor="end">colleges · departments</text>
+        </g>
+        <g>
+          <rect class="storebar" x="900" y="228" width="390" height="44"/>
+          <path class="storeline" d="M900,228 H1290 M900,272 H1290 M940,228 V272 M906,228 V272"/>
+          <text class="did" x="916" y="256">D1</text>
+          <text class="stt" x="952" y="256">Users &amp; Organisation Units</text>
+          <text class="sub" x="1278" y="256" text-anchor="end">same store, drawn twice</text>
+        </g>
+        <g>
+          <rect class="storebar" x="900" y="348" width="390" height="44"/>
+          <path class="storeline" d="M900,348 H1290 M900,392 H1290 M940,348 V392"/>
+          <text class="did" x="912" y="376">D4</text>
+          <text class="stt" x="952" y="376">PDS Submissions</text>
+          <text class="sub" x="1278" y="376" text-anchor="end">submissions + revisions</text>
+        </g>
+        <g>
+          <rect class="storebar" x="900" y="412" width="390" height="44"/>
+          <path class="storeline" d="M900,412 H1290 M900,456 H1290 M940,412 V456 M906,412 V456"/>
+          <text class="did" x="916" y="440">D3</text>
+          <text class="stt" x="952" y="440">Blank Form Templates</text>
+          <text class="sub" x="1278" y="440" text-anchor="end">pds · leave · ledger masters</text>
+        </g>
+        <g>
+          <rect class="storebar" x="900" y="500" width="390" height="44"/>
+          <path class="storeline" d="M900,500 H1290 M900,544 H1290 M940,500 V544"/>
+          <text class="did" x="912" y="528">D5</text>
+          <text class="stt" x="952" y="528">Leave Applications</text>
+          <text class="sub" x="1278" y="528" text-anchor="end">leave_applications</text>
+        </g>
+        <g>
+          <rect class="storebar" x="900" y="564" width="390" height="44"/>
+          <path class="storeline" d="M900,564 H1290 M900,608 H1290 M940,564 V608"/>
+          <text class="did" x="912" y="592">D6</text>
+          <text class="stt" x="952" y="592">Leave Approvals</text>
+          <text class="sub" x="1278" y="592" text-anchor="end">one row per approval</text>
+        </g>
+        <g>
+          <rect class="storebar" x="900" y="678" width="390" height="44"/>
+          <path class="storeline" d="M900,678 H1290 M900,722 H1290 M940,678 V722"/>
+          <text class="did" x="912" y="706">D7</text>
+          <text class="stt" x="952" y="706">Ledger Records</text>
+          <text class="sub" x="1278" y="706" text-anchor="end">entries · cards · changes</text>
+        </g>
+        <g>
+          <rect class="storebar" x="900" y="828" width="390" height="44"/>
+          <path class="storeline" d="M900,828 H1290 M900,872 H1290 M940,828 V872"/>
+          <text class="did" x="912" y="856">D8</text>
+          <text class="stt" x="952" y="856">Policies &amp; Notices</text>
+          <text class="sub" x="1278" y="856" text-anchor="end">policies · views · notices</text>
+        </g>
+        <g>
+          <rect class="storebar" x="900" y="948" width="390" height="44"/>
+          <path class="storeline" d="M900,948 H1290 M900,992 H1290 M940,948 V992"/>
+          <text class="did" x="908" y="976">D10</text>
+          <text class="stt" x="952" y="976">Document Store</text>
+          <text class="sub" x="1278" y="976" text-anchor="end">storage/app · pdf cache</text>
+        </g>
+        <g>
+          <rect class="storebar" x="900" y="1012" width="390" height="44"/>
+          <path class="storeline" d="M900,1012 H1290 M900,1056 H1290 M940,1012 V1056 M906,1012 V1056"/>
+          <text class="did" x="916" y="1040">D3</text>
+          <text class="stt" x="952" y="1040">Blank Form Templates</text>
+          <text class="sub" x="1278" y="1040" text-anchor="end">same store, drawn twice</text>
+        </g>
+        <g>
+          <rect class="storebar" x="900" y="1128" width="390" height="44"/>
+          <path class="storeline" d="M900,1128 H1290 M900,1172 H1290 M940,1128 V1172"/>
+          <text class="did" x="912" y="1156">D9</text>
+          <text class="stt" x="952" y="1156">Activity Log</text>
+          <text class="sub" x="1278" y="1156" text-anchor="end">every process writes here</text>
+        </g>
+
+        <!-- ============ ENTITY FLOWS — EMPLOYEE ============ -->
+        <path class="flow" d="M206,140 L618.2,105.2" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="412" y="118" text-anchor="middle">credentials, one-time code</text>
+
+        <path class="flow" d="M206,170 L624.2,372.9" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="415" y="266" text-anchor="middle">filled PDS workbook</text>
+
+        <path class="flow" d="M206,185 L630.9,512.2" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="418" y="338" text-anchor="middle">filled leave form</text>
+
+        <path class="flow" d="M637.3,655 L206,200" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="421" y="420" text-anchor="middle">own ledger card</text>
+
+        <path class="flow" d="M642.9,800.3 L206,215" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="410" y="462" text-anchor="middle">policy text, announcement</text>
+
+        <path class="flow" d="M647.5,947.2 L206,230" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="427" y="556" text-anchor="middle">PDS and leave form as PDF</text>
+
+        <path class="flow" d="M651.2,1095.1 L206,245" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="429" y="663" text-anchor="middle">own figures, digital ID</text>
+
+        <!-- ============ ENTITY FLOWS — HR ADMINISTRATOR ============ -->
+        <path class="flow" d="M206,320 L618.7,259.1" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="412" y="284" text-anchor="middle">staff, college, department</text>
+
+        <path class="flow" d="M206,345 L618.4,392.9" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="412" y="364" text-anchor="middle">PDS decision, blank form</text>
+
+        <path class="flow" d="M206,370 L622,528" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="414" y="443" text-anchor="middle">second approval</text>
+
+        <path class="flow" d="M206,395 L627.9,666.4" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="417" y="525" text-anchor="middle">ledger posting, correction</text>
+
+        <path class="flow" d="M206,420 L634.1,808.3" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="420" y="608" text-anchor="middle">policy, announcement</text>
+
+        <path class="flow" d="M645.4,1098.5 L206,445" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="426" y="766" text-anchor="middle">audit trail, campus figures</text>
+
+        <!-- ============ ENTITY FLOWS — DEAN ============ -->
+        <path class="flow" d="M206,510 L618.2,544.8" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="300" y="506" text-anchor="middle">stage-1 approve or return</text>
+
+        <path class="flow" d="M618.2,553.3 L206,575" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="300" y="572" text-anchor="middle">college leave queue</text>
+
+        <path class="flow" d="M639.7,1102.9 L206,595" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="423" y="843" text-anchor="middle">college dashboard</text>
+
+        <!-- ============ ENTITY FLOWS — CAMPUS DIRECTOR ============ -->
+        <path class="flow" d="M206,670 L619.9,565.2" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="300" y="638" text-anchor="middle">final approval or return</text>
+
+        <path class="flow" d="M634.3,1108.1 L206,715" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="420" y="906" text-anchor="middle">campus-wide figures</text>
+
+        <!-- ============ ENTITY FLOWS — PUBLIC VERIFIER ============ -->
+        <path class="flow" d="M206,925 L624,1123.4" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="415" y="1018" text-anchor="middle">verification token</text>
+
+        <path class="flow" d="M622.7,1126.4 L206,955" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="414" y="1047" text-anchor="middle">name, position, validity</text>
+
+        <!-- ============ ENTITY FLOWS — MAIL RELAY ============ -->
+        <path class="flow" d="M618,100 H236 V1075 H208" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="248" y="1067">one-time sign-in code</text>
+
+        <path class="flow" d="M625.4,879.4 L206,1105" marker-end="url(#d1-ah)"/>
+        <text class="lbl" x="416" y="986" text-anchor="middle">announcement notice</text>
+
+        <!-- ============ STORE FLOWS ============ -->
+        <path class="flow" d="M741.4,91.5 L898,70" marker-end="url(#d1-ah)" marker-start="url(#d1-ah)"/>
+        <text class="rl" x="820" y="72" text-anchor="middle">session, OTP challenge</text>
+
+        <path class="flow" d="M741.3,109.6 L898,134" marker-end="url(#d1-ah)" marker-start="url(#d1-ah)"/>
+        <text class="rl" x="820" y="136" text-anchor="middle">account, role, lock</text>
+
+        <path class="flow" d="M742,250 H898" marker-end="url(#d1-ah)" marker-start="url(#d1-ah)"/>
+        <text class="rl" x="820" y="242" text-anchor="middle">staff, college, dept</text>
+
+        <path class="flow" d="M741.4,391.5 L898,370" marker-end="url(#d1-ah)" marker-start="url(#d1-ah)"/>
+        <text class="rl" x="820" y="372" text-anchor="middle">submission, revision</text>
+
+        <path class="flow" d="M898,434 L741.3,409.6" marker-end="url(#d1-ah)"/>
+        <text class="rl" x="820" y="436" text-anchor="middle">active CS Form 212</text>
+
+        <path class="flow" d="M741.5,542.1 L898,522" marker-end="url(#d1-ah)" marker-start="url(#d1-ah)"/>
+        <text class="rl" x="820" y="524" text-anchor="middle">application, status</text>
+
+        <path class="flow" d="M741.2,560.1 L898,586" marker-end="url(#d1-ah)"/>
+        <text class="rl" x="820" y="588" text-anchor="middle">approval record</text>
+
+        <path class="flow" d="M742,700 H898" marker-end="url(#d1-ah)" marker-start="url(#d1-ah)"/>
+        <text class="rl" x="820" y="692" text-anchor="middle">ledger line, balance</text>
+
+        <path class="flow" d="M742,850 H898" marker-end="url(#d1-ah)" marker-start="url(#d1-ah)"/>
+        <text class="rl" x="820" y="842" text-anchor="middle">policy, notice, view</text>
+
+        <path class="flow" d="M741.4,991.5 L898,970" marker-end="url(#d1-ah)" marker-start="url(#d1-ah)"/>
+        <text class="rl" x="820" y="972" text-anchor="middle">workbook, cached PDF</text>
+
+        <path class="flow" d="M898,1034 L741.3,1009.6" marker-end="url(#d1-ah)"/>
+        <text class="rl" x="820" y="1036" text-anchor="middle">template geometry</text>
+
+        <path class="flow" d="M742,1150 H898" marker-end="url(#d1-ah)"/>
+        <text class="rl" x="820" y="1142" text-anchor="middle">audit entry</text>
+      </svg>
+    </div>
+    <figcaption><b>Figure 2</b> A line with an arrowhead at both ends is a read <em>and</em> a write.
+    Every process also writes to <strong>D9 Activity Log</strong>; only the link from 8.0 is drawn, because
+    eight converging lines would obscure the flows that actually differ between processes.</figcaption>
+  </figure>
+
+  <h3>What each process does</h3>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>No.</th><th>Process</th><th>What it transforms</th><th>Where it lives</th></tr></thead>
+      <tbody>
+        <tr><td class="k p">1.0</td><td><strong>Sign-in &amp; Access Control</strong></td>
+          <td>Credentials and an emailed one-time code become an authorised session carrying a role and a college scope.</td>
+          <td class="k">Auth/ · TwoFactorService</td></tr>
+        <tr><td class="k p">2.0</td><td><strong>Employee &amp; Organisation Records</strong></td>
+          <td>HR keystrokes become staff records bound to a college and department &mdash; which is what decides who approves their leave.</td>
+          <td class="k">Admin/EmployeeController</td></tr>
+        <tr><td class="k p">3.0</td><td><strong>Personal Data Sheet Management</strong></td>
+          <td>An uploaded CS Form 212 workbook becomes a validated, versioned submission and an approve-or-return decision.</td>
+          <td class="k">PdsSubmissionService</td></tr>
+        <tr><td class="k p">4.0</td><td><strong>Leave Application &amp; Approval Chain</strong></td>
+          <td>An uploaded leave form becomes an approved record, routed through a chain derived from who applied.</td>
+          <td class="k">LeaveWorkflowService · LeaveChain</td></tr>
+        <tr><td class="k p">5.0</td><td><strong>Ledger Maintenance</strong></td>
+          <td>Approved days become a ledger line and a recomputed running balance on one of the two cards.</td>
+          <td class="k">LeaveLedgerService</td></tr>
+        <tr><td class="k p">6.0</td><td><strong>Policies &amp; Announcements</strong></td>
+          <td>Published text becomes a readable notice plus a per-employee acknowledgement record.</td>
+          <td class="k">HrPolicyController</td></tr>
+        <tr><td class="k p">7.0</td><td><strong>Document Rendering &amp; Delivery</strong></td>
+          <td>A stored workbook becomes an A4 PDF, by LibreOffice where it exists and pure PHP where it does not.</td>
+          <td class="k">XlsxToPdfService</td></tr>
+        <tr><td class="k p">8.0</td><td><strong>Dashboards, Digital ID &amp; Audit Trail</strong></td>
+          <td>Stored records become per-role figures, a printable ID with a QR token, and an append-only trail.</td>
+          <td class="k">DashboardService · ActivityLogger</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="tblcap"><b>Table 1</b> The eight Level-1 processes and the class that carries each one.</p>
+</section>
+
+<section id="dfd2">
+  <div class="shead"><span class="num">03</span><h2>Data Flow Diagram &mdash; Level&nbsp;2</h2></div>
+  <p class="sdek">Process 4.0 exploded &mdash; the leave application and approval chain</p>
+
+  <div class="col">
+    <p>Only one Level-1 process is worth decomposing further, and it is the one the whole project was
+    commissioned for: the leave chain that used to mean walking a printed form between three offices.</p>
+    <p>The single most important thing this diagram shows is the <strong>loop</strong>. A form returned at any
+    stage does not resume where it stopped &mdash; it goes back to <span class="m">4.2</span> and starts the
+    chain again from the first approval. That is why <span class="m">4.5</span> is drawn as its own process
+    rather than as a branch inside <span class="m">4.4</span>: returning is a different transformation, not a
+    different outcome of the same one.</p>
+    <p>The second thing worth noticing is that <span class="m">4.3</span> sits <em>between</em> upload and
+    approval. The chain is not a fixed sequence stored anywhere; it is derived per form from who applied,
+    because nobody approves their own leave. A Dean&rsquo;s form skips the Dean stage, and the Campus
+    Director&rsquo;s form goes to HR alone.</p>
+  </div>
+
+  <figure class="fig">
+    <div class="plate">
+      <svg viewBox="0 0 1340 720" role="img" aria-label="Level 2 data flow diagram of the leave process: the blank form is served, the filled workbook uploaded and validated, the approval chain derived from the applicant, each stage decision recorded, a returned form looped back to restart the chain, approved days posted to the ledger, and the approval sheet rendered.">
+        <defs>
+          <marker id="d2-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0.6 L9.4,5 L0,9.4 z" fill="currentColor"/>
+          </marker>
+          <marker id="d2-am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0.6 L9.4,5 L0,9.4 z" fill="var(--maroon)"/>
+          </marker>
+        </defs>
+
+        <!-- entities -->
+        <rect class="ent" x="45" y="40" width="170" height="52" rx="3"/>
+        <text class="tt" x="130" y="63" text-anchor="middle">Employee</text>
+        <text class="sub" x="130" y="79" text-anchor="middle">applicant</text>
+
+        <rect class="ent" x="345" y="40" width="170" height="52" rx="3"/>
+        <text class="tt" x="430" y="63" text-anchor="middle">Dean</text>
+        <text class="sub" x="430" y="79" text-anchor="middle">stage 1</text>
+
+        <rect class="ent" x="645" y="40" width="170" height="52" rx="3"/>
+        <text class="tt" x="730" y="63" text-anchor="middle">HR Administrator</text>
+        <text class="sub" x="730" y="79" text-anchor="middle">stage 2</text>
+
+        <rect class="ent" x="945" y="40" width="170" height="52" rx="3"/>
+        <text class="tt" x="1030" y="63" text-anchor="middle">Campus Director</text>
+        <text class="sub" x="1030" y="79" text-anchor="middle">stage 3</text>
+
+        <!-- processes -->
+        <circle class="proc" cx="130" cy="300" r="54"/>
+        <text class="pid" x="130" y="282" text-anchor="middle">4.1</text>
+        <text class="pl" x="130" y="302" text-anchor="middle">Serve Blank</text>
+        <text class="pl" x="130" y="316" text-anchor="middle">Leave Form</text>
+
+        <circle class="proc" cx="310" cy="300" r="54"/>
+        <text class="pid" x="310" y="282" text-anchor="middle">4.2</text>
+        <text class="pl" x="310" y="302" text-anchor="middle">Upload &amp;</text>
+        <text class="pl" x="310" y="316" text-anchor="middle">Validate</text>
+
+        <circle class="proc" cx="490" cy="300" r="54"/>
+        <text class="pid" x="490" y="282" text-anchor="middle">4.3</text>
+        <text class="pl" x="490" y="302" text-anchor="middle">Derive</text>
+        <text class="pl" x="490" y="316" text-anchor="middle">Approval Chain</text>
+
+        <circle class="proc" cx="670" cy="300" r="54"/>
+        <text class="pid" x="670" y="282" text-anchor="middle">4.4</text>
+        <text class="pl" x="670" y="302" text-anchor="middle">Record Stage</text>
+        <text class="pl" x="670" y="316" text-anchor="middle">Decision</text>
+
+        <circle class="proc" cx="850" cy="300" r="54"/>
+        <text class="pid" x="850" y="282" text-anchor="middle">4.6</text>
+        <text class="pl" x="850" y="302" text-anchor="middle">Post to</text>
+        <text class="pl" x="850" y="316" text-anchor="middle">Ledger</text>
+
+        <circle class="proc" cx="1030" cy="300" r="54"/>
+        <text class="pid" x="1030" y="282" text-anchor="middle">4.7</text>
+        <text class="pl" x="1030" y="302" text-anchor="middle">Render &amp;</text>
+        <text class="pl" x="1030" y="316" text-anchor="middle">Release PDF</text>
+
+        <circle class="proc" cx="670" cy="500" r="54"/>
+        <text class="pid" x="670" y="482" text-anchor="middle">4.5</text>
+        <text class="pl" x="670" y="502" text-anchor="middle">Return for</text>
+        <text class="pl" x="670" y="516" text-anchor="middle">Revision</text>
+
+        <!-- data stores -->
+        <g>
+          <rect class="storebar" x="30" y="638" width="220" height="44"/>
+          <path class="storeline" d="M30,638 H250 M30,682 H250 M70,638 V682"/>
+          <text class="did" x="42" y="666">D3</text>
+          <text class="stt" x="82" y="666">Blank Form Templates</text>
+        </g>
+        <g>
+          <rect class="storebar" x="300" y="638" width="220" height="44"/>
+          <path class="storeline" d="M300,638 H520 M300,682 H520 M344,638 V682"/>
+          <text class="did" x="308" y="666">D10</text>
+          <text class="stt" x="356" y="666">Document Store</text>
+        </g>
+        <g>
+          <rect class="storebar" x="570" y="638" width="220" height="44"/>
+          <path class="storeline" d="M570,638 H790 M570,682 H790 M610,638 V682"/>
+          <text class="did" x="582" y="666">D5</text>
+          <text class="stt" x="622" y="666">Leave Applications</text>
+        </g>
+        <g>
+          <rect class="storebar" x="840" y="638" width="220" height="44"/>
+          <path class="storeline" d="M840,638 H1060 M840,682 H1060 M880,638 V682"/>
+          <text class="did" x="852" y="666">D6</text>
+          <text class="stt" x="892" y="666">Leave Approvals</text>
+        </g>
+        <g>
+          <rect class="storebar" x="1090" y="638" width="220" height="44"/>
+          <path class="storeline" d="M1090,638 H1310 M1090,682 H1310 M1130,638 V682"/>
+          <text class="did" x="1102" y="666">D7</text>
+          <text class="stt" x="1142" y="666">Ledger Records</text>
+        </g>
+
+        <!-- entity flows -->
+        <path class="flow" d="M118,92 V245" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="108" y="170" text-anchor="end">requests form</text>
+
+        <path class="flow" d="M160,92 L278.4,256.2" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="228" y="182">filled workbook</text>
+
+        <path class="flow" d="M660,92 L180.2,280.3" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="420" y="212" text-anchor="middle">publishes blank form</text>
+
+        <path class="flow" d="M430,92 L629.2,264.6" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="512" y="172">first approval</text>
+
+        <path class="flow" d="M760,92 L691.4,250.4" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="700" y="152" text-anchor="end">second approval</text>
+
+        <path class="flow" d="M800,92 L837.4,247.5" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="818" y="180">chooses which card</text>
+
+        <path class="flow" d="M1000,92 L715.7,271.2" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="892" y="218" text-anchor="middle">final approval</text>
+
+        <path class="flow" d="M1030,246 V150 H142 V96" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="600" y="138" text-anchor="middle">approval sheet as PDF</text>
+
+        <!-- process to process -->
+        <path class="flow" d="M184,300 H256" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="220" y="288" text-anchor="middle">blank form</text>
+
+        <path class="flow" d="M364,300 H436" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="400" y="288" text-anchor="middle">validated file</text>
+
+        <path class="flow" d="M544,300 H616" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="580" y="288" text-anchor="middle">stage list</text>
+
+        <path class="flow" d="M724,300 H796" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="760" y="288" text-anchor="middle">fully approved</text>
+
+        <path class="flow" d="M904,300 H976" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="940" y="288" text-anchor="middle">posted record</text>
+
+        <path class="flow" d="M670,354 V444" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="682" y="380">returned with remarks</text>
+
+        <!-- the loop -->
+        <path class="flow" d="M618,516 H310 V356" marker-end="url(#d2-am)" stroke="var(--maroon)" stroke-width="1.8"/>
+        <text class="lbl on" x="450" y="508" text-anchor="middle">returned form restarts the chain</text>
+
+        <!-- store flows -->
+        <path class="flow" d="M130,638 V356" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="142" y="500">active blank form</text>
+
+        <path class="flow" d="M323.9,352.2 L400,636" marker-end="url(#d2-ah)" marker-start="url(#d2-ah)"/>
+        <text class="lbl" x="392" y="466">stored workbook</text>
+
+        <path class="flow" d="M349.9,336.4 L680,636" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="500" y="424" text-anchor="middle">new application row</text>
+
+        <path class="flow" d="M518.5,345.9 L700,636" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="580" y="484" text-anchor="middle">chain and first status</text>
+
+        <path class="flow" d="M680.9,352.9 L740,636" marker-end="url(#d2-ah)" marker-start="url(#d2-ah)"/>
+        <text class="lbl" x="742" y="452">stage status update</text>
+
+        <path class="flow" d="M700.4,344.6 L900,636" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="836" y="400" text-anchor="middle">approval and remarks</text>
+
+        <path class="flow" d="M718.7,523.2 L960,636" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="862" y="562" text-anchor="middle">return recorded</text>
+
+        <path class="flow" d="M888.9,337.5 L1200,636" marker-end="url(#d2-ah)" marker-start="url(#d2-ah)"/>
+        <text class="lbl" x="1074" y="466" text-anchor="middle">ledger line, balance</text>
+
+        <path class="flow" d="M1030,354 V598 H360 V636" marker-end="url(#d2-ah)"/>
+        <text class="lbl" x="700" y="590" text-anchor="middle">workbook in, PDF out</text>
+      </svg>
+    </div>
+    <figcaption><b>Figure 3</b> The maroon path is the one that makes the chain a chain rather than a queue:
+    a return sends the form back to <span class="m">4.2</span>, not back one stage.
+    <span class="m">4.7</span> also renders the form for each reviewer to read in the browser; those three
+    read-only flows are omitted so the decision path stays visible.</figcaption>
+  </figure>
+
+  <h3>The states a leave application moves through</h3>
+  <p class="col">These are the literal values stored in <span class="m">leave_applications.status</span>, and the
+  stages that produce them come from <span class="m">LeaveChain::stagesFor()</span>.</p>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>Status</th><th>Means</th><th>Set by</th><th>Next</th></tr></thead>
+      <tbody>
+        <tr><td class="k">submitted</td><td>Uploaded and awaiting the first applicable stage</td><td>4.2 &rarr; 4.3</td><td class="k">dean_approved <em>or</em> dean_returned</td></tr>
+        <tr><td class="k">dean_approved</td><td>First approval given; sitting with HR</td><td>4.4</td><td class="k">hr_approved <em>or</em> hr_returned</td></tr>
+        <tr><td class="k">hr_approved</td><td>Second approval given; sitting with the Campus Director</td><td>4.4</td><td class="k">cd_approved <em>or</em> cd_returned</td></tr>
+        <tr><td class="k">cd_approved</td><td><strong>Terminal.</strong> Every applicable stage has approved</td><td>4.4</td><td class="k">&rarr; 4.6 ledger posting</td></tr>
+        <tr><td class="k">dean_returned<br>hr_returned<br>cd_returned</td><td>Returned with remarks at that stage</td><td>4.5</td><td class="k">back to submitted, chain restarts</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="tblcap"><b>Table 2</b> A stage that does not apply to an applicant is skipped, not failed &mdash; it still
+  prints on the trail, marked N/A, so an absent approval is explained rather than merely missing.</p>
+</section>
+
+<section id="uc">
+  <div class="shead"><span class="num">04</span><h2>Use Case Diagram</h2></div>
+  <p class="sdek">UML 2.5 &middot; four human roles, one abstract base actor, two secondary actors</p>
+
+  <div class="col">
+    <p>Four roles share one interface; only their capabilities differ. Drawing that as four separate actors
+    each wired to its own copy of &ldquo;sign in&rdquo; and &ldquo;manage own profile&rdquo; would produce a
+    diagram nobody can read and a claim that is not true &mdash; those are the <em>same</em> use case. So the
+    diagram uses <strong>actor generalization</strong>: an abstract <span class="m">System User</span> owns
+    what everyone can do, and each concrete role inherits it and adds its own.</p>
+    <p>Two inheritance decisions carry real information. <strong>Dean and Campus Director inherit from
+    Employee</strong>, because they are members of staff who also file their own leave. <strong>HR
+    Administrator inherits from System User instead</strong> &mdash; it is a system account, so it never files
+    leave, holds no ledger card and submits no Personal Data Sheet. That single arrow is the whole reason the
+    approval chain has to be derived per applicant rather than fixed.</p>
+    <p><span class="m">Verify a digital ID</span> hangs below the rest because it is the one use case reached
+    without signing in at all: a QR code on a printed card resolves to a public page.</p>
+  </div>
+
+  <figure class="fig">
+    <div class="plate">
+      <svg viewBox="0 0 1400 1860" role="img" aria-label="Use case diagram: an abstract System User actor owns sign-in, profile, policy and announcement use cases; Employee inherits it and adds PDS, leave, ledger and ID use cases; Dean and Campus Director inherit Employee and add their approval and dashboard use cases; HR Administrator inherits System User and adds account, template, review, ledger, publishing and audit use cases; a mail relay and a public verifier act as secondary actors.">
+        <defs>
+          <marker id="uc-gen" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto">
+            <path d="M0.5,0.8 L10.8,6 L0.5,11.2 z" fill="var(--surface)" stroke="currentColor" stroke-width="1.1"/>
+          </marker>
+          <marker id="uc-dep" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+            <path d="M1,0.8 L9,5 L1,9.2" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          </marker>
+        </defs>
+
+        <!-- system boundary -->
+        <rect class="bnd" x="320" y="20" width="820" height="1790" rx="6"/>
+        <text class="tt" x="730" y="48" text-anchor="middle" letter-spacing="2.5">N E X H R I S</text>
+
+        <!-- ================= ACTORS ================= -->
+        <!-- System User -->
+        <g class="actor"><circle cx="140" cy="55" r="9"/><path d="M140,64 V90 M125,73 H155 M140,90 L127,108 M140,90 L153,108"/></g>
+        <text class="tt" x="140" y="126" text-anchor="middle">System User</text>
+        <text class="sub" x="140" y="140" text-anchor="middle">abstract</text>
+
+        <!-- Employee -->
+        <g class="actor"><circle cx="140" cy="295" r="9"/><path d="M140,304 V330 M125,313 H155 M140,330 L127,348 M140,330 L153,348"/></g>
+        <text class="tt" x="140" y="366" text-anchor="middle">Employee</text>
+        <text class="sub" x="140" y="380" text-anchor="middle">faculty and staff</text>
+
+        <!-- Dean -->
+        <g class="actor"><circle cx="70" cy="555" r="9"/><path d="M70,564 V590 M55,573 H85 M70,590 L57,608 M70,590 L83,608"/></g>
+        <text class="tt" x="70" y="626" text-anchor="middle">Dean</text>
+
+        <!-- Campus Director -->
+        <g class="actor"><circle cx="210" cy="555" r="9"/><path d="M210,564 V590 M195,573 H225 M210,590 L197,608 M210,590 L223,608"/></g>
+        <text class="tt" x="210" y="626" text-anchor="middle">Campus Director</text>
+
+        <!-- HR Administrator -->
+        <g class="actor"><circle cx="140" cy="1115" r="9"/><path d="M140,1124 V1150 M125,1133 H155 M140,1150 L127,1168 M140,1150 L153,1168"/></g>
+        <text class="tt" x="140" y="1186" text-anchor="middle">HR Administrator</text>
+        <text class="sub" x="140" y="1200" text-anchor="middle">system account</text>
+
+        <!-- Public Verifier -->
+        <g class="actor"><circle cx="1265" cy="1721" r="9"/><path d="M1265,1730 V1756 M1250,1739 H1280 M1265,1756 L1252,1774 M1265,1756 L1278,1774"/></g>
+        <text class="tt" x="1265" y="1792" text-anchor="middle">Public Verifier</text>
+
+        <!-- Mail Relay (system actor) -->
+        <rect class="ent" x="1190" y="94" width="160" height="54" rx="3"/>
+        <text class="sub" x="1270" y="114" text-anchor="middle">&#171;system&#187;</text>
+        <text class="tt" x="1270" y="132" text-anchor="middle">Mail Relay</text>
+
+        <!-- ============ GENERALIZATION ============ -->
+        <path class="flow" d="M140,282 V162" marker-end="url(#uc-gen)"/>
+        <path class="flow" d="M64,542 V412 H216 V542"/>
+        <path class="flow" d="M140,412 V398" marker-end="url(#uc-gen)"/>
+        <path class="flow" d="M140,1102 H34 V73 H110" marker-end="url(#uc-gen)"/>
+
+        <!-- ============ GROUP LABELS ============ -->
+        <text class="grp" x="410" y="82">AVAILABLE TO EVERY ROLE</text>
+        <text class="grp" x="410" y="368">EMPLOYEE</text>
+        <text class="grp" x="410" y="786">DEAN</text>
+        <text class="grp" x="410" y="940">CAMPUS DIRECTOR</text>
+        <text class="grp" x="410" y="1094">HR ADMINISTRATOR</text>
+        <text class="grp" x="410" y="1710">NO SIGN-IN REQUIRED</text>
+
+        <!-- ============ USE CASES ============ -->
+        <ellipse class="uc" cx="600" cy="120" rx="190" ry="27"/>
+        <text class="tt" x="600" y="125" text-anchor="middle">Sign in</text>
+
+        <ellipse class="uc" cx="600" cy="186" rx="190" ry="27"/>
+        <text class="tt" x="600" y="191" text-anchor="middle">Manage own profile</text>
+
+        <ellipse class="uc" cx="600" cy="252" rx="190" ry="27"/>
+        <text class="tt" x="600" y="257" text-anchor="middle">Read and acknowledge an HR policy</text>
+
+        <ellipse class="uc" cx="600" cy="318" rx="190" ry="27"/>
+        <text class="tt" x="600" y="323" text-anchor="middle">View announcements and notices</text>
+
+        <ellipse class="uc" cx="600" cy="406" rx="190" ry="27"/>
+        <text class="tt" x="600" y="411" text-anchor="middle">Submit a Personal Data Sheet</text>
+
+        <ellipse class="uc" cx="600" cy="472" rx="190" ry="27"/>
+        <text class="tt" x="600" y="477" text-anchor="middle">File a leave application</text>
+
+        <ellipse class="uc" cx="600" cy="538" rx="190" ry="27"/>
+        <text class="tt" x="600" y="543" text-anchor="middle">Track leave status and remarks</text>
+
+        <ellipse class="uc" cx="600" cy="604" rx="190" ry="27"/>
+        <text class="tt" x="600" y="609" text-anchor="middle">View own ledger card</text>
+
+        <ellipse class="uc" cx="600" cy="670" rx="190" ry="27"/>
+        <text class="tt" x="600" y="675" text-anchor="middle">Print digital ID with QR code</text>
+
+        <ellipse class="uc" cx="600" cy="736" rx="190" ry="27"/>
+        <text class="tt" x="600" y="741" text-anchor="middle">Export own documents as PDF</text>
+
+        <ellipse class="uc" cx="600" cy="824" rx="190" ry="27"/>
+        <text class="tt" x="600" y="829" text-anchor="middle">Review leave &mdash; first approval</text>
+
+        <ellipse class="uc" cx="600" cy="890" rx="190" ry="27"/>
+        <text class="tt" x="600" y="895" text-anchor="middle">View college dashboard</text>
+
+        <ellipse class="uc" cx="600" cy="978" rx="190" ry="27"/>
+        <text class="tt" x="600" y="983" text-anchor="middle">Approve leave &mdash; final approval</text>
+
+        <ellipse class="uc" cx="600" cy="1044" rx="190" ry="27"/>
+        <text class="tt" x="600" y="1049" text-anchor="middle">View campus-wide dashboard</text>
+
+        <ellipse class="uc" cx="600" cy="1132" rx="190" ry="27"/>
+        <text class="tt" x="600" y="1137" text-anchor="middle">Manage employee accounts</text>
+
+        <ellipse class="uc" cx="600" cy="1198" rx="190" ry="27"/>
+        <text class="tt" x="600" y="1203" text-anchor="middle">Manage colleges and departments</text>
+
+        <ellipse class="uc" cx="600" cy="1264" rx="190" ry="27"/>
+        <text class="tt" x="600" y="1269" text-anchor="middle">Publish blank form templates</text>
+
+        <ellipse class="uc" cx="600" cy="1330" rx="190" ry="27"/>
+        <text class="tt" x="600" y="1335" text-anchor="middle">Review a PDS submission</text>
+
+        <ellipse class="uc" cx="600" cy="1396" rx="190" ry="27"/>
+        <text class="tt" x="600" y="1401" text-anchor="middle">Review leave &mdash; second approval</text>
+
+        <ellipse class="uc" cx="600" cy="1462" rx="190" ry="27"/>
+        <text class="tt" x="600" y="1467" text-anchor="middle">Post approved leave to a ledger</text>
+
+        <ellipse class="uc" cx="600" cy="1528" rx="190" ry="27"/>
+        <text class="tt" x="600" y="1533" text-anchor="middle">Correct a ledger card line</text>
+
+        <ellipse class="uc" cx="600" cy="1594" rx="190" ry="27"/>
+        <text class="tt" x="600" y="1599" text-anchor="middle">Publish policies and announcements</text>
+
+        <ellipse class="uc" cx="600" cy="1660" rx="190" ry="27"/>
+        <text class="tt" x="600" y="1665" text-anchor="middle">Read the audit trail</text>
+
+        <ellipse class="uc" cx="600" cy="1748" rx="190" ry="27"/>
+        <text class="tt" x="600" y="1753" text-anchor="middle">Verify a digital ID</text>
+
+        <!-- ============ INCLUDED / EXTENDING USE CASES ============ -->
+        <ellipse class="uc2" cx="1000" cy="120" rx="130" ry="25"/>
+        <text class="tt sm" x="1000" y="125" text-anchor="middle">Verify one-time code</text>
+
+        <ellipse class="uc2" cx="1000" cy="439" rx="130" ry="25"/>
+        <text class="tt sm" x="1000" y="444" text-anchor="middle">Upload filled workbook</text>
+
+        <ellipse class="uc2" cx="1000" cy="505" rx="130" ry="25"/>
+        <text class="tt sm" x="1000" y="510" text-anchor="middle">Derive approval chain</text>
+
+        <ellipse class="uc2" cx="1000" cy="736" rx="130" ry="25"/>
+        <text class="tt sm" x="1000" y="741" text-anchor="middle">Convert workbook to A4</text>
+
+        <ellipse class="uc2" cx="1000" cy="1110" rx="130" ry="25"/>
+        <text class="tt sm" x="1000" y="1115" text-anchor="middle">Return with remarks</text>
+
+        <ellipse class="uc2" cx="1000" cy="1495" rx="130" ry="25"/>
+        <text class="tt sm" x="1000" y="1500" text-anchor="middle">Replay running balances</text>
+
+        <ellipse class="uc2" cx="1000" cy="1594" rx="130" ry="25"/>
+        <text class="tt sm" x="1000" y="1599" text-anchor="middle">Notify by email</text>
+
+        <!-- ============ ASSOCIATIONS ============ -->
+        <path class="flow" d="M158,76 L406,120"/>
+        <path class="flow" d="M158,80 L406,186"/>
+        <path class="flow" d="M158,84 L406,252"/>
+        <path class="flow" d="M158,88 L406,318"/>
+
+        <path class="flow" d="M158,316 L406,406"/>
+        <path class="flow" d="M158,320 L406,472"/>
+        <path class="flow" d="M158,324 L406,538"/>
+        <path class="flow" d="M158,328 L406,604"/>
+        <path class="flow" d="M158,332 L406,670"/>
+        <path class="flow" d="M158,336 L406,736"/>
+
+        <path class="flow" d="M88,576 L406,824"/>
+        <path class="flow" d="M88,580 L406,890"/>
+
+        <path class="flow" d="M228,576 L406,978"/>
+        <path class="flow" d="M228,580 L406,1044"/>
+
+        <path class="flow" d="M158,1130 L406,1132"/>
+        <path class="flow" d="M158,1134 L406,1198"/>
+        <path class="flow" d="M158,1138 L406,1264"/>
+        <path class="flow" d="M158,1142 L406,1330"/>
+        <path class="flow" d="M158,1146 L406,1396"/>
+        <path class="flow" d="M158,1150 L406,1462"/>
+        <path class="flow" d="M158,1154 L406,1528"/>
+        <path class="flow" d="M158,1158 L406,1594"/>
+        <path class="flow" d="M158,1162 L406,1660"/>
+
+        <path class="flow" d="M1249,1744 L794,1748"/>
+
+        <path class="flow" d="M1190,121 H1132"/>
+        <path class="flow" d="M1350,121 H1372 V1594 H1132" marker-end="url(#uc-dep)"/>
+        <text class="lbl" x="1364" y="900" text-anchor="end">notices</text>
+
+        <!-- ============ INCLUDE / EXTEND ============ -->
+        <path class="flow dash" d="M870,120 H794" marker-end="url(#uc-dep)"/>
+        <text class="lbl" x="832" y="110" text-anchor="middle">&#171;extend&#187;</text>
+
+        <path class="flow dash" d="M790,410 L866,436" marker-end="url(#uc-dep)"/>
+        <text class="lbl" x="828" y="412" text-anchor="middle">&#171;include&#187;</text>
+
+        <path class="flow dash" d="M790,466 L866,443" marker-end="url(#uc-dep)"/>
+        <text class="lbl" x="828" y="470" text-anchor="middle">&#171;include&#187;</text>
+
+        <path class="flow dash" d="M792,480 L868,502" marker-end="url(#uc-dep)"/>
+        <text class="lbl" x="830" y="502" text-anchor="middle">&#171;include&#187;</text>
+
+        <path class="flow dash" d="M790,736 H866" marker-end="url(#uc-dep)"/>
+        <text class="lbl" x="828" y="728" text-anchor="middle">&#171;include&#187;</text>
+
+        <path class="flow dash" d="M872,1096 L794,834" marker-end="url(#uc-dep)"/>
+        <path class="flow dash" d="M876,1092 L796,988" marker-end="url(#uc-dep)"/>
+        <path class="flow dash" d="M874,1128 L794,1388" marker-end="url(#uc-dep)"/>
+        <text class="lbl" x="898" y="1058" text-anchor="middle">&#171;extend&#187;</text>
+
+        <path class="flow dash" d="M790,1468 L868,1490" marker-end="url(#uc-dep)"/>
+        <text class="lbl" x="828" y="1466" text-anchor="middle">&#171;include&#187;</text>
+
+        <path class="flow dash" d="M790,1522 L868,1502" marker-end="url(#uc-dep)"/>
+        <text class="lbl" x="828" y="1528" text-anchor="middle">&#171;include&#187;</text>
+
+        <path class="flow dash" d="M790,1594 H866" marker-end="url(#uc-dep)"/>
+        <text class="lbl" x="828" y="1586" text-anchor="middle">&#171;include&#187;</text>
+      </svg>
+    </div>
+    <figcaption><b>Figure 4</b> A hollow triangle is generalization &mdash; the role at the tail can do everything
+    the role at the head can. A dashed arrow is <span class="m">&#171;include&#187;</span> (always happens) or
+    <span class="m">&#171;extend&#187;</span> (happens only under a condition: the second factor is optional,
+    a return only occurs when a reviewer rejects).</figcaption>
+  </figure>
+
+  <h3>Where the boundary is enforced</h3>
+  <p class="col">A use case diagram states what a role <em>may</em> do; it does not by itself say where that is
+  checked. In NexHRIS it is checked <strong>in the query, not the interface</strong>. A Dean&rsquo;s visibility is
+  scoped by <span class="m">User::scopeVisibleTo()</span>, so a Dean who edits a URL to reach another
+  college&rsquo;s employee gets a 403 rather than data. Hiding the button was never the control.</p>
+</section>
+
+<section id="ipo">
+  <div class="shead"><span class="num">05</span><h2>Input &mdash; Process &mdash; Output</h2></div>
+  <p class="sdek">The capstone IPO chart, with the feedback path that makes it a cycle</p>
+
+  <div class="col">
+    <p>The IPO chart answers a different question from the data flow diagrams. A DFD says <em>where</em> data
+    goes; the IPO chart says <em>what the system is for</em> &mdash; what goes in, what happens to it, and what
+    comes back out that the campus did not have before.</p>
+    <p>The feedback path along the bottom is not decoration. Three of this system&rsquo;s outputs re-enter it
+    as inputs: a returned leave form goes back to the employee to be corrected and re-uploaded, a corrected
+    ledger line forces every balance below it to be replayed, and an unacknowledged policy stays on an
+    employee&rsquo;s list until they acknowledge it.</p>
+  </div>
+
+  <figure class="fig">
+    <div class="plate">
+      <svg viewBox="0 0 1280 620" role="img" aria-label="IPO chart: an input panel listing credentials, employee records, blank and filled workbooks, decisions and postings; a process panel listing authentication, validation, chain derivation, approval recording, balance replay, PDF conversion and audit logging; an output panel listing authorised sessions, versioned submissions, approved forms, ledger cards, A4 PDFs, digital IDs, dashboards, notices and the audit trail; and a feedback arrow returning outputs to the input side.">
+        <defs>
+          <marker id="ipo-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M0,0.6 L9.4,5 L0,9.4 z" fill="currentColor"/>
+          </marker>
+        </defs>
+
+        <!-- INPUT -->
+        <rect x="40" y="60" width="360" height="410" rx="6" fill="var(--surface-2)" stroke="var(--ink-3)" stroke-width="1.4"/>
+        <path d="M40,104 H400" stroke="var(--ink-3)" stroke-width="1.4" fill="none"/>
+        <text class="grp hd-i" x="60" y="89">I N P U T</text>
+        <g fill="var(--gold-mark)">
+          <rect x="60" y="136" width="5" height="5"/><rect x="60" y="162" width="5" height="5"/>
+          <rect x="60" y="188" width="5" height="5"/><rect x="60" y="214" width="5" height="5"/>
+          <rect x="60" y="240" width="5" height="5"/><rect x="60" y="266" width="5" height="5"/>
+          <rect x="60" y="292" width="5" height="5"/><rect x="60" y="318" width="5" height="5"/>
+          <rect x="60" y="344" width="5" height="5"/><rect x="60" y="370" width="5" height="5"/>
+        </g>
+        <text class="li" x="76" y="141">Sign-in credentials and one-time code</text>
+        <text class="li" x="76" y="167">Employee record: name, number, position</text>
+        <text class="li" x="76" y="193">College and department assignment</text>
+        <text class="li" x="76" y="219">Blank CS Form 212 and leave form (.xlsx)</text>
+        <text class="li" x="76" y="245">Filled PDS workbook, uploaded</text>
+        <text class="li" x="76" y="271">Filled leave form, uploaded</text>
+        <text class="li" x="76" y="297">Approve or return decision with remarks</text>
+        <text class="li" x="76" y="323">Days to charge and which ledger card</text>
+        <text class="li" x="76" y="349">Policy and announcement text</text>
+        <text class="li" x="76" y="375">Ledger line corrections</text>
+
+        <!-- PROCESS -->
+        <rect x="460" y="60" width="360" height="410" rx="6" fill="var(--maroon-tint)" stroke="var(--maroon)" stroke-width="1.6"/>
+        <path d="M460,104 H820" stroke="var(--maroon)" stroke-width="1.6" fill="none"/>
+        <text class="grp hd-p" x="480" y="89">P R O C E S S</text>
+        <g fill="var(--maroon)">
+          <rect x="480" y="136" width="5" height="5"/><rect x="480" y="162" width="5" height="5"/>
+          <rect x="480" y="188" width="5" height="5"/><rect x="480" y="214" width="5" height="5"/>
+          <rect x="480" y="240" width="5" height="5"/><rect x="480" y="266" width="5" height="5"/>
+          <rect x="480" y="292" width="5" height="5"/><rect x="480" y="318" width="5" height="5"/>
+          <rect x="480" y="344" width="5" height="5"/><rect x="480" y="370" width="5" height="5"/>
+        </g>
+        <text class="li" x="496" y="141">Authenticate, mail a code, attach scope</text>
+        <text class="li" x="496" y="167">Validate the uploaded workbook</text>
+        <text class="li" x="496" y="193">Derive the approval chain per applicant</text>
+        <text class="li" x="496" y="219">Record each approval in sequence</text>
+        <text class="li" x="496" y="245">Restart the chain when a form is returned</text>
+        <text class="li" x="496" y="271">Post days, replay the running balance</text>
+        <text class="li" x="496" y="297">Convert the workbook to A4 PDF</text>
+        <text class="li" x="496" y="323">Track who has acknowledged a policy</text>
+        <text class="li" x="496" y="349">Aggregate figures for the viewer role</text>
+        <text class="li" x="496" y="375">Append every action to the audit log</text>
+
+        <!-- OUTPUT -->
+        <rect x="880" y="60" width="360" height="410" rx="6" fill="var(--forest-tint)" stroke="var(--forest)" stroke-width="1.4"/>
+        <path d="M880,104 H1240" stroke="var(--forest)" stroke-width="1.4" fill="none"/>
+        <text class="grp hd-o" x="900" y="89">O U T P U T</text>
+        <g fill="var(--forest)">
+          <rect x="900" y="136" width="5" height="5"/><rect x="900" y="162" width="5" height="5"/>
+          <rect x="900" y="188" width="5" height="5"/><rect x="900" y="214" width="5" height="5"/>
+          <rect x="900" y="240" width="5" height="5"/><rect x="900" y="266" width="5" height="5"/>
+          <rect x="900" y="292" width="5" height="5"/><rect x="900" y="318" width="5" height="5"/>
+          <rect x="900" y="344" width="5" height="5"/><rect x="900" y="370" width="5" height="5"/>
+        </g>
+        <text class="li" x="916" y="141">Authorised session, role-scoped screens</text>
+        <text class="li" x="916" y="167">Versioned PDS with a review status</text>
+        <text class="li" x="916" y="193">Fully approved leave form with the full trail</text>
+        <text class="li" x="916" y="219">Leave and service credit ledger cards</text>
+        <text class="li" x="916" y="245">A4 PDF of every campus form</text>
+        <text class="li" x="916" y="271">Printable digital ID with a QR code</text>
+        <text class="li" x="916" y="297">Dashboard figures per role</text>
+        <text class="li" x="916" y="323">Email notices and the in-app bell</text>
+        <text class="li" x="916" y="349">Public verification page</text>
+        <text class="li" x="916" y="375">Audit trail with account and IP</text>
+
+        <!-- arrows -->
+        <path class="flow" d="M406,265 H452" marker-end="url(#ipo-ah)" stroke-width="1.8"/>
+        <path class="flow" d="M826,265 H872" marker-end="url(#ipo-ah)" stroke-width="1.8"/>
+
+        <!-- feedback -->
+        <path class="flow" d="M1060,470 V556 H220 V478" marker-end="url(#ipo-ah)" stroke="var(--maroon)" stroke-width="1.7"/>
+        <text class="lbl on" x="640" y="548" text-anchor="middle">FEEDBACK &nbsp;·&nbsp; a returned form, a corrected ledger line, a policy still unacknowledged</text>
+      </svg>
+    </div>
+    <figcaption><b>Figure 5</b> Ten inputs, ten transformations, ten outputs. The maroon path is what stops
+    this being a one-way pipeline: three outputs re-enter as inputs, which is why the leave chain has a restart
+    and the ledger has a replay.</figcaption>
+  </figure>
+
+  <h3>IPO by module</h3>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>Module</th><th>Input</th><th>Process</th><th>Output</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Authentication</strong></td>
+          <td>Email, password, emailed one-time code</td>
+          <td>Verify credentials, mail a code valid for a fixed window, attach role and college scope to the session</td>
+          <td>Authorised session; role-based landing page; a sign-in row in the audit trail</td>
+        </tr>
+        <tr>
+          <td><strong>Employee records</strong></td>
+          <td>Name, employee number, position, college, department, role</td>
+          <td>Create or update the staff record and bind it to a college &mdash; which determines who approves that person&rsquo;s leave</td>
+          <td>Staff record; a populated approver chain; an entry in the employee directory</td>
+        </tr>
+        <tr>
+          <td><strong>Personal Data Sheet</strong></td>
+          <td>Blank CS Form 212 published by HR; the employee&rsquo;s filled workbook</td>
+          <td>Validate the workbook against the published template, keep every version, route to HR for approve or return</td>
+          <td>Approved or returned submission; full revision history; the PDS as an A4 PDF</td>
+        </tr>
+        <tr>
+          <td><strong>Leave</strong></td>
+          <td>Blank leave form; the filled workbook; a decision and remarks from each approver</td>
+          <td>Derive the chain from who applied, record each approval in turn, restart the chain on a return</td>
+          <td>Fully approved application; printable approval sheet; skipped stages shown as N/A rather than blank</td>
+        </tr>
+        <tr>
+          <td><strong>Ledger cards</strong></td>
+          <td>Days from an approved application; which of the two cards to charge; manual corrections</td>
+          <td>Write the line, then replay every balance below it so a mid-card correction stays arithmetically true</td>
+          <td>Leave ledger card and service credit ledger card, each on the campus form, each with its own precision</td>
+        </tr>
+        <tr>
+          <td><strong>Policies &amp; announcements</strong></td>
+          <td>Policy document or notice text published by HR</td>
+          <td>Publish, then record who has viewed and who has acknowledged</td>
+          <td>Readable policy; acknowledgement register; notification bell and email notice</td>
+        </tr>
+        <tr>
+          <td><strong>Documents</strong></td>
+          <td>A stored workbook and the template it came from</td>
+          <td>Convert with LibreOffice where it exists, pure PHP where it does not; force A4, keep print areas and orientation</td>
+          <td>An A4 PDF that is the campus&rsquo;s own form, cached under a key that carries the owner</td>
+        </tr>
+        <tr>
+          <td><strong>Dashboards &amp; audit</strong></td>
+          <td>Every stored record; the viewer&rsquo;s role and college</td>
+          <td>Aggregate only what the viewer may see; append every sign-in, approval and change with the account and IP behind it</td>
+          <td>Four different dashboards from one code path; an append-only audit trail</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="tblcap"><b>Table 3</b> The same three columns applied per module. Read a row across and it states one
+  module&rsquo;s contract.</p>
+</section>
+
+<section id="dict">
+  <div class="shead"><span class="num">06</span><h2>Dictionaries</h2></div>
+  <p class="sdek">What each store and each entity in the diagrams actually is</p>
+
+  <h3>Data stores</h3>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>Ref</th><th>Store</th><th>Tables or location</th><th>Written by</th></tr></thead>
+      <tbody>
+        <tr><td class="k d">D1</td><td><strong>Users &amp; Organisation Units</strong></td><td class="k">users, colleges, departments</td><td class="k p">1.0, 2.0</td></tr>
+        <tr><td class="k d">D2</td><td><strong>Session &amp; Auth Records</strong></td><td class="k">sessions, two_factor_challenges, password_reset_tokens</td><td class="k p">1.0</td></tr>
+        <tr><td class="k d">D3</td><td><strong>Blank Form Templates</strong></td><td class="k">pds_templates, leave_form_templates, ledger_templates</td><td class="k p">2.0</td></tr>
+        <tr><td class="k d">D4</td><td><strong>PDS Submissions</strong></td><td class="k">pds_submissions, pds_submission_revisions, and the CS&nbsp;Form&nbsp;212 detail tables</td><td class="k p">3.0</td></tr>
+        <tr><td class="k d">D5</td><td><strong>Leave Applications</strong></td><td class="k">leave_applications</td><td class="k p">4.2, 4.3, 4.4, 4.5</td></tr>
+        <tr><td class="k d">D6</td><td><strong>Leave Approvals</strong></td><td class="k">leave_approvals &mdash; one row per approval</td><td class="k p">4.4, 4.5</td></tr>
+        <tr><td class="k d">D7</td><td><strong>Ledger Records</strong></td><td class="k">leave_ledger_entries, employee_ledgers, ledger_changes</td><td class="k p">4.6, 5.0</td></tr>
+        <tr><td class="k d">D8</td><td><strong>Policies &amp; Notices</strong></td><td class="k">hr_policies, hr_policy_views, announcements, notifications</td><td class="k p">6.0</td></tr>
+        <tr><td class="k d">D9</td><td><strong>Activity Log</strong></td><td class="k">activity_logs &mdash; append only</td><td class="k p">every process</td></tr>
+        <tr><td class="k d">D10</td><td><strong>Document Store</strong></td><td class="k">storage/app &mdash; uploaded workbooks and the PDF cache, not a table</td><td class="k p">3.0, 4.2, 7.0</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="tblcap"><b>Table 4</b> Ten stores over 41 tables. D10 is a file system: the database holds the path and
+  the metadata, never the document.</p>
+
+  <h3>External entities</h3>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>Entity</th><th>Why it is outside the boundary</th><th>Net flow</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Employee</strong></td><td>A person. The system stores a record <em>about</em> them; it does not contain them.</td><td>Both ways</td></tr>
+        <tr><td><strong>Dean</strong></td><td>A person acting as the first approver for their own college only.</td><td>Both ways</td></tr>
+        <tr><td><strong>HR Administrator</strong></td><td>A person operating the system account. Holds no leave, ledger or PDS.</td><td>Both ways</td></tr>
+        <tr><td><strong>Campus Director</strong></td><td>A person giving the final approval &mdash; except on their own form, which HR approves alone.</td><td>Both ways</td></tr>
+        <tr><td><strong>Mail Relay</strong></td><td>A service the campus runs, not part of this system.</td><td>Receives only</td></tr>
+        <tr><td><strong>Public Verifier</strong></td><td>Anyone with a phone and a printed ID card. Never authenticates.</td><td>Both ways</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="tblcap"><b>Table 5</b> The mail relay receives and never sends back &mdash; so when a code cannot be
+  delivered the challenge is discarded and the sign-in fails closed.</p>
+
+  <div class="note">
+    <b>On balancing</b>
+    Figure&nbsp;2 shows the same six external entities and the same net boundary flows as Figure&nbsp;1, and
+    Figure&nbsp;3 shows the same flows into and out of process 4.0 as Figure&nbsp;2 does. A panel is entitled to
+    check that, and it holds.
+  </div>
+</section>
+
+<footer>
+  <p>Drawn from the NexHRIS codebase &mdash; <span class="m">routes/web.php</span>,
+  <span class="m">app/Services/</span>, <span class="m">app/Models/</span> and
+  <span class="m">database/migrations/</span>. Prose background for the manuscript is in
+  <span class="m">docs/SYSTEM-OVERVIEW.md</span>.</p>
+  <p>ISPSC Tagudin Campus &middot; Laravel 12 on PHP 8.2 &middot; MySQL</p>
+</footer>
+
+</div>

@@ -56,6 +56,7 @@ class LeaveWorkflowTest extends TestCase
     private function submitForm(User $employee): LeaveApplication
     {
         Storage::fake('public');
+        Storage::fake('local');
 
         $this->actingAs($employee)->post(route('leave.store'), [
             'leave_type' => 'VL',
@@ -289,6 +290,7 @@ class LeaveWorkflowTest extends TestCase
     public function test_employee_downloads_the_template_hr_published(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         [$employee, , $hr] = $this->cast();
 
         $this->actingAs($hr)->post(route('admin.leave.templates.store'), [
@@ -300,15 +302,19 @@ class LeaveWorkflowTest extends TestCase
         $this->assertNotNull($template);
         $this->assertSame('csc-form-6.xlsx', $template->original_filename);
 
+        // The download is named for what it is, not for whatever HR happened
+        // to call the upload — the employee has to tell the blank apart from
+        // the copy they fill in and send back.
         $this->actingAs($employee)
             ->get(route('leave.template.download'))
             ->assertOk()
-            ->assertDownload('csc-form-6.xlsx');
+            ->assertDownload('Leave Form Template v' . $template->version . '.xlsx');
     }
 
     public function test_publishing_a_template_deactivates_the_previous_one(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         [, , $hr] = $this->cast();
 
         foreach (['old.xlsx', 'new.xlsx'] as $name) {

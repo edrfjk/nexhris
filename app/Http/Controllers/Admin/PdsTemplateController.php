@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PdsTemplate;
 use App\Services\TemplatePublisher;
+use App\Services\XlsxToPdfService;
+use App\Support\DocumentName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -46,6 +48,37 @@ class PdsTemplateController extends Controller
     }
 
     /** Rolls back to an earlier version. */
+    /**
+     * The blank PDS, rendered so HR can read it in the browser.
+     *
+     * Linking straight at the stored .xlsx opened an empty tab, because no
+     * browser renders a workbook. This runs the same conversion an employee's
+     * filled sheet goes through, so the preview matches what gets printed.
+     */
+    public function preview(Request $request, PdsTemplate $template, XlsxToPdfService $converter)
+    {
+        abort_unless($request->user()->isAdmin(), 403);
+        abort_unless($template->exists(), 404, 'The uploaded file for this version is missing.');
+
+        // The original workbook, for HR to edit and re-publish. Served through
+        // here rather than the /storage URL, which is built from APP_URL and
+        // so points at the wrong host whenever that setting is stale.
+        if ($request->query('format') === 'xlsx') {
+            return Storage::disk('public')->download(
+                $template->file_path,
+                DocumentName::template('Personal Data Sheet Template', $template->version, 'xlsx'),
+            );
+        }
+
+        return $converter->stream(
+            $template->absolutePath(),
+            DocumentName::template('Personal Data Sheet Template', $template->version),
+            // Keyed on the checksum so a re-published version never serves
+            // the previous upload's cached preview.
+            cacheKey: 'pds-template:' . $template->checksum,
+        );
+    }
+
     public function activate(Request $request, PdsTemplate $template)
     {
         abort_unless($request->user()->isAdmin(), 403);

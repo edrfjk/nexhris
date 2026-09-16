@@ -30,10 +30,18 @@ class LoginController extends Controller
 
     public function store(Request $request)
     {
-        $credentials = $request->validate([
+        // `terms` is validated but deliberately kept out of $credentials —
+        // Auth::attempt treats every key it is given as a column to match on,
+        // and there is no `terms` column to match.
+        $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
+            'terms' => ['accepted'],
+        ], [
+            'terms.accepted' => 'You must read and accept the Terms and Conditions before signing in.',
         ]);
+
+        $credentials = $request->only('email', 'password');
 
         $throttleKey = Str::lower($credentials['email']) . '|' . $request->ip();
 

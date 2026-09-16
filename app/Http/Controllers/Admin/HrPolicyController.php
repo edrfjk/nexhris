@@ -83,7 +83,7 @@ class HrPolicyController extends Controller
 
         if ($request->hasFile('file')) {
             if ($policy->file_path) {
-                Storage::disk('public')->delete($policy->file_path);
+                Storage::disk('local')->delete($policy->file_path);
             }
             $this->storeFile($request, $policy);
         }
@@ -94,7 +94,7 @@ class HrPolicyController extends Controller
     public function destroy(HrPolicy $policy)
     {
         if ($policy->file_path) {
-            Storage::disk('public')->delete($policy->file_path);
+            Storage::disk('local')->delete($policy->file_path);
         }
         $policy->delete();
 
@@ -118,11 +118,40 @@ class HrPolicyController extends Controller
         return back()->with('success', $policy->is_pinned ? 'Policy pinned.' : 'Policy unpinned.');
     }
 
+    /**
+     * A policy's attached file.
+     *
+     * Attachments moved to the private disk with everything else, so they are
+     * served here instead of by a /storage link. Any signed-in member of staff
+     * may read a published policy; an unpublished draft is HR's alone.
+     */
+    public function attachment(Request $request, HrPolicy $policy)
+    {
+        abort_unless(
+            $policy->is_published || $request->user()->isAdmin(),
+            404,
+        );
+
+        abort_unless(
+            $policy->file_path && Storage::disk('local')->exists($policy->file_path),
+            404,
+            'This policy has no attached file.',
+        );
+
+        // Inline, so a PDF opens in the browser instead of landing in Downloads.
+        return Storage::disk('local')->response(
+            $policy->file_path,
+            $policy->file_original_name ?: basename($policy->file_path),
+        );
+    }
+
     public function compliance(HrPolicy $policy)
     {
         abort_unless($policy->requires_acknowledgment, 404);
 
-        $employees = User::where('role', 'employee')
+        // A policy that requires acknowledgment applies to every member of
+        // staff, deans and the Campus Director included.
+        $employees = User::personnel()
             ->where('status', 'active')
             ->with(['policyViews' => fn ($q) => $q->where('hr_policy_id', $policy->id)])
             ->orderBy('name')
@@ -154,7 +183,7 @@ class HrPolicyController extends Controller
     private function storeFile(Request $request, HrPolicy $policy): void
     {
         $file = $request->file('file');
-        $path = $file->store('hr-policies', 'public');
+        $path = $file->store('hr-policies', 'local');
 
         $policy->update([
             'file_path' => $path,
