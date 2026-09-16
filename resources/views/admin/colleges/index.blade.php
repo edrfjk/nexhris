@@ -4,7 +4,7 @@
 @section('content')
 
 <x-page-header
-    title="Colleges &amp; Offices"
+    title="Colleges & Offices"
     subtitle="The college decides which Dean signs a leave form. Departments group people inside it.">
     <x-slot:actions>
         <button type="button" class="btn btn-md btn-primary"
