@@ -21,11 +21,12 @@
         <rect x="235" y="315" width="150" height="110" rx="8" fill="#fff" stroke="#000" stroke-width="1.4"/>
         <path d="M235,335 H385" fill="none" stroke="#000" stroke-width="1"/>
         <text x="310" y="330.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">0</text>
-        <text x="310" y="361.19" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="9">NEXHRIS:</text>
-        <text x="310" y="372.17" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="9">HUMAN RESOURCE</text>
-        <text x="310" y="383.15" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="9">INFORMATION SYSTEM</text>
-        <text x="310" y="394.13" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="9">FOR ISPSC TAGUDIN</text>
-        <text x="310" y="405.11" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="9">CAMPUS</text>
+        <text x="310" y="358.4" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">NEXHRIS: A SMART AND</text>
+        <text x="310" y="368.16" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">NEXT-GENERATION</text>
+        <text x="310" y="377.92" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">HUMAN RESOURCE</text>
+        <text x="310" y="387.68" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">INFORMATION SYSTEM FOR</text>
+        <text x="310" y="397.44" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">ILOCOS SUR POLYTECHNIC</text>
+        <text x="310" y="407.2" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">STATE COLLEGE</text>
         <rect x="240" y="14" width="140" height="48" fill="#fff" stroke="#000" stroke-width="1.1"/>
         <path d="M243,62 V17 H380" fill="none" stroke="#000" stroke-width="1.3"/>
         <text x="311.5" y="42.15" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="9" font-weight="bold">HR ADMINISTRATOR</text>
