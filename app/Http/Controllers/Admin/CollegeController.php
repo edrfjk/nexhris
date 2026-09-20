@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\College;
 use App\Models\User;
+use App\Models\Position;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -36,8 +37,11 @@ class CollegeController extends Controller
 
         return view('admin.colleges.index', [
             'colleges' => $colleges,
-            // Only Deans can be assigned, and only one college each.
-            'availableDeans' => User::where('role', 'dean')->orderBy('name')->get(),
+            // A college may appoint only a Dean whose account already belongs
+            // to it. Assigning a Dean is not a hidden way to move their staff
+            // record to another college.
+            'deansByCollege' => User::where('role', 'dean')->whereNotNull('college_id')
+                ->orderBy('name')->get()->groupBy('college_id'),
             'unassigned' => User::whereNull('college_id')
                 ->whereIn('role', ['employee', 'dean', 'campus_director'])
                 ->count(),
@@ -47,15 +51,16 @@ class CollegeController extends Controller
                 ->whereIn('role', ['employee', 'dean', 'campus_director'])
                 ->count(),
             'totalDepartments' => \App\Models\Department::count(),
+            'positions' => Position::orderBy('category')->orderBy('sort_order')->orderBy('name')->get(),
         ]);
     }
 
     public function store(Request $request)
     {
         $data = $this->validated($request);
+        unset($data['dean_id']);
 
         $college = College::create($data);
-        $this->syncDean($college, $data['dean_id'] ?? null);
 
         $this->log->log('college.created', "Created college {$college->name}.", $college);
 
@@ -67,9 +72,15 @@ class CollegeController extends Controller
         $data = $this->validated($request, $college);
 
         $before = $college->only(['code', 'name', 'short_name', 'dean_id', 'is_active']);
+        // Employee position changes are now the source of truth. Keep the
+        // existing appointment when this organisation form does not post a
+        // dean field (it only displays the current holder).
+        $deanId = $data['dean_id'] ?? $college->dean_id;
+        unset($data['dean_id']);
+        $this->assertDeanBelongsToCollege($college, $deanId);
 
         $college->update($data);
-        $this->syncDean($college, $data['dean_id'] ?? null);
+        $this->syncDean($college, $deanId);
 
         $this->log->log('college.updated', "Updated college {$college->name}.", $college, [
             'before' => $before,
@@ -122,18 +133,25 @@ class CollegeController extends Controller
     private function syncDean(College $college, ?int $deanId): void
     {
         DB::transaction(function () use ($college, $deanId) {
-            College::where('dean_id', $deanId)
-                ->whereKeyNot($college->id)
-                ->update(['dean_id' => null]);
+            if ($deanId) {
+                College::where('dean_id', $deanId)
+                    ->whereKeyNot($college->id)
+                    ->update(['dean_id' => null]);
+            }
 
             $college->update(['dean_id' => $deanId]);
-
-            if ($deanId) {
-                User::whereKey($deanId)->update([
-                    'college_id' => $college->id,
-                    'department' => $college->code,
-                ]);
-            }
         });
+    }
+
+    private function assertDeanBelongsToCollege(College $college, ?int $deanId): void
+    {
+        if ($deanId && ! User::whereKey($deanId)
+            ->where('role', 'dean')
+            ->where('college_id', $college->id)
+            ->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'dean_id' => 'Choose a Dean account that already belongs to this college.',
+            ]);
+        }
     }
 }

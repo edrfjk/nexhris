@@ -485,6 +485,18 @@ class AuthenticationTest extends TestCase
         $this->assertDatabaseHas('activity_logs', ['action' => 'auth.logout', 'user_id' => $user->id]);
     }
 
+    public function test_authenticated_pages_are_not_cacheable(): void
+    {
+        $response = $this->actingAs($this->user('employee'))
+            ->get(route('employee.dashboard'));
+
+        $response->assertOk()
+            ->assertHeader('Pragma', 'no-cache')
+            ->assertHeader('Expires', '0');
+
+        $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+    }
+
     public function test_activity_log_records_the_ip_address(): void
     {
         $user = $this->user('employee');

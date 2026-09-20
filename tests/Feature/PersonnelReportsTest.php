@@ -97,9 +97,9 @@ class PersonnelReportsTest extends TestCase
     }
 
     /** The bytes of a streamed Dompdf response. */
-    private function pdfBytes(string $url): string
+    private function pdfBytes(string $url, ?User $viewer = null): string
     {
-        $response = $this->actingAs($this->hr)->get($url)->assertOk();
+        $response = $this->actingAs($viewer ?? $this->hr)->get($url)->assertOk();
 
         return $response->baseResponse instanceof \Symfony\Component\HttpFoundation\StreamedResponse
             ? $response->streamedContent()
@@ -240,5 +240,30 @@ class PersonnelReportsTest extends TestCase
                 );
             }
         }
+    }
+
+    public function test_a_dean_can_export_only_their_colleges_balances(): void
+    {
+        $cte = College::where('code', 'CTE')->firstOrFail();
+        $outside = User::factory()->create([
+            'name' => 'Outside College Person',
+            'role' => 'employee',
+            'status' => 'active',
+            'college_id' => $cte->id,
+        ]);
+        LeaveBalance::create(['user_id' => $outside->id, 'vl_balance' => 5, 'sl_balance' => 5]);
+
+        $pdf = $this->textOf($this->pdfBytes(route('admin.leave.export.pdf'), $this->dean));
+
+        $this->assertStringContainsString('Manalansan', $pdf);
+        $this->assertStringNotContainsString('Outside College Person', $pdf);
+
+        $this->actingAs($this->dean)
+            ->get(route('admin.leave.export.excel'))
+            ->assertOk();
+
+        $this->actingAs($this->dean)
+            ->get(route('admin.leave.ledger.pdf', $outside))
+            ->assertForbidden();
     }
 }

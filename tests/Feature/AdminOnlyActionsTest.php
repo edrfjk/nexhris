@@ -151,7 +151,8 @@ class AdminOnlyActionsTest extends TestCase
     {
         $hr = User::factory()->create(['role' => 'admin', 'status' => 'active']);
 
-        $this->actingAs($hr)->get(route('admin.employees.create'))->assertOk();
+        $this->actingAs($hr)->get(route('admin.employees.create'))
+            ->assertRedirect(route('admin.employees.index', ['add' => 1]));
         $this->actingAs($hr)->get(route('admin.policies.create'))->assertOk();
 
         $this->actingAs($hr)

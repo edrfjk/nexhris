@@ -143,20 +143,28 @@
 
         <!-- Tab: Profile Details -->
         <div x-show="tab === 'profile'" x-cloak class="p-6">
-            <form method="POST" action="{{ route('admin.employees.update', $employee) }}" class="space-y-5">
+            <form method="POST" action="{{ route('admin.employees.update', $employee) }}" enctype="multipart/form-data" class="space-y-5">
                 @csrf @method('PUT')
                 <input type="hidden" name="_no_password" value="1">
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                @php($ledgerName = $employee->nameParts())
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label class="label">Employee Number</label>
                         <input type="text" name="employee_number" value="{{ old('employee_number', $employee->employee_number) }}"
                                class="input">
                     </div>
                     <div>
-                        <label class="label">Full Name</label>
-                        <input type="text" name="name" value="{{ old('name', $employee->name) }}"
-                               class="input">
+                        <label class="label">First Name</label>
+                        <input type="text" name="first_name" value="{{ old('first_name', $employee->first_name ?: $ledgerName['first']) }}" class="input">
+                    </div>
+                    <div>
+                        <label class="label">Middle Name</label>
+                        <input type="text" name="middle_name" value="{{ old('middle_name', $employee->middle_name) }}" class="input">
+                    </div>
+                    <div>
+                        <label class="label">Last Name</label>
+                        <input type="text" name="last_name" value="{{ old('last_name', $employee->last_name ?: $ledgerName['family']) }}" class="input">
                     </div>
                     <div>
                         <label class="label">Email</label>
@@ -168,11 +176,10 @@
                         <input type="text" name="contact_number" value="{{ old('contact_number', $employee->contact_number) }}"
                                class="input">
                     </div>
-                    <div>
-                        <label class="label">Position</label>
-                        <input type="text" name="position" value="{{ old('position', $employee->position) }}"
-                               class="input">
-                    </div>
+                    @include('admin.employees.partials.position-fields', [
+                        'selectedPosition' => old('position', $employee->position),
+                        'positionFieldId' => 'show-employee',
+                    ])
                     <div>
                         <label class="label">System Role</label>
                         <select name="role" class="select">
@@ -181,7 +188,17 @@
                             <option value="campus_director" @selected(old('role', $employee->role) === 'campus_director')>Campus Director</option>
                         </select>
                     </div>
-@include('admin.employees.partials.college-program-fields', ['employee' => $employee])
+                    <div>
+                        <label class="label">Profile Photo <span class="font-normal text-sand-400">(optional)</span></label>
+                        <input type="file" name="photo" accept="image/*" class="file-input w-full text-xs">
+                        <span class="hint">JPG or PNG, maximum 2 MB. Leave blank to keep the current photo.</span>
+                        @error('photo') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+@include('admin.employees.partials.college-program-fields', [
+    'employee' => $employee,
+    'organizationFieldId' => 'show-employee',
+    'positionFieldId' => 'show-employee',
+])
                 </div>
 
                 <div class="flex justify-end pt-4 border-t border-sand-100">

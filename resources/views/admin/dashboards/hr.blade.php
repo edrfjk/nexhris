@@ -12,7 +12,7 @@
     :title="$greeting . ', ' . auth()->user()->name"
     :subtitle="'Campus-wide activity for ' . $year . ' · ' . now()->format('l, j F Y')">
     <x-slot:actions>
-        <a href="{{ route('admin.employees.create') }}" class="btn btn-sm btn-secondary">
+        <a href="{{ route('admin.employees.index', ['add' => 1]) }}" class="btn btn-sm btn-secondary">
             <x-heroicon-o-user-plus />Add Employee
         </a>
         <a href="{{ route('admin.announcements.index') }}" class="btn btn-sm btn-secondary">

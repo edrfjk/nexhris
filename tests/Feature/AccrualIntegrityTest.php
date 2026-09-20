@@ -84,23 +84,50 @@ class AccrualIntegrityTest extends TestCase
                 && str_contains($message, $this->employee->name));
     }
 
-    public function test_the_database_refuses_a_duplicate_accrual_even_off_the_beaten_path(): void
+    public function test_manual_duplicate_posting_requires_explicit_confirmation(): void
     {
-        $service = app(LeaveLedgerService::class);
+        $payload = [
+            'period_from' => '2026-09-01',
+            'period_to' => '2026-09-30',
+            'ledger' => 'leave',
+            'vl_earned' => 1.25,
+            'sl_earned' => 1.25,
+        ];
 
-        $service->postEntry(
-            employee: $this->employee,
-            periodFrom: '2026-09-01', periodTo: '2026-09-30',
-            type: 'earned', remarks: 'September', vlEarned: 1.25,
-        );
+        $this->actingAs($this->hr)
+            ->post(route('admin.leave.earned.store', $this->employee), $payload)
+            ->assertRedirect();
 
-        $this->expectException(\Illuminate\Database\UniqueConstraintViolationException::class);
+        $this->actingAs($this->hr)
+            ->post(route('admin.leave.earned.store', $this->employee), $payload)
+            ->assertRedirect()
+            ->assertSessionHas('error', fn (string $message) =>
+                str_contains($message, 'already recorded')
+                && str_contains($message, 'Nothing was added'));
 
-        $service->postEntry(
-            employee: $this->employee,
-            periodFrom: '2026-09-01', periodTo: '2026-09-30',
-            type: 'earned', remarks: 'September again', vlEarned: 1.25,
-        );
+        $this->assertSame(1, $this->employee->leaveLedgerEntries()->where('type', 'earned')->count());
+    }
+
+    public function test_manual_duplicate_posting_can_proceed_after_confirmation(): void
+    {
+        $payload = [
+            'period_from' => '2026-09-01',
+            'period_to' => '2026-09-30',
+            'ledger' => 'leave',
+            'vl_earned' => 1.25,
+            'allow_duplicate' => '1',
+        ];
+
+        $this->actingAs($this->hr)
+            ->post(route('admin.leave.earned.store', $this->employee), $payload)
+            ->assertRedirect();
+
+        $this->actingAs($this->hr)
+            ->post(route('admin.leave.earned.store', $this->employee), $payload)
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertSame(2, $this->employee->leaveLedgerEntries()->where('type', 'earned')->count());
     }
 
     public function test_two_absences_in_one_month_are_both_recorded(): void

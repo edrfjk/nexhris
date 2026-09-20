@@ -42,7 +42,6 @@ class RenderedMarkupTest extends TestCase
         return [
             'HR dashboard' => ['admin', 'admin.dashboard'],
             'HR employees' => ['admin', 'admin.employees.index'],
-            'HR add employee' => ['admin', 'admin.employees.create'],
             'HR ledger cards' => ['admin', 'admin.leave.index'],
             'HR templates' => ['admin', 'admin.leave.templates.index'],
             'HR review queue' => ['admin', 'admin.leave.review.index'],

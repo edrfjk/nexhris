@@ -14,6 +14,9 @@ class User extends Authenticatable
     protected $fillable = [
         'employee_number',
         'name',
+        'first_name',
+        'middle_name',
+        'last_name',
         'email',
         'position',
         'department',
@@ -299,6 +302,19 @@ public function serviceRecords()
 /** Family name, first name and middle initial, as the ledger card prints them. */
 public function nameParts(): array
 {
+    // New accounts keep each part separately. This is deliberately checked
+    // before the legacy parser: a multi-word first name or middle name must
+    // never be mistaken for a surname when stamping a leave ledger card.
+    if ($this->first_name || $this->last_name) {
+        return [
+            'family' => strtoupper(trim((string) $this->last_name)),
+            'first' => strtoupper(trim((string) $this->first_name)),
+            'middle' => $this->middle_name
+                ? strtoupper(mb_substr(trim((string) $this->middle_name), 0, 1)) . '.'
+                : '',
+        ];
+    }
+
     $name = trim((string) $this->name);
 
     // "SURNAME, First M." is the form HR enters most often; fall back to

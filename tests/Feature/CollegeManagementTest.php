@@ -49,11 +49,11 @@ class CollegeManagementTest extends TestCase
             ->assertSessionHasErrors('code');
     }
 
-    public function test_assigning_a_dean_moves_them_onto_that_college(): void
+    public function test_college_can_appoint_a_dean_already_assigned_to_it(): void
     {
         $hr = $this->user('admin');
-        $dean = $this->user('dean');
         $cas = College::where('code', 'CAS')->firstOrFail();
+        $dean = $this->user('dean', ['college_id' => $cas->id]);
 
         $this->actingAs($hr)->put(route('admin.colleges.update', $cas), [
             'code' => $cas->code,
@@ -65,26 +65,21 @@ class CollegeManagementTest extends TestCase
         $this->assertSame($cas->id, $dean->fresh()->college_id);
     }
 
-    public function test_a_dean_signs_for_only_one_college(): void
+    public function test_college_cannot_move_a_dean_from_another_college(): void
     {
         $hr = $this->user('admin');
-        $dean = $this->user('dean');
-
         $cas = College::where('code', 'CAS')->firstOrFail();
         $cte = College::where('code', 'CTE')->firstOrFail();
+        $dean = $this->user('dean', ['college_id' => $cas->id]);
 
-        foreach ([$cas, $cte] as $college) {
-            $this->actingAs($hr)->put(route('admin.colleges.update', $college), [
-                'code' => $college->code,
-                'name' => $college->name,
-                'dean_id' => $dean->id,
-            ]);
-        }
+        $this->actingAs($hr)->put(route('admin.colleges.update', $cte), [
+            'code' => $cte->code,
+            'name' => $cte->name,
+            'dean_id' => $dean->id,
+        ])->assertSessionHasErrors('dean_id');
 
-        // The first college must have been released when the Dean moved.
-        $this->assertNull($cas->fresh()->dean_id);
-        $this->assertSame($dean->id, $cte->fresh()->dean_id);
-        $this->assertSame($cte->id, $dean->fresh()->college_id);
+        $this->assertNull($cte->fresh()->dean_id);
+        $this->assertSame($cas->id, $dean->fresh()->college_id);
     }
 
     public function test_a_college_with_employees_is_deactivated_rather_than_deleted(): void

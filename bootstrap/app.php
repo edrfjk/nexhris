@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     // half-verified session cannot reach any page by typing its URL.
     $middleware->web(append: [
         \App\Http\Middleware\EnsureTwoFactorVerified::class,
+        \App\Http\Middleware\PreventAuthenticatedPageCaching::class,
     ]);
 })
     ->withExceptions(function (Exceptions $exceptions): void {

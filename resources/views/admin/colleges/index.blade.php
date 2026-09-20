@@ -7,6 +7,11 @@
     title="Colleges & Offices"
     subtitle="The college decides which Dean signs a leave form. Departments group people inside it.">
     <x-slot:actions>
+        <button type="button" class="btn btn-md btn-secondary"
+                onclick="document.getElementById('manage-positions').showModal()">
+            <x-heroicon-o-briefcase />
+            Positions
+        </button>
         <button type="button" class="btn btn-md btn-primary"
                 onclick="document.getElementById('add-college').showModal()">
             <x-heroicon-o-plus />
@@ -245,15 +250,9 @@
                 </div>
             </div>
 
-            <div>
-                <label class="label">Assign Dean</label>
-                <select name="dean_id" class="select">
-                    <option value="">No Dean yet</option>
-                    @foreach ($availableDeans as $dean)
-                        <option value="{{ $dean->id }}">{{ $dean->name }}</option>
-                    @endforeach
-                </select>
-                <span class="hint">A Dean signs for exactly one college; assigning here moves them.</span>
+            <div class="rounded-lg border border-sand-200 bg-sand-50 p-3 text-xs text-sand-600">
+                Create the college first, then create or edit a Dean account and assign that account to this college.
+                The Dean can then be appointed from this college’s edit screen.
             </div>
 
             <div>
@@ -294,15 +293,11 @@
                 </div>
 
                 <div>
-                    <label class="label">Assign Dean</label>
-                    <select name="dean_id" class="select">
-                        <option value="">No Dean yet</option>
-                        @foreach ($availableDeans as $dean)
-                            <option value="{{ $dean->id }}" @selected($college->dean_id === $dean->id)>
-                                {{ $dean->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <label class="label">College Dean</label>
+                    <div class="rounded-lg border border-sand-200 bg-sand-50 px-3 py-2.5 text-sm text-sand-700">
+                        {{ $college->dean?->name ?? 'No Dean assigned yet' }}
+                    </div>
+                    <span class="hint">Set an employee’s position to College Dean under Employee Accounts. The assignment updates here automatically.</span>
                 </div>
 
                 <div>
@@ -434,5 +429,78 @@
         </dialog>
     @endforeach
 @endforeach
+
+{{-- Position catalogue: the Employee Accounts modal reads this live list, so
+     HR can add a title here without a developer changing the form. --}}
+<dialog id="manage-positions" class="card w-[min(56rem,96vw)] max-h-[92vh] overflow-y-auto p-0 backdrop:bg-sand-900/40">
+    <div class="card-header sticky top-0 z-10 bg-white">
+        <div>
+            <h3 class="card-title"><x-heroicon-o-briefcase />Manage Positions</h3>
+            <p class="mt-0.5 text-xs text-sand-500">Active positions appear in the Add Employee dropdown.</p>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Close" onclick="document.getElementById('manage-positions').close()">
+            <x-heroicon-o-x-mark class="w-5 h-5" />
+        </button>
+    </div>
+
+    <form method="POST" action="{{ route('admin.positions.store') }}" class="border-b border-sand-100 bg-sand-50 p-4">
+        @csrf
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-6">
+            <div class="sm:col-span-2">
+                <label class="label label-required">Position title</label>
+                <input name="name" required maxlength="150" class="input" placeholder="e.g. ICT Officer">
+            </div>
+            <div class="sm:col-span-2">
+                <label class="label">Category</label>
+                <select name="category" class="select">
+                    <option value="">No category</option>
+                    @foreach ($positions->pluck('category')->filter()->unique()->sort() as $category)
+                        <option value="{{ $category }}">{{ $category }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="label">Or new category</label>
+                <input name="new_category" maxlength="100" class="input" placeholder="e.g. ICT Office">
+            </div>
+            <div class="flex items-end"><button class="btn btn-md btn-primary w-full"><x-heroicon-o-plus />Add</button></div>
+        </div>
+    </form>
+
+    <div class="divide-y divide-sand-100">
+        @forelse ($positions->groupBy(fn ($position) => $position->category ?: 'Other') as $category => $group)
+            <section class="p-4">
+                <h4 class="section-label mb-2">{{ $category }}</h4>
+                <div class="space-y-2">
+                    @foreach ($group as $position)
+                        <form method="POST" action="{{ route('admin.positions.update', $position) }}" class="grid grid-cols-1 items-end gap-2 sm:grid-cols-12">
+                            @csrf @method('PUT')
+                            <div class="sm:col-span-5">
+                                <label class="sr-only">Position title</label>
+                                <input name="name" value="{{ $position->name }}" required maxlength="150" class="input input-sm">
+                            </div>
+                            <div class="sm:col-span-4">
+                                <label class="sr-only">Category</label>
+                                <input name="category" value="{{ $position->category }}" maxlength="100" class="input input-sm">
+                            </div>
+                            <label class="flex h-9 items-center gap-1.5 text-xs text-sand-600 sm:col-span-1">
+                                <input type="hidden" name="is_active" value="0">
+                                <input type="checkbox" name="is_active" value="1" @checked($position->is_active) class="rounded border-sand-300 text-maroon-800 focus:ring-maroon-500">
+                                Active
+                            </label>
+                            <button class="btn btn-xs btn-secondary sm:col-span-1">Save</button>
+                            <button type="submit" form="delete-position-{{ $position->id }}" class="btn btn-xs btn-danger-soft sm:col-span-1">Delete</button>
+                        </form>
+                        <form id="delete-position-{{ $position->id }}" method="POST" action="{{ route('admin.positions.destroy', $position) }}" onsubmit="return confirm({{ Js::from('Remove this title from future employee selections? Existing employee records will keep their title.') }})">
+                            @csrf @method('DELETE')
+                        </form>
+                    @endforeach
+                </div>
+            </section>
+        @empty
+            <x-empty-state message="No positions yet. Add the first title above." />
+        @endforelse
+    </div>
+</dialog>
 
 @endsection

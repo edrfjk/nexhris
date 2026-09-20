@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\CollegeController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\PositionController;
 use App\Http\Controllers\Admin\LeaveLedgerController;
 use App\Http\Controllers\Admin\LeaveReviewController;
 use App\Http\Controllers\Admin\LeaveFormTemplateController;
@@ -223,6 +224,12 @@ Route::middleware('auth')->group(function () {
                 ->name('departments.update');
             Route::delete('/departments/{department}', [DepartmentController::class, 'destroy'])
                 ->name('departments.destroy');
+
+            // Position choices are maintained beside colleges and departments;
+            // the employee form reads this same catalogue.
+            Route::post('/positions', [PositionController::class, 'store'])->name('positions.store');
+            Route::put('/positions/{position}', [PositionController::class, 'update'])->name('positions.update');
+            Route::delete('/positions/{position}', [PositionController::class, 'destroy'])->name('positions.destroy');
         });
 
 
@@ -440,36 +447,41 @@ Route::middleware('auth')->group(function () {
         // PDS REVIEW / ADMIN
         // ====================================================
 
-        Route::get(
-            '/pds',
-            [PdsReviewController::class, 'index']
-        )->name('pds.index');
+        // PDS records contain highly sensitive personal data. Reviewer access
+        // is not enough here: only the HR administrator may list, view, or
+        // download another employee's PDS.
+        Route::middleware('role:admin')->group(function () {
+            Route::get(
+                '/pds',
+                [PdsReviewController::class, 'index']
+            )->name('pds.index');
 
-        Route::get(
-            '/pds/{employee}',
-            [PdsReviewController::class, 'show']
-        )->name('pds.show');
+            Route::get(
+                '/pds/{employee}',
+                [PdsReviewController::class, 'show']
+            )->name('pds.show');
 
-        Route::post(
-            '/pds/{employee}/approve',
-            [PdsReviewController::class, 'approve']
-        )->name('pds.approve');
+            Route::post(
+                '/pds/{employee}/approve',
+                [PdsReviewController::class, 'approve']
+            )->name('pds.approve');
 
-        Route::post(
-            '/pds/{employee}/return',
-            [PdsReviewController::class, 'returnForRevision']
-        )->name('pds.return');
+            Route::post(
+                '/pds/{employee}/return',
+                [PdsReviewController::class, 'returnForRevision']
+            )->name('pds.return');
 
-        Route::get(
-            '/pds/{employee}/download/{filename?}',
-            [PdsReviewController::class, 'download']
-        )->name('pds.download');
+            Route::get(
+                '/pds/{employee}/download/{filename?}',
+                [PdsReviewController::class, 'download']
+            )->name('pds.download');
 
         // The original workbook, for when the PDF preview is not enough.
-        Route::get(
-            '/pds/{employee}/workbook',
-            [PdsReviewController::class, 'downloadWorkbook']
-        )->name('pds.workbook');
+            Route::get(
+                '/pds/{employee}/workbook',
+                [PdsReviewController::class, 'downloadWorkbook']
+            )->name('pds.workbook');
+        });
 
 
         // ====================================================

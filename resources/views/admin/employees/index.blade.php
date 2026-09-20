@@ -9,11 +9,11 @@
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
             Export PDF
         </a>
-        <a href="{{ route('admin.employees.create') }}"
-           class="btn btn-md btn-primary">
+        <button type="button" class="btn btn-md btn-primary"
+                onclick="document.getElementById('add-employee').showModal()">
             <x-heroicon-o-plus class="w-4 h-4" />
             Add Employee
-        </a>
+        </button>
     </x-slot:actions>
 </x-page-header>
 
@@ -263,6 +263,109 @@
 </div>
 
 <div class="mt-4">{{ $employees->links() }}</div>
+
+{{-- Kept here instead of a create page so HR can add an account and return to
+     the list in one action. --}}
+<dialog id="add-employee" class="card w-[min(52rem,96vw)] max-h-[92vh] overflow-y-auto p-0 backdrop:bg-sand-900/40">
+    <form method="POST" action="{{ route('admin.employees.store') }}" enctype="multipart/form-data">
+        @csrf
+        <div class="card-header sticky top-0 z-10 bg-white">
+            <div>
+                <h3 class="card-title"><x-heroicon-o-user-plus />Add Employee</h3>
+                <p class="mt-0.5 text-xs text-sand-500">Create the account and ledger-ready name in one place.</p>
+            </div>
+            <button type="button" class="icon-btn" aria-label="Close" onclick="document.getElementById('add-employee').close()">
+                <x-heroicon-o-x-mark class="w-5 h-5" />
+            </button>
+        </div>
+
+        <div class="card-body space-y-5">
+            <div>
+                <p class="section-label mb-3">Identity</p>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div>
+                        <label class="label label-required">First Name</label>
+                        <input type="text" name="first_name" required value="{{ old('first_name') }}" class="input @error('first_name') input-error @enderror">
+                        @error('first_name') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="label">Middle Name</label>
+                        <input type="text" name="middle_name" value="{{ old('middle_name') }}" class="input">
+                        <span class="hint">Ledger prints its initial only.</span>
+                    </div>
+                    <div>
+                        <label class="label label-required">Last Name</label>
+                        <input type="text" name="last_name" required value="{{ old('last_name') }}" class="input @error('last_name') input-error @enderror">
+                        @error('last_name') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="label label-required">Employee Number</label>
+                        <input type="text" name="employee_number" required value="{{ old('employee_number') }}" class="input @error('employee_number') input-error @enderror">
+                        @error('employee_number') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="label label-required">Email</label>
+                        <input type="email" name="email" required value="{{ old('email') }}" class="input @error('email') input-error @enderror">
+                        @error('email') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-sand-100 pt-5">
+                <p class="section-label mb-3">Employment</p>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    @include('admin.employees.partials.position-fields', [
+                        'selectedPosition' => old('position'),
+                        'positionFieldId' => 'add-employee',
+                    ])
+                    <div>
+                        <label class="label label-required">System Role</label>
+                        <select name="role" required class="select">
+                            <option value="employee" @selected(old('role', 'employee') === 'employee')>Employee</option>
+                            <option value="dean" @selected(old('role') === 'dean')>Dean</option>
+                            <option value="campus_director" @selected(old('role') === 'campus_director')>Campus Director</option>
+                        </select>
+                        <span class="hint">Role controls access; position is the job title.</span>
+                    </div>
+                    <div>
+                        <label class="label label-required">First day of government service</label>
+                        <input type="date" name="first_day_of_service" required value="{{ old('first_day_of_service') }}" class="input @error('first_day_of_service') input-error @enderror">
+                        @error('first_day_of_service') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="label">Contact Number</label>
+                        <input type="text" name="contact_number" value="{{ old('contact_number') }}" class="input">
+                    </div>
+                    @include('admin.employees.partials.college-program-fields', [
+                        'employee' => null,
+                        'organizationFieldId' => 'add-employee',
+                        'positionFieldId' => 'add-employee',
+                    ])
+                </div>
+            </div>
+
+            <div class="border-t border-sand-100 pt-5">
+                <p class="section-label mb-3">Login Credentials</p>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="label label-required">Temporary Password</label>
+                        <input type="password" name="password" required class="input @error('password') input-error @enderror">
+                        @error('password') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="label label-required">Confirm Password</label>
+                        <input type="password" name="password_confirmation" required class="input">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer sticky bottom-0 bg-sand-50 flex justify-end gap-2">
+            <button type="button" class="btn btn-md btn-secondary" onclick="document.getElementById('add-employee').close()">Cancel</button>
+            <button class="btn btn-md btn-primary">Create Employee</button>
+        </div>
+    </form>
+</dialog>
 @endsection
 
 @push('scripts')
@@ -293,5 +396,11 @@
     sync();
     college.addEventListener('change', sync);
 })();
+
+@if ($errors->any() || request()->boolean('add'))
+    // Validation returns to this page; reopen the modal so the errors are in
+    // context rather than leaving HR on a blank directory.
+    document.getElementById('add-employee')?.showModal();
+@endif
 </script>
 @endpush

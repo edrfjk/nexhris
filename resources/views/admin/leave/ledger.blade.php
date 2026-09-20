@@ -6,6 +6,12 @@
 @php
     $me = auth()->user();
     $isHr = $me->isAdmin();
+    $earnedPeriods = $ledger->where('type', 'earned')
+        ->map(fn ($line) => [
+            'ledger' => $line->ledger,
+            'from' => $line->period_from?->format('Y-m-d'),
+            'to' => $line->period_to?->format('Y-m-d'),
+        ])->values();
     $num = fn ($v) => (float) $v > 0 ? number_format((float) $v, 2) : '—';
 @endphp
 
@@ -85,7 +91,8 @@
 
         {{-- Earned --}}
         <form method="POST" action="{{ route('admin.leave.earned.store', $employee) }}"
-              x-show="tab === 'earned'" class="p-5">
+              x-show="tab === 'earned'" class="p-5" data-earned-credit-form
+              data-earned-periods="{{ $earnedPeriods->toJson() }}">
             @csrf
             {{-- This tab posts to the leave card. Service credits are earned
                  per event, so they are recorded in their own section below. --}}
@@ -376,7 +383,8 @@
 
     @if ($isHr)
         <form method="POST" action="{{ route('admin.leave.earned.store', $employee) }}"
-              x-show="adding" x-cloak class="p-5 bg-sand-50 border-b border-sand-100">
+              x-show="adding" x-cloak class="p-5 bg-sand-50 border-b border-sand-100"
+              data-earned-credit-form data-earned-periods="{{ $earnedPeriods->toJson() }}">
             @csrf
             <input type="hidden" name="ledger" value="service">
 
@@ -519,5 +527,39 @@
         </div>
     @endif
 </div>
+
+@if ($isHr)
+    @push('scripts')
+        <script>
+            document.querySelectorAll('[data-earned-credit-form]').forEach((form) => {
+                form.addEventListener('submit', (event) => {
+                    const from = form.elements.period_from.value;
+                    const to = form.elements.period_to.value;
+                    const ledger = form.elements.ledger.value;
+                    const periods = JSON.parse(form.dataset.earnedPeriods || '[]');
+                    const duplicate = periods.some((period) =>
+                        period.ledger === ledger && period.from === from && period.to === to
+                    );
+
+                    if (duplicate) {
+                        if (!window.confirm(
+                            `Credits for ${from} to ${to} are already recorded. ` +
+                            'Do you want to post another credit for the same period?'
+                        )) {
+                            event.preventDefault();
+                            return;
+                        }
+
+                        const override = document.createElement('input');
+                        override.type = 'hidden';
+                        override.name = 'allow_duplicate';
+                        override.value = '1';
+                        form.appendChild(override);
+                    }
+                });
+            });
+        </script>
+    @endpush
+@endif
 
 @endsection

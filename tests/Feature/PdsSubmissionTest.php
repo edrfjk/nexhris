@@ -359,6 +359,26 @@ class PdsSubmissionTest extends TestCase
             ->assertOk();
     }
 
+    public function test_only_hr_can_open_the_pds_review_area(): void
+    {
+        Storage::fake('public');
+        Storage::fake('local');
+        $hr = $this->user('admin');
+        $employee = $this->user('employee');
+        $dean = $this->user('dean');
+
+        $this->submitPds($employee, $hr);
+
+        foreach ([
+            route('admin.pds.index'),
+            route('admin.pds.show', $employee),
+            route('admin.pds.download', $employee),
+            route('admin.pds.workbook', $employee),
+        ] as $url) {
+            $this->actingAs($dean)->get($url)->assertForbidden();
+        }
+    }
+
     public function test_a_submission_records_the_template_version_used(): void
     {
         Storage::fake('public');
