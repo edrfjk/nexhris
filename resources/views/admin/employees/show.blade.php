@@ -3,7 +3,7 @@
 
 @section('content')
 <x-page-header title="Employee Details"
-    :subtitle="$employee->name . ' · ' . $employee->orgLine()">
+    :subtitle="$employee->name . ' · ' . $employee->orgShortLine()">
     <x-slot:actions>
         <a href="{{ route('admin.employees.index') }}"
            class="btn btn-md btn-secondary">
@@ -32,7 +32,7 @@
                     </div>
                     <div class="pb-1">
                         <h2 class="text-lg font-bold text-sand-800">{{ $employee->name }}</h2>
-                        <p class="text-sm text-sand-500">{{ $employee->position ?: 'Employee' }} · {{ $employee->orgLine() }}</p>
+                        <p class="text-sm text-sand-500">{{ $employee->position ?: 'Employee' }} · {{ $employee->orgShortLine() }}</p>
                     </div>
                 </div>
 

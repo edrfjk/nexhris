@@ -70,6 +70,18 @@ class EmployeeManagementTest extends TestCase
         ]);
     }
 
+    public function test_compact_employee_profile_affiliation_uses_the_department_code(): void
+    {
+        $cas = College::where('code', 'CAS')->firstOrFail();
+        $bsit = $this->department('CAS', 'Bachelor of Science in Information Technology');
+        $employee = User::factory()->create([
+            'college_id' => $cas->id,
+            'department_id' => $bsit->id,
+        ]);
+
+        $this->assertSame('College of Arts and Sciences · ' . $bsit->code, $employee->orgShortLine());
+    }
+
     public function test_structured_name_is_saved_and_supplies_the_ledger_parts(): void
     {
         $admin = $this->hr();
