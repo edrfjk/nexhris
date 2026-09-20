@@ -230,6 +230,12 @@ public function departmentName(): ?string
     return $this->departmentRecord?->name ?: ($this->program ?: null);
 }
 
+/** Short department/programme code for compact profile headers, e.g. BSIT. */
+public function departmentCode(): ?string
+{
+    return $this->departmentRecord?->code ?: null;
+}
+
 /** The college name, falling back to the legacy free-text code. */
 public function collegeName(): ?string
 {
@@ -246,6 +252,15 @@ public function collegeName(): ?string
 public function orgLine(string $separator = " \u{00B7} "): string
 {
     return collect([$this->collegeName(), $this->departmentName()])
+        ->filter()
+        ->unique()
+        ->implode($separator) ?: 'No college assigned';
+}
+
+/** Compact affiliation for profile headers where the full programme name wraps. */
+public function orgShortLine(string $separator = " \u{00B7} "): string
+{
+    return collect([$this->collegeName(), $this->departmentCode() ?: $this->departmentName()])
         ->filter()
         ->unique()
         ->implode($separator) ?: 'No college assigned';

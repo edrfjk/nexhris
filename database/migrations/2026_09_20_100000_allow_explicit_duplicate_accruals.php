@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     private const UNIQUE = 'ledger_entries_one_accrual_per_period';
+    private const USER_INDEX = 'leave_ledger_entries_user_id_index';
 
     /**
      * Duplicate accruals are allowed only when HR explicitly confirms the
@@ -19,8 +20,22 @@ return new class extends Migration
             return;
         }
 
-        $hasUnique = collect(Schema::getIndexes('leave_ledger_entries'))
+        $indexes = collect(Schema::getIndexes('leave_ledger_entries'));
+
+        $hasUnique = $indexes
             ->contains(fn (array $index) => $index['name'] === self::UNIQUE);
+
+        $hasUserIndex = $indexes
+            ->contains(fn (array $index) => $index['name'] === self::USER_INDEX);
+
+        // MariaDB requires an index for the user_id foreign key.
+        // The unique accrual index currently provides that index,
+        // so create a dedicated user_id index before removing it.
+        if ($hasUnique && ! $hasUserIndex) {
+            Schema::table('leave_ledger_entries', function (Blueprint $table) {
+                $table->index('user_id', self::USER_INDEX);
+            });
+        }
 
         if ($hasUnique) {
             Schema::table('leave_ledger_entries', function (Blueprint $table) {
@@ -31,7 +46,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        // The prior migration owns this constraint. It will recreate it when
-        // rolling back after this migration has been reversed.
+        // The prior migration owns the unique constraint.
     }
 };
