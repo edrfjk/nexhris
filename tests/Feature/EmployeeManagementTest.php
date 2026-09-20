@@ -4,8 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\College;
 use App\Models\Department;
+use App\Models\Position;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class EmployeeManagementTest extends TestCase
@@ -65,6 +68,188 @@ class EmployeeManagementTest extends TestCase
             'department' => 'CAS',
             'program' => 'Bachelor of Science in Information Technology',
         ]);
+    }
+
+    public function test_structured_name_is_saved_and_supplies_the_ledger_parts(): void
+    {
+        $admin = $this->hr();
+        $cas = College::where('code', 'CAS')->firstOrFail();
+
+        $this->actingAs($admin)->post(route('admin.employees.store'), [
+            'employee_number' => 'EMP-STRUCTURED',
+            'first_name' => 'Maria Clara',
+            'middle_name' => 'Santos',
+            'last_name' => 'Dela Cruz',
+            'email' => 'maria@example.test',
+            'position' => 'Instructor I',
+            'college_id' => $cas->id,
+            'role' => 'employee',
+            'first_day_of_service' => '2020-06-01',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertRedirect(route('admin.employees.index'));
+
+        $employee = User::where('employee_number', 'EMP-STRUCTURED')->firstOrFail();
+
+        $this->assertSame('Maria Clara Santos Dela Cruz', $employee->name);
+        $this->assertSame([
+            'family' => 'DELA CRUZ',
+            'first' => 'MARIA CLARA',
+            'middle' => 'S.',
+        ], $employee->nameParts());
+    }
+
+    public function test_program_head_is_automatically_assigned_to_the_selected_department(): void
+    {
+        $admin = $this->hr();
+        $cas = College::where('code', 'CAS')->firstOrFail();
+        $bsit = $this->department('CAS', 'Bachelor of Science in Information Technology');
+
+        $this->actingAs($admin)->post(route('admin.employees.store'), [
+            'employee_number' => 'BSIT-HEAD',
+            'first_name' => 'Jamie',
+            'last_name' => 'Santos',
+            'email' => 'jamie.santos@example.test',
+            'position' => 'Program Chair / Program Head',
+            'college_id' => $cas->id,
+            'department_id' => $bsit->id,
+            'role' => 'employee',
+            'first_day_of_service' => '2020-06-01',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertRedirect(route('admin.employees.index'));
+
+        $this->assertSame(
+            User::where('employee_number', 'BSIT-HEAD')->value('id'),
+            $bsit->fresh()->head_id,
+        );
+    }
+
+    public function test_college_dean_position_automatically_appoints_the_employee_and_grants_dean_role(): void
+    {
+        $admin = $this->hr();
+        $cas = College::where('code', 'CAS')->firstOrFail();
+
+        $this->actingAs($admin)->post(route('admin.employees.store'), [
+            'employee_number' => 'CAS-DEAN',
+            'first_name' => 'Alex',
+            'last_name' => 'Reyes',
+            'email' => 'alex.reyes@example.test',
+            'position' => 'College Dean',
+            'college_id' => $cas->id,
+            'role' => 'employee',
+            'first_day_of_service' => '2020-06-01',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertRedirect(route('admin.employees.index'));
+
+        $dean = User::where('employee_number', 'CAS-DEAN')->firstOrFail();
+        $this->assertSame($dean->id, $cas->fresh()->dean_id);
+        $this->assertSame('dean', $dean->fresh()->role);
+    }
+
+    public function test_replacing_an_existing_program_head_requires_confirmation_and_keeps_their_account(): void
+    {
+        $admin = $this->hr();
+        $cas = College::where('code', 'CAS')->firstOrFail();
+        $bsit = $this->department('CAS', 'Bachelor of Science in Information Technology');
+        $previous = User::factory()->create(['role' => 'employee', 'college_id' => $cas->id]);
+        $bsit->update(['head_id' => $previous->id]);
+
+        $payload = [
+            'employee_number' => 'NEW-BSIT-HEAD', 'first_name' => 'Taylor', 'last_name' => 'Cruz',
+            'email' => 'taylor.cruz@example.test', 'position' => 'Program Chair / Program Head',
+            'college_id' => $cas->id, 'department_id' => $bsit->id, 'role' => 'employee',
+            'first_day_of_service' => '2020-06-01', 'password' => 'password123', 'password_confirmation' => 'password123',
+        ];
+
+        $this->actingAs($admin)->post(route('admin.employees.store'), $payload)
+            ->assertSessionHasErrors('position');
+        $this->assertSame($previous->id, $bsit->fresh()->head_id);
+
+        $this->actingAs($admin)->post(route('admin.employees.store'), $payload + ['confirm_replace_program_head' => true])
+            ->assertRedirect(route('admin.employees.index'));
+        $this->assertNotSame($previous->id, $bsit->fresh()->head_id);
+        $this->assertDatabaseHas('users', ['id' => $previous->id]);
+    }
+
+    public function test_replacing_a_college_dean_requires_confirmation_and_removes_the_previous_dean_role(): void
+    {
+        $admin = $this->hr();
+        $cas = College::where('code', 'CAS')->firstOrFail();
+        $previous = User::factory()->create(['role' => 'dean', 'college_id' => $cas->id]);
+        $cas->update(['dean_id' => $previous->id]);
+
+        $payload = [
+            'employee_number' => 'NEW-CAS-DEAN', 'first_name' => 'Morgan', 'last_name' => 'Flores',
+            'email' => 'morgan.flores@example.test', 'position' => 'College Dean',
+            'college_id' => $cas->id, 'role' => 'employee', 'first_day_of_service' => '2020-06-01',
+            'password' => 'password123', 'password_confirmation' => 'password123',
+        ];
+
+        $this->actingAs($admin)->post(route('admin.employees.store'), $payload)
+            ->assertSessionHasErrors('position');
+        $this->assertSame($previous->id, $cas->fresh()->dean_id);
+
+        $this->actingAs($admin)->post(route('admin.employees.store'), $payload + ['confirm_replace_dean' => true])
+            ->assertRedirect(route('admin.employees.index'));
+
+        $replacement = User::where('employee_number', 'NEW-CAS-DEAN')->firstOrFail();
+        $this->assertSame($replacement->id, $cas->fresh()->dean_id);
+        $this->assertSame('dean', $replacement->fresh()->role);
+        $this->assertSame('employee', $previous->fresh()->role);
+    }
+
+    public function test_hr_can_manage_categories_and_the_position_catalogue(): void
+    {
+        $admin = $this->hr();
+
+        $this->actingAs($admin)->post(route('admin.positions.store'), [
+            'name' => 'ICT Officer',
+            'new_category' => 'Information Technology Office',
+            'is_active' => true,
+        ])->assertSessionHasNoErrors();
+
+        $position = Position::where('name', 'ICT Officer')->firstOrFail();
+        $this->assertSame('Information Technology Office', $position->category);
+
+        $this->actingAs($admin)->get(route('admin.employees.index'))
+            ->assertOk()
+            ->assertSee('add-employee', false)
+            ->assertSee('ICT Officer');
+
+        $this->actingAs($admin)->put(route('admin.positions.update', $position), [
+            'name' => 'Information and Communications Technology Officer',
+            'category' => 'Information Technology Office',
+            'is_active' => true,
+        ])->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('positions', ['name' => 'Information and Communications Technology Officer']);
+    }
+
+    public function test_hr_can_optionally_replace_a_photo_while_editing_an_account(): void
+    {
+        Storage::fake('public');
+        $admin = $this->hr();
+        $employee = User::factory()->create([
+            'role' => 'employee',
+            'status' => 'active',
+            'employee_number' => 'PHOTO-100',
+            'profile_photo_path' => 'profile-photos/old.jpg',
+        ]);
+        Storage::disk('public')->put('profile-photos/old.jpg', 'old photo');
+
+        $this->actingAs($admin)->put(route('admin.employees.update', $employee), [
+            'employee_number' => $employee->employee_number,
+            'name' => $employee->name,
+            'email' => $employee->email,
+            'photo' => UploadedFile::fake()->image('new-photo.jpg'),
+        ])->assertRedirect(route('admin.employees.show', $employee));
+
+        $newPath = $employee->fresh()->profile_photo_path;
+        $this->assertNotSame('profile-photos/old.jpg', $newPath);
+        Storage::disk('public')->assertMissing('profile-photos/old.jpg');
+        Storage::disk('public')->assertExists($newPath);
     }
 
     public function test_moving_an_employee_carries_both_legacy_strings_across(): void

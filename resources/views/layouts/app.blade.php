@@ -317,6 +317,14 @@
 </div>
 
 <script>
+    // Chrome may restore a page from its back-forward cache without making a
+    // request. Force a fresh auth check when that happens after sign-out.
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
+
     setTimeout(() => {
         document.querySelectorAll('[data-flash]').forEach(el => {
             el.style.transition = 'opacity 0.4s ease';

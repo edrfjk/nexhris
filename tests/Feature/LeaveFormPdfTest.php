@@ -183,6 +183,20 @@ class LeaveFormPdfTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_a_dean_from_another_college_cannot_print_an_approval_sheet(): void
+    {
+        $application = $this->application(['status' => 'cd_approved']);
+
+        $cte = College::where('code', 'CTE')->firstOrFail();
+        $otherDean = User::factory()->create([
+            'role' => 'dean', 'status' => 'active', 'college_id' => $cte->id,
+        ]);
+
+        $this->actingAs($otherDean)
+            ->get(route('admin.leave.review.print', $application))
+            ->assertForbidden();
+    }
+
     // ------------------------------------------------------------------
     // Edges
     // ------------------------------------------------------------------

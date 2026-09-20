@@ -84,6 +84,7 @@ class LeaveLedgerController extends Controller
             'sl_earned' => ['nullable', 'numeric', 'min:0'],
             'service_earned' => ['nullable', 'numeric', 'min:0'],
             'remarks' => ['nullable', 'string', 'max:255'],
+            'allow_duplicate' => ['nullable', 'boolean'],
             // Which of the two cards this line is written on. Without it a
             // service credit posted here landed on the leave card, where
             // service credits are not counted, and silently did nothing.
@@ -93,6 +94,26 @@ class LeaveLedgerController extends Controller
         ]);
 
         $card = $data['ledger'] ?? LeaveLedgerEntry::LEAVE;
+        $allowDuplicate = $request->boolean('allow_duplicate');
+
+        // Give HR a useful application message instead of allowing the
+        // database's unique-index error to escape when this period was
+        // already credited for this employee and card.
+        $alreadyPosted = $employee->leaveLedgerEntries()
+            ->where('type', 'earned')
+            ->where('ledger', $card)
+            ->whereDate('period_from', $data['period_from'])
+            ->whereDate('period_to', $data['period_to'])
+            ->exists();
+
+        if ($alreadyPosted && ! $allowDuplicate) {
+            return back()->with('error', sprintf(
+                'Credits for %s to %s are already recorded on the %s card. Nothing was added.',
+                $data['period_from'],
+                $data['period_to'],
+                $card === LeaveLedgerEntry::SERVICE ? 'service credit' : 'leave',
+            ))->withInput();
+        }
 
         try {
             $service->postEntry(
@@ -100,12 +121,21 @@ class LeaveLedgerController extends Controller
                 periodFrom: $data['period_from'],
                 periodTo: $data['period_to'],
                 type: 'earned',
-                remarks: $data['remarks'] ?: "Earned {$data['period_from']} – {$data['period_to']}",
+                remarks: ($data['remarks'] ?? null) ?: "Earned {$data['period_from']} – {$data['period_to']}",
                 vlEarned: (float) ($data['vl_earned'] ?? 0),
                 slEarned: (float) ($data['sl_earned'] ?? 0),
                 serviceEarned: (float) ($data['service_earned'] ?? 0),
                 ledger: $card,
             );
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            // The pre-check handles the normal case. This catch handles two
+            // HR requests arriving at the same time; the database constraint
+            // remains the final protection against double crediting.
+            return back()->with('error', sprintf(
+                'Credits for %s to %s were already recorded. Nothing was added.',
+                $data['period_from'],
+                $data['period_to'],
+            ))->withInput();
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -281,9 +311,16 @@ class LeaveLedgerController extends Controller
     // Exports
     // ------------------------------------------------------------------
 
-    public function exportLedgerPdf(User $employee)
+    public function exportLedgerPdf(Request $request, User $employee)
     {
-        abort_unless(auth()->user()->isReviewer(), 403);
+        $viewer = $request->user();
+
+        abort_unless($viewer->isReviewer(), 403);
+        abort_unless(
+            ! $viewer->isDean() || $employee->college_id === $viewer->college_id,
+            403,
+            'This employee is not registered under your program.',
+        );
 
         return LeaveApplicationController::renderLedgerCard(
             $employee,
@@ -396,11 +433,15 @@ class LeaveLedgerController extends Controller
         return $pdf->stream(DocumentName::leaveCalendar($start));
     }
 
-    public function exportAllPdf()
+    public function exportAllPdf(Request $request)
     {
         // The same set the on-screen list shows, or the report silently
         // omits whoever is not a plain employee.
-        $employees = User::personnel()->with('leaveBalance')->orderBy('name')->get();
+        $employees = User::personnel()
+            ->visibleTo($request->user())
+            ->with('leaveBalance')
+            ->orderBy('name')
+            ->get();
 
         $pdf = Pdf::loadView('admin.leave.all-balances-pdf', [
             'employees' => $employees,
@@ -411,9 +452,13 @@ class LeaveLedgerController extends Controller
         return $pdf->stream(DocumentName::leaveBalances());
     }
 
-    public function exportAllExcel()
+    public function exportAllExcel(Request $request)
     {
-        $employees = User::personnel()->with('leaveBalance')->orderBy('name')->get();
+        $employees = User::personnel()
+            ->visibleTo($request->user())
+            ->with('leaveBalance')
+            ->orderBy('name')
+            ->get();
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();

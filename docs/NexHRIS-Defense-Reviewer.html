@@ -1,0 +1,596 @@
+<title>NexHRIS Defense Reviewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#fbfbf7; --surface:#ffffff; --sunk:#f5f5ee; --line:#e3e1d4; --line-strong:#cfccba;
+  --ink:#26251f; --ink-2:#514f43; --muted:#6b6859;
+  --accent:#780000; --accent-ink:#ffffff; --accent-soft:#fbe8e8; --accent-line:#f5cccc;
+  --ready:#245e12; --ready-soft:#e2f2dc; --mark:#f0dc00; --mark-ink:#383200;
+  --focus:#a82c2c;
+  --sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#1a1915; --surface:#22211c; --sunk:#2b2a24; --line:#3a382f; --line-strong:#514f43;
+    --ink:#eceadf; --ink-2:#cfccba; --muted:#a6a392;
+    --accent:#eba8a8; --accent-ink:#2a0000; --accent-soft:#3d1515; --accent-line:#5c2020;
+    --ready:#9bcf8b; --ready-soft:#1c2e16; --mark:#d4c200; --mark-ink:#1e1b00; --focus:#eba8a8;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#1a1915; --surface:#22211c; --sunk:#2b2a24; --line:#3a382f; --line-strong:#514f43;
+  --ink:#eceadf; --ink-2:#cfccba; --muted:#a6a392;
+  --accent:#eba8a8; --accent-ink:#2a0000; --accent-soft:#3d1515; --accent-line:#5c2020;
+  --ready:#9bcf8b; --ready-soft:#1c2e16; --mark:#d4c200; --mark-ink:#1e1b00; --focus:#eba8a8;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:20px;padding-block:28px 64px}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+h1,h2,h3{text-wrap:balance;margin:0}
+code,.mono{font-family:var(--mono);font-size:.86em}
+code{background:var(--sunk);border:1px solid var(--line);padding:0 .3em;border-radius:4px;color:var(--ink-2);white-space:nowrap}
+
+/* ---------- masthead ---------- */
+.mast{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:end;border-bottom:2px solid var(--accent);padding-bottom:18px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+.mast h1{font-size:clamp(26px,4vw,36px);line-height:1.12;letter-spacing:-.02em;margin-top:6px}
+.mast p{margin:8px 0 0;color:var(--ink-2);max-width:62ch}
+.progress{min-width:180px;text-align:right}
+.progress .big{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.progress .big small{font-size:15px;color:var(--muted);font-weight:500}
+.bar{height:6px;background:var(--sunk);border:1px solid var(--line);border-radius:99px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;width:0;background:var(--ready);transition:width .3s}
+.progress .lbl{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* ---------- key figures ---------- */
+.figs{margin-top:22px}
+.figs h2{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.fig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(150px,45%),1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.fig{background:var(--surface);padding:12px 14px}
+.fig b{display:block;font-family:var(--mono);font-size:17px;font-weight:500;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2}
+.fig span{display:block;font-size:12.5px;color:var(--ink-2);margin-top:3px;line-height:1.35}
+
+/* ---------- tools ---------- */
+.tools{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ground);padding-block:14px 10px;margin-top:22px;border-bottom:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.search{flex:1 1 260px;position:relative}
+.search input{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:9px 12px}
+.search input::placeholder{color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{font:inherit;font-size:14px;font-weight:500;border:0;background:transparent;color:var(--ink-2);padding:8px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.check{display:inline-flex;gap:8px;align-items:center;font-size:14px;color:var(--ink-2);cursor:pointer;user-select:none}
+.check input{accent-color:var(--accent);width:16px;height:16px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-top:10px;scrollbar-width:thin}
+.chip{flex:0 0 auto;font:inherit;font-size:13px;font-weight:500;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:5px 11px;cursor:pointer;white-space:nowrap}
+.chip .n{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:4px}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.chip[aria-pressed="true"] .n{color:var(--accent)}
+
+/* ---------- sections ---------- */
+.section{margin-top:30px}
+.sec-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px;margin-bottom:12px}
+.sec-head h2{font-size:20px;letter-spacing:-.01em}
+.owner{font-size:12.5px;color:var(--muted)}
+.owner b{color:var(--ink-2);font-weight:600}
+.cards{display:grid;gap:10px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.card.is-ready{border-color:color-mix(in srgb,var(--ready) 40%,var(--line))}
+.q-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
+.q{font-size:16px;font-weight:600;line-height:1.4;letter-spacing:-.005em}
+.ready{font:inherit;font-size:12.5px;font-weight:600;color:var(--muted);background:transparent;border:1px solid var(--line-strong);border-radius:99px;padding:3px 10px;cursor:pointer;white-space:nowrap}
+.ready[aria-pressed="true"]{color:var(--ready);background:var(--ready-soft);border-color:var(--ready)}
+.say{margin-top:8px;color:var(--ink);max-width:78ch}
+.say::before{content:"Say first";display:inline-block;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-right:8px;vertical-align:1px}
+details.more{margin-top:10px}
+details.more summary{cursor:pointer;font-size:13.5px;font-weight:500;color:var(--accent);list-style:none;display:inline-flex;align-items:center;gap:6px}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::before{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+details.more[open] summary::before{transform:rotate(45deg)}
+details.more ul{margin:8px 0 0;padding-left:20px;color:var(--ink-2);max-width:78ch}
+details.more li{margin:4px 0}
+.show{margin-top:10px;font-size:13px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.show .mono{font-family:var(--sans);font-size:13px}
+.show b{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2)}
+.reveal{margin-top:10px;font:inherit;font-size:13.5px;font-weight:500;color:var(--accent);background:var(--accent-soft);border:1px dashed var(--accent-line);border-radius:8px;padding:7px 12px;cursor:pointer}
+mark{background:var(--mark);color:var(--mark-ink);border-radius:2px;padding:0 1px}
+.empty{margin-top:40px;text-align:center;color:var(--muted)}
+
+/* ---------- tips ---------- */
+.tips{margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.tip{border-left:3px solid var(--mark);background:var(--sunk);padding:12px 14px;border-radius:0 8px 8px 0}
+.tip h3{font-size:14px}
+.tip p{margin:4px 0 0;font-size:13.5px;color:var(--ink-2)}
+
+@media (max-width:640px){
+  .mast{grid-template-columns:1fr}
+  .progress{text-align:left}
+  .card{padding:14px}
+  .q{font-size:15px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div>
+      <div class="eyebrow">Final defense · Technical Q&amp;A</div>
+      <h1>NexHRIS Defense Reviewer</h1>
+      <p>Likely panel questions on the system, its design, security, deployment, and methodology, answered from the system as it was built. Say the first line, then go deeper only if the panel asks.</p>
+    </div>
+    <div class="progress" aria-live="polite">
+      <div class="big"><span id="readyCount">0</span> <small>/ <span id="totalCount">0</span> ready</small></div>
+      <div class="bar"><i id="readyBar"></i></div>
+      <div class="lbl">Saved in this browser only</div>
+    </div>
+  </header>
+
+  <section class="figs" aria-labelledby="figs-h">
+    <h2 id="figs-h">Numbers to know by heart</h2>
+    <div class="fig-grid">
+      <div class="fig"><b>4</b><span>roles: HR Administrator, Campus Director, Dean, Employee</span></div>
+      <div class="fig"><b>18</b><span>application tables in the relational database</span></div>
+      <div class="fig"><b>530</b><span>automated tests, all passing</span></div>
+      <div class="fig"><b>5 / 15 min</b><span>failed sign-ins before lockout / lock duration</span></div>
+      <div class="fig"><b>6 digits · 10 min</b><span>email verification code and its expiry</span></div>
+      <div class="fig"><b>60 s</b><span>wait before a new code can be sent</span></div>
+      <div class="fig"><b>8+ chars</b><span>password with letters and numbers, bcrypt-hashed</span></div>
+      <div class="fig"><b>2 · 3</b><span>decimal places on the leave card · service credit card</span></div>
+      <div class="fig"><b>10 MB</b><span>largest upload accepted</span></div>
+      <div class="fig"><b>142 → 105</b><span>employee population → Slovin sample at 5% error</span></div>
+      <div class="fig"><b>107</b><span>total respondents (2 HR + 105 employees)</span></div>
+      <div class="fig"><b>1 vCPU · 4 GB</b><span>Hostinger KVM 1 server, 50 GB storage</span></div>
+    </div>
+  </section>
+
+  <div class="tips">
+    <div class="tip"><h3>Answer in two layers</h3><p>Give the one-line answer. Stop. Offer the details only when the panel follows up.</p></div>
+    <div class="tip"><h3>Show, don't claim</h3><p>When a question is about behavior, offer to demonstrate it live. Each card lists what to open.</p></div>
+    <div class="tip"><h3>Own the limits</h3><p>A limitation stated plainly scores better than a feature stretched. The Scope chapter already lists them.</p></div>
+  </div>
+
+  <div class="tools" role="search">
+    <div class="row">
+      <label class="search" for="q"><span class="visually-hidden" style="position:absolute;left:-9999px">Search questions</span>
+        <input id="q" type="search" placeholder="Search a question or term, e.g. LibreOffice, Slovin, lockout" autocomplete="off">
+      </label>
+      <div class="seg" role="group" aria-label="Study mode">
+        <button type="button" id="modeRead" aria-pressed="true">Read</button>
+        <button type="button" id="modeQuiz" aria-pressed="false">Quiz me</button>
+      </div>
+      <label class="check" for="notReady"><input id="notReady" type="checkbox"> Not ready only</label>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Topics"></div>
+  </div>
+
+  <main id="list"></main>
+  <p class="empty" id="empty" hidden>No questions match. Clear the search or pick another topic.</p>
+</div>
+
+<script>
+const OWNERS = {
+  overview: "Project Manager",
+  stack: "Programmer and Developer",
+  db: "System Analyst and Designer",
+  security: "Programmer and Developer",
+  access: "Programmer and Developer",
+  pds: "System Analyst and Designer",
+  leave: "System Analyst and Designer",
+  ledger: "Programmer and Developer",
+  docs: "Programmer and Developer",
+  modules: "System Analyst and Designer",
+  testing: "Quality Assurance and Tester",
+  deploy: "Programmer and Developer",
+  diagrams: "System Analyst and Designer",
+  method: "Documenter and Technical Writer",
+  limits: "Project Manager",
+  curve: "Whole team"
+};
+const CATS = [
+  ["overview","System overview"], ["stack","Architecture and technology"], ["db","Database and ERD"],
+  ["security","Security and data privacy"], ["access","Roles and access control"], ["pds","Personal Data Sheet"],
+  ["leave","Leave and approval chain"], ["ledger","Ledger cards"], ["docs","Official forms and PDF conversion"],
+  ["modules","Policies, announcements, ID, reports"], ["testing","Testing and quality"],
+  ["deploy","Deployment and maintenance"], ["diagrams","Diagrams and notation"], ["method","Methodology and statistics"],
+  ["limits","Limitations and future work"], ["curve","Curveball questions"]
+];
+
+// q: question · a: say first · d: details if they dig · s: what to show
+const QA = [
+// ---------------------------------------------------------------- overview
+{id:"ov1",c:"overview",q:"In one sentence, what is NexHRIS?",
+ a:"A web-based HR information system for ISPSC Tagudin Campus that moves Personal Data Sheet submission, leave applications and approval, and ledger card maintenance online while keeping the official Civil Service forms exactly as the campus uses them.",
+ d:["Four roles: HR Administrator, Campus Director, Dean, Employee.","Modules: accounts, colleges and departments, form templates, PDS, leave and approval chain, leave calendar, ledger cards, reports, HR policies, announcements and notifications, digital ID, activity log."],
+ s:"Sign in as HR and walk the sidebar top to bottom."},
+{id:"ov2",c:"overview",q:"How is NexHRIS different from the document management systems in your review, like DocuTrack?",
+ a:"Those systems store and retrieve files. NexHRIS processes the transactions the files represent: a PDS with a review-and-return cycle, leave routed by the applicant's rank, and running-balance ledger cards, all while reproducing the official forms.",
+ d:["DocuTrack (Bulong et al., 2025) and the DMS of Angala et al. (2023) stop at document handling.","The four gaps: governed PDS submission with versions, rank-derived approval chain with skipped stages recorded, ledger cards where one correction recalculates every later balance, and exact reproduction of government forms."]},
+{id:"ov3",c:"overview",q:"Who are the users and what can each one do?",
+ a:"The HR Administrator runs the system; Deans give the first leave approval for their college; the Campus Director gives final approval and oversees campus-wide leave; employees submit their PDS, file leave, and view their own records.",
+ d:["Deans and the Campus Director are also employees: they file their own leave and PDS through the same screens.","The HR Administrator account is the system administrator and does not file its own leave or PDS.","The Campus Director additionally views every employee's ledger card."],
+ s:"Sign in with each role and compare the sidebars."},
+{id:"ov4",c:"overview",q:"Why did you not digitize the entire 201 file?",
+ a:"We focused on the parts employees touch most often: the Personal Data Sheet, leave records, personal information, and HR policies. Appointment papers, service records, and performance ratings stay with the HR Office, as stated in our scope.",
+ d:["Those four are the transactions that currently force employees to visit the HR Office repeatedly.","Adding other 201 documents later fits the same pattern: a versioned template plus a reviewed submission."]},
+
+// ---------------------------------------------------------------- stack
+{id:"st1",c:"stack",q:"What technologies did you use, and why?",
+ a:"Laravel 12 in PHP for the back end, MariaDB for the relational database, Blade with Tailwind CSS and Alpine.js for the interface, Chart.js for dashboard charts, PhpSpreadsheet to read the Excel forms, and LibreOffice to convert them to PDF.",
+ d:["Laravel gives authentication, CSRF protection, validation, migrations, mail, and an ORM out of the box, so security basics are not hand-written.","MariaDB is MySQL-compatible, open source, and light on a 1-CPU server.","Tailwind and Alpine are compiled with Vite into one bundled stylesheet and script, so the interface does not depend on an outside CDN.","Other libraries: Dompdf (system printouts), Simple QrCode (ID card), Symfony HTML Sanitizer (policy text), Blade Heroicons (icons)."]},
+{id:"st2",c:"stack",q:"What architecture does the system follow?",
+ a:"Model-View-Controller. Controllers take the request, services hold the business rules such as the approval chain and ledger recalculation, Eloquent models map the tables, and Blade views render the pages.",
+ d:["Business rules live in service classes (for example LeaveWorkflowService, LeaveChain, LeaveLedgerService, PdsSubmissionService, TwoFactorService), so they can be tested without the interface.","Database changes are version-controlled migrations, so a fresh server builds the same schema."],
+ s:"Open app/Services and one controller to show the split."},
+{id:"st3",c:"stack",q:"Why a web application and not a mobile app?",
+ a:"One web system works on every device through the browser, including phones, with no app store and one codebase to maintain. The layout adapts to phone screens.",
+ d:["We tested every employee screen at phone width.","A dedicated mobile app is listed under limitations and future work."]},
+{id:"st4",c:"stack",q:"Is the system real-time? How do notifications work?",
+ a:"Notifications are sent the moment the action happens: an email and an entry in the notification bell. Pages show the latest data when opened; they do not push live updates.",
+ d:["Three notification types: announcement posted, leave stage changed, PDS status changed.","Each is delivered through two channels: database (the bell) and mail.","They are sent synchronously, so no background queue worker is needed on the server."],
+ s:"File a leave as an employee, then open the Dean's bell."},
+{id:"st5",c:"stack",q:"How does the dashboard get its figures?",
+ a:"A dashboard service computes each role's figures from the database when the dashboard opens, and Chart.js draws the charts in the browser.",
+ d:["HR: employees, leave in review, awaiting ledger posting, PDS compliance, breakdown by college, six-month leave volume, leave type distribution, latest policy acknowledgment, staff without a PDS, recent activity.","Dean: college headcount, upcoming leave in the college, recent decisions.","Campus Director: pending approvals by college, six-month leave volume, on leave today, own application, recent decisions.","Employee: VL, SL, and service credit balances, leave used this year, latest application, announcements."]},
+
+// ---------------------------------------------------------------- db
+{id:"db1",c:"db",q:"Is your database relational? How many tables?",
+ a:"Yes. MariaDB with InnoDB tables linked by foreign keys. The ERD shows the 18 tables the system uses; the rest are Laravel's own tables for sessions, cache, jobs, and migrations.",
+ d:["Core: users, colleges, departments.","PDS: pds_templates, pds_submissions, pds_submission_revisions.","Leave: leave_form_templates, leave_applications, leave_approvals, leave_ledger_entries, leave_balances, ledger_templates.","Others: hr_policies, hr_policy_views, announcements, notifications, two_factor_challenges, activity_logs."],
+ s:"Appendix G."},
+{id:"db2",c:"db",q:"Explain the main relationships in your ERD.",
+ a:"The users table is the center: a user belongs to one college and one department, and files many leave applications and PDS submissions. A college has many departments, and a leave application has many approval records.",
+ d:["colleges.dean_id and departments.head_id point back to users, so a user can be a Dean or a department head.","leave_applications keeps the applicant plus the Dean, HR, and Director who acted on it.","A leave application is posted as one ledger entry (one-to-one).","leave_balances is one-to-one with users.","hr_policy_views links users and policies with viewed_at and acknowledged_at.","announcements.college_id is optional: empty means campus-wide."],
+ s:"Appendix G, crow's foot notation."},
+{id:"db3",c:"db",q:"Is your database normalized?",
+ a:"Largely, yes: each entity has its own table joined by foreign keys, so a person, college, or form is stored once. A few values are copied on purpose for speed and to mirror the paper records, and we can name each one.",
+ d:["Each ledger line stores the balance after it, as the paper card does, and leave_balances holds the current balance. Both are recalculated from the entries whenever a line changes, so they cannot drift.","Each leave application keeps its current stage status and remarks for fast review-queue queries; the full decision history is in leave_approvals."]},
+{id:"db4",c:"db",q:"Why store the PDS as an uploaded workbook instead of database fields?",
+ a:"Because the requirement is the exact CS Form No. 212. Rebuilding the four-page form from fields would never match the official layout, and the CSC revises the form. Storing the filled workbook keeps it faithful and survives form revisions.",
+ d:["Each submission remembers which template version it was filled on.","The panel may see older pds_ detail tables in the database: they are from an earlier design, are not used by any screen, and can be dropped."]},
+{id:"db5",c:"db",q:"How do you prevent inconsistent data when several steps must happen together?",
+ a:"Multi-step changes run inside database transactions, so they either complete fully or not at all: ledger postings and recalculation, approval decisions, template publishing, and PDS uploads.",
+ d:["Foreign keys stop orphan records.","Validation rules reject bad input before it reaches the database."]},
+
+// ---------------------------------------------------------------- security
+{id:"se1",c:"security",q:"How do you comply with the Data Privacy Act of 2012?",
+ a:"Personal data is only visible to the roles that need it, uploaded records are kept outside the public web folder, passwords are hashed, privileged accounts need an emailed code, every connection is HTTPS, and every significant action is logged.",
+ d:["The public ID verification page shows only name, position, college, and whether the account is active.","Nightly backups are encrypted with AES-256.","Accounts are deactivated, not deleted, so records keep their history."]},
+{id:"se2",c:"security",q:"How are passwords stored?",
+ a:"Never in plain text. They are hashed with bcrypt at cost 12 through Laravel. A password must be at least 8 characters with both letters and numbers.",
+ d:["The same rule applies when HR creates an account, when a user changes a password, and on password reset.","Forgotten passwords are reset through an emailed, time-limited link."]},
+{id:"se3",c:"security",q:"How do you protect against SQL injection?",
+ a:"All database access goes through Laravel's Eloquent ORM and query builder, which bind values as parameters instead of joining them into SQL text.",
+ d:["Input is also validated before use: types, lengths, allowed values, and dates."]},
+{id:"se4",c:"security",q:"How do you protect against cross-site scripting (XSS)?",
+ a:"Blade escapes all output by default. The one place that displays formatted HTML, the policy text, is cleaned first by the Symfony HTML Sanitizer, which keeps formatting and removes scripts and event handlers.",
+ d:["Allowed: paragraphs, headings, bold, italic, lists, alignment, links.","Links are limited to http, https, and mailto and open in a new tab with rel=noopener.","We have tests with 13 attack payloads, such as script tags, onerror images, and javascript: links, and all are removed."]},
+{id:"se5",c:"security",q:"What about CSRF and session hijacking?",
+ a:"Every form carries Laravel's CSRF token, and requests without a valid token are rejected. Sessions are stored server-side in the database, expire after 120 minutes, and the session cookie is marked secure so it is sent only over HTTPS.",
+ d:["The session ID is regenerated at sign-in to prevent session fixation.","The cookie uses the SameSite=Lax setting, which also blocks most cross-site requests."]},
+{id:"se6",c:"security",q:"How do you stop brute-force attacks on the login?",
+ a:"Two layers. A rate limiter per email and IP address, and an account lock: after 5 failed attempts the account is locked for 15 minutes. Failed attempts and lockouts are written to the activity log.",
+ d:["The counter resets after a successful sign-in.","The verification-code step has its own limit: 5 wrong codes and the code is invalidated.","Password-reset requests are throttled too."],
+ s:"Enter a wrong password five times on a test account."},
+{id:"se7",c:"security",q:"Where are the uploaded files stored? Can someone open them by URL?",
+ a:"Personnel records (filled PDS, leave forms, policy attachments) are on the private disk outside the web root, and are served only through the application after a login and role check. Guessing a URL returns nothing.",
+ d:["Only blank official templates and profile photos are on the public disk; they contain no personal data.","Early uploads were moved to private storage with a dedicated command, records:secure."]},
+{id:"se8",c:"security",q:"What is logged in the activity log?",
+ a:"Sign-ins, failed sign-ins, lockouts, leave and PDS decisions, template and policy publications, account changes, and ledger corrections, each with the account, date and time, IP address, and browser.",
+ d:["A ledger correction also stores the values the line held before, so a disputed balance can be traced.","HR can filter by keyword, action, user, and date range."],
+ s:"Admin → Activity Log."},
+
+// ---------------------------------------------------------------- access (includes 2FA)
+{id:"ac1",c:"access",q:"What does 'data boundaries enforced at the query level' mean?",
+ a:"The restriction is in the database query itself, not only in which buttons appear. A Dean's review queue query only selects applications from employees of the Dean's college, so even a typed URL cannot fetch another college's record.",
+ d:["Three layers: route middleware (who may enter the admin area; some routes HR-only), controller checks (for example, only HR may approve a PDS), and query scoping (the Dean's college filter).","Reviewers never see their own application in their queue."],
+ s:"As a Dean, change the application ID in the URL to one from another college: a 403 page appears."},
+{id:"ac2",c:"access",q:"Explain your two-factor authentication.",
+ a:"After a correct password, the HR Administrator, Deans, and the Campus Director get a 6-digit code by email. It expires in 10 minutes, a new code can be requested after 60 seconds, and 5 wrong entries invalidate it.",
+ d:["The code is generated with a cryptographically secure random function and stored hashed, not in plain text.","A middleware runs on every page, so a session that passed the password but not the code cannot reach any page.","Employees sign in with a password only, because their accounts carry no approval authority."],
+ s:"Sign in as a Dean and show the countdown."},
+{id:"ac3",c:"access",q:"Why don't employees need two-factor authentication?",
+ a:"Two-factor is placed where the risk is: accounts that approve leave or manage everyone's records. An employee account only reaches that employee's own data, and a password plus lockout is proportionate for it.",
+ d:["It is a single setting in the service, so it can be extended to employees if the campus requires it."]},
+{id:"ac4",c:"access",q:"Can a Dean change an employee's college to approve their leave?",
+ a:"No. Creating or editing accounts, and managing colleges and departments, are HR-only at both the route and the controller. The college decides who signs the leave, so editing it would be granting authority.",
+ d:["Deans and the Director see the review screens, not account management."]},
+{id:"ac5",c:"access",q:"What is the Terms and Conditions checkbox for?",
+ a:"Users must accept the Terms and Conditions before signing in, so consent to how the system processes personal data is recorded at every sign-in, in line with the Data Privacy Act.",
+ d:["The terms page is reachable from the login screen.","The server rejects a sign-in without the box ticked, even if the check is removed from the page."],
+ s:"/terms"},
+
+// ---------------------------------------------------------------- pds
+{id:"pd1",c:"pds",q:"Walk us through the Personal Data Sheet process.",
+ a:"HR publishes CS Form No. 212. The employee downloads it, fills it in Excel or LibreOffice Calc, uploads it, checks the PDF preview, and submits. HR reviews it and approves or returns it with remarks. A returned sheet is corrected and resubmitted, and every version is kept.",
+ d:["The employee is notified by email and the bell at each decision.","The exported PDF is named after the employee and the year."],
+ s:"/pds as an employee, then Admin → PDS Requests."},
+{id:"pd2",c:"pds",q:"How do you know the uploaded file is really the official PDS?",
+ a:"On upload the system opens the workbook and compares its sheets with the active template. A different or renamed workbook is rejected with a message saying which sheets are missing or unexpected.",
+ d:["Only .xlsx files up to 10 MB are accepted.","A PDF, scan, or corrupted file gets a clear error rather than a crash.","The system does not verify that what the employee wrote is true; that stays with HR on review, as stated in our limitations."]},
+{id:"pd3",c:"pds",q:"What happens to old versions of the PDS?",
+ a:"They are kept. When a new file is uploaded, the previous one is archived as a revision with its outcome, remarks, reviewer, and the template version it was filled on.",
+ d:["This gives HR a history of what was returned and why."]},
+
+// ---------------------------------------------------------------- leave
+{id:"lv1",c:"leave",q:"Explain the leave approval chain.",
+ a:"It depends on who applies, because nobody signs their own leave. An employee's application goes Dean, then HR, then Campus Director. A Dean's skips the Dean stage. The Campus Director's is decided by HR alone.",
+ d:["The chain is computed from the applicant's role by one class, LeaveChain.","Skipped stages still print on the approval sheet marked N/A, so a missing signature is explained.","Each decision is recorded as a separate approval row with stage, user, action, and remarks."],
+ s:"The printed approval sheet of a Dean's own application."},
+{id:"lv2",c:"leave",q:"What happens when a reviewer returns an application?",
+ a:"The employee sees the remarks, uploads a corrected form, and the application restarts from the first stage of the chain, so everyone reviews the corrected version.",
+ d:["All previous stage decisions are cleared on resubmission and the event is logged."]},
+{id:"lv3",c:"leave",q:"How are leave days counted?",
+ a:"The system counts weekdays between the start and end dates, inclusive. Holidays are not deducted automatically; HR adjusts on the ledger when needed.",
+ d:["This is a known limitation worth stating honestly if asked about holidays."]},
+{id:"lv4",c:"leave",q:"What if an employee files more leave than their balance?",
+ a:"The system warns but does not block, because HR may still approve leave without pay. Final balances are reconciled by HR on the ledger after approval.",
+ d:["Balances are shown on the My Leave page before filing."]},
+{id:"lv5",c:"leave",q:"Which leave types are supported?",
+ a:"Vacation leave and sick leave. Other leave types, such as maternity or special privilege leave, continue to be processed manually, as stated in our scope.",
+ d:["The approval chain and form upload would work the same way for more types; adding them is future work."]},
+{id:"lv6",c:"leave",q:"How do reviewers read the leave form without Excel?",
+ a:"The uploaded form is converted to PDF on the server and opens in the browser, so a Dean can review it on a phone.",
+ d:["The employee may upload the form as .xlsx, .xls, .doc, .docx, or PDF, up to 10 MB."]},
+
+// ---------------------------------------------------------------- ledger
+{id:"lg1",c:"ledger",q:"What are the two ledger cards?",
+ a:"The leave ledger card records vacation and sick leave credits earned, used, and the running balance. The service credit ledger card records credits earned outside regular accrual, such as election duty or enrolment work, and the days charged against them.",
+ d:["HR decides which card an approved leave is charged to.","The leave card uses 2 decimal places and the service credit card 3, following the campus forms.","Both print on A4 in the layout of the official card."],
+ s:"Admin → Ledger Cards → an employee."},
+{id:"lg2",c:"ledger",q:"If HR corrects a line in the middle of the card, what happens to the balances below it?",
+ a:"Every balance after that line is recalculated automatically. The system replays all entries in date order inside a transaction, so the card always adds up.",
+ d:["Each line stores the balance as it stood after it, like the paper card.","The correction is logged with the old values."],
+ s:"Correct an earned credit on a sample card and watch later balances change."},
+{id:"lg3",c:"ledger",q:"How are monthly leave credits posted?",
+ a:"HR posts the credits for a period to one employee or to all personnel in one action. Anyone already credited for that period is skipped, so nobody is credited twice.",
+ d:["HR enters the VL, SL, or service amounts; the system does not compute credits from attendance or biometrics (a stated limitation)."]},
+{id:"lg4",c:"ledger",q:"Can employees edit their ledger?",
+ a:"No. Only HR can post, correct, or remove ledger lines. The Campus Director can view every card, and employees and Deans can view only their own.",
+ d:["The permission is checked in the controller, not just hidden in the interface."]},
+
+// ---------------------------------------------------------------- docs
+{id:"dc1",c:"docs",q:"How does the system produce PDFs that look exactly like the official forms?",
+ a:"It converts the actual Excel workbook with LibreOffice on the server instead of rebuilding the form from database values. The merged cells, borders, check boxes, and print areas come from the real file.",
+ d:["Each conversion gets its own temporary LibreOffice profile, so simultaneous conversions don't lock each other out.","A stuck conversion is stopped after 120 seconds.","Results are cached by a hash of the file, so an unchanged workbook is converted once."]},
+{id:"dc2",c:"docs",q:"What if LibreOffice fails or is not installed?",
+ a:"The system falls back to a built-in PHP renderer based on PhpSpreadsheet and Dompdf. If a form still cannot be reproduced completely, it gives the original workbook instead of an incomplete PDF, because a half-rendered official form is worse than none.",
+ d:["The renderer is chosen automatically, or set with PDF_RENDERER in the configuration."]},
+{id:"dc3",c:"docs",q:"Why must employees use desktop Excel or LibreOffice Calc?",
+ a:"Google Sheets, Excel on the web, WPS, and phone spreadsheet apps remove the form's check boxes when they save. The PDS and leave pages warn employees about this.",
+ d:["We confirmed LibreOffice Calc keeps all the check boxes of the template.","This is listed under limitations."]},
+{id:"dc4",c:"docs",q:"How do form templates and versions work?",
+ a:"Each upload of a blank form becomes a new numbered version with a SHA-256 checksum. Activating a version retires the previous one instead of overwriting it, and the active version cannot be deleted.",
+ d:["Covers CS Form No. 212 (PDS), CS Form No. 6 (leave), and the ledger card.","HR can preview a version as PDF before activating it."],
+ s:"Admin → Form Templates."},
+
+// ---------------------------------------------------------------- modules
+{id:"md1",c:"modules",q:"How does acknowledgment tracking for policies work?",
+ a:"When HR marks a policy as requiring acknowledgment, the system records when each person views it and when they click Acknowledge. HR sees who has and hasn't acknowledged, and the dashboard shows the latest policy's progress.",
+ d:["Policies can be formatted text, a file (PDF, Word, PowerPoint), or a link.","They have an effective date, an optional expiry date, and can be pinned or unpublished."],
+ s:"Admin → HR Policies → Compliance."},
+{id:"md2",c:"modules",q:"How does the digital ID's QR code work? Can it be faked?",
+ a:"The QR code holds a link with a random 40-character token unique to the employee. Scanning it opens a public page confirming the holder's name, position, college, and whether the account is active.",
+ d:["The token is unguessable, so the page cannot be used to list staff.","It shows no email, contact number, employee number, balances, or PDS data.","A deactivated employee's card shows as inactive, so a copied card of a former employee is caught."],
+ s:"Scan the QR code on /my-id with a phone."},
+{id:"md3",c:"modules",q:"Can announcements target a specific college?",
+ a:"Yes. HR posts an announcement to the whole campus or to one college, and only those users are notified by email and the bell.",
+ d:[]},
+{id:"md4",c:"modules",q:"What reports can the system generate?",
+ a:"The leave balances of all personnel as PDF or Excel, the employee directory as PDF following the on-screen filter, the monthly leave calendar as PDF, individual ledger cards, and the leave approval sheet.",
+ d:["Every file is named after the person or period it covers, for example the employee's name and 'Ledger Card'."]},
+{id:"md5",c:"modules",q:"Who can see the leave calendar?",
+ a:"HR and the Campus Director see the whole campus and can narrow the view to one college; a Dean sees only their college. It shows approved and pending leave by month and can be filtered by leave type.",
+ d:[]},
+
+// ---------------------------------------------------------------- testing
+{id:"ts1",c:"testing",q:"How did you test the system?",
+ a:"Two ways: 530 automated tests with PHPUnit that run after every change, all passing, and browser-based testing of every screen under each of the four roles on desktop and phone widths.",
+ d:["Automated tests cover sign-in and two-factor, role boundaries, the approval chain, ledger recalculation, document conversion, policy sanitization, and file confidentiality.","The browser runs checked 51 screens and 16 downloads, clicked 105 controls, and walked full flows: leave through all three stages and the PDS return-and-resubmit cycle.","We also tested the interface with the CDN blocked, to confirm the page still works."]},
+{id:"ts2",c:"testing",q:"Give an example of a bug your testing caught.",
+ a:"One wrong verification code made the correct code expire. The database silently reset the expiry time whenever the attempt counter was updated. We found it through browser testing on MariaDB, fixed it with a migration, and added a test so it cannot return.",
+ d:["Another: the verification code countdown on the sign-in screen was frozen; it now counts down live.","Another: script saved inside a policy would have run in readers' browsers; policy text is now sanitized."]},
+{id:"ts3",c:"testing",q:"What is the difference between your unit/feature tests and your TAM evaluation?",
+ a:"The tests verify the system works correctly: functionality, security, and rules. The TAM evaluation measures whether users accept it: perceived usefulness and perceived ease of use.",
+ d:[]},
+{id:"ts4",c:"testing",q:"Did you do performance or load testing?",
+ a:"Not formal load testing. The expected load is about 144 users with light traffic, which a 1-CPU, 4 GB server handles comfortably. The heaviest operation, PDF conversion, is cached so a form is converted once.",
+ d:["State this plainly as a limitation if asked; stress testing is future work."]},
+
+// ---------------------------------------------------------------- deploy
+{id:"dp1",c:"deploy",q:"Where and how is the system deployed?",
+ a:"On a Hostinger KVM 1 virtual private server: Ubuntu 24.04 LTS, Nginx, PHP 8.3, MariaDB, and LibreOffice, with a free Let's Encrypt certificate for HTTPS.",
+ d:["1 virtual CPU, 4 GB RAM, 50 GB storage.","Runs under a non-root user with the UFW firewall allowing only web and SSH traffic.","Production has debug mode off and cached configuration.","The step-by-step guide is in docs/DEPLOYMENT-HOSTINGER-VPS.md."]},
+{id:"dp2",c:"deploy",q:"Why a VPS and not shared hosting?",
+ a:"PDF conversion of the official forms needs LibreOffice, which shared hosting does not allow you to install. A VPS gives full control of the software and still costs little.",
+ d:[]},
+{id:"dp3",c:"deploy",q:"What is your backup and recovery plan?",
+ a:"A nightly scheduled job at 2 a.m. writes one AES-256 encrypted archive of the database and all uploaded records, keeps a set number of recent archives, and can send a copy off the server.",
+ d:["The plain database dump is deleted as soon as the encrypted archive is made.","A backup kept only on the same server is not a real backup, so the off-site copy matters."],
+ s:"php artisan backup:run"},
+{id:"dp4",c:"deploy",q:"How are emails sent?",
+ a:"Through an SMTP mail service configured on the server, from the HR Office address. All messages use one formal layout with the institution's name.",
+ d:["A mail:test command checks the settings before go-live.","If sending the verification code fails, the code is cancelled and the user is told, rather than left waiting."]},
+{id:"dp5",c:"deploy",q:"How will the system be maintained after you graduate?",
+ a:"It uses a mainstream framework with documentation, database changes are migrations, the business rules are in named service classes, and the 530 tests show a future developer at once if a change breaks something.",
+ d:["Deployment and backup are documented step by step.","Form changes by the CSC need no code: HR uploads a new template version."]},
+
+// ---------------------------------------------------------------- diagrams
+{id:"dg1",c:"diagrams",q:"What notation did you use for your DFDs, and what do the symbols mean?",
+ a:"Gane and Sarson. Squares with a shaded edge are external entities (the four roles), rounded rectangles are numbered processes, open-ended rectangles are data stores (D1 to D10), and arrows are named data flows.",
+ d:["A diagonal mark on an entity, or an extra line on a store, means it is drawn again to avoid crossing lines."]},
+{id:"dg2",c:"diagrams",q:"What is the difference between your Context Diagram and Level 1 DFD?",
+ a:"The context diagram (Level 0) shows the whole system as one process exchanging data with the four roles. Level 1 breaks it into nine processes and shows the ten data stores they read and write.",
+ d:["The nine processes: authenticate user; manage accounts, profiles and digital ID; publish form templates; process PDS; process leave; manage ledger cards; publish announcements and policies; generate dashboards and calendar; monitor activity log."],
+ s:"Appendices E and F."},
+{id:"dg3",c:"diagrams",q:"Why are the Dean and Campus Director connected to Employee with a hollow arrow in the use case diagram?",
+ a:"That is UML generalization: the Dean and the Campus Director are also employees and can do everything an employee can, like filing their own leave and PDS, plus their own review functions.",
+ d:["The use cases are named after each role's sidebar menu items."],
+ s:"Appendix D."},
+{id:"dg4",c:"diagrams",q:"Read the flow chart of the developed system.",
+ a:"Open the sign-in page, enter email and password, and tick the terms. The system checks terms, lock status, credentials, and active status; any failure returns to sign-in. HR, Deans, and the Director then verify the emailed code. The user is routed to their role's dashboard and works until logging out.",
+ d:[],
+ s:"Appendix H."},
+
+// ---------------------------------------------------------------- method
+{id:"mt1",c:"method",q:"Why did you use the RAD model?",
+ a:"The requirements were clear and the system splits into modules, so RAD let us build and test each module in turn with the HR Administrator's feedback before moving on, instead of waiting until the end to show anything.",
+ d:["Phases: requirements planning, user design, construction, cutover.","User design and construction loop: prototype, test, refine."],
+ s:"Figure 2."},
+{id:"mt2",c:"method",q:"Show how you computed your sample size.",
+ a:"With Slovin's formula: n = N ÷ (1 + N·e²) = 142 ÷ (1 + 142 × 0.05²) = 142 ÷ 1.355 = 104.8, rounded up to 105 employees.",
+ d:["Plus 2 HR personnel by total enumeration, for 107 respondents.","Employees were chosen by simple random sampling."]},
+{id:"mt3",c:"method",q:"Why TAM, and what are its two constructs?",
+ a:"TAM (Davis, 1989) is the most widely validated model for whether people will accept a new information system. Its two constructs are perceived usefulness, whether it improves the job, and perceived ease of use, whether it is free of effort.",
+ d:["Rated on a 5-point Likert scale, interpreted by mean ranges: 4.21–5.00 Strongly Agree, 3.41–4.20 Agree, 2.61–3.40 Neutral, 1.81–2.60 Disagree, 1.00–1.80 Strongly Disagree."]},
+{id:"mt4",c:"method",q:"Why the Wilcoxon Signed-Rank Test and not a t-test?",
+ a:"The same respondents rated both the manual process and NexHRIS, so the data are paired, and Likert ratings are ordinal, not interval. Wilcoxon is the non-parametric test for paired ordinal data; a paired t-test assumes normally distributed interval data.",
+ d:["Significance level 0.05: if p < 0.05, reject the null hypothesis of no difference."]},
+{id:"mt5",c:"method",q:"State your hypothesis and how you will decide on it.",
+ a:"H₀: there is no significant difference between the manual process and NexHRIS in perceived usefulness and perceived ease of use. We reject it for a construct when the Wilcoxon p-value is below 0.05.",
+ d:[]},
+
+// ---------------------------------------------------------------- limits
+{id:"lm1",c:"limits",q:"What are the limitations of the system?",
+ a:"It does not digitize the whole 201 file, read or verify form contents, compute credits from attendance, or handle leave types other than vacation and sick leave. It needs internet, has no mobile app, and does not connect to CSC, GSIS, or DBM systems.",
+ d:["Forms must be filled in desktop Excel or LibreOffice Calc.","Holidays are not deducted automatically from leave days.","Single campus only; the ID card has no RFID."]},
+{id:"lm2",c:"limits",q:"What would you add next?",
+ a:"More leave types with a holiday calendar, automatic monthly accrual, integration with the biometric attendance system, a mobile app, and multi-campus support.",
+ d:["Also: off-site backup to cloud storage, and formal load testing before a campus-wide rollout."]},
+
+// ---------------------------------------------------------------- curve
+{id:"cv1",c:"curve",q:"What happens if the server goes down?",
+ a:"Users cannot reach the system until it is back, which is why we listed internet dependence as a limitation. No data is lost: the database is on disk and there is a nightly encrypted backup to restore from.",
+ d:["The HR Office can fall back to the manual process during an outage."]},
+{id:"cv2",c:"curve",q:"What if the HR Administrator's account is compromised?",
+ a:"The attacker would need both the password and access to the HR email for the code. Every action is logged with the IP address, so misuse is traceable, and the password can be reset at once.",
+ d:["Lockout after 5 failed attempts slows password guessing."]},
+{id:"cv3",c:"curve",q:"Two HR users edit the same ledger at the same time. What happens?",
+ a:"Each change is saved in a transaction and the balances are recalculated from all entries every time, so the final card is always consistent with the lines on it.",
+ d:["The last correction saved to the same line wins, and both are recorded in the activity log."]},
+{id:"cv4",c:"curve",q:"Why not just use Google Forms and Google Drive?",
+ a:"Google Forms cannot reproduce the official CS forms, route an approval chain by rank, keep running-balance ledger cards, or restrict records by college. And personnel data would sit in personal accounts outside the campus's control.",
+ d:["Google Sheets also strips the form's check boxes, which we verified."]},
+{id:"cv5",c:"curve",q:"How is this 'smart' and 'next-generation'?",
+ a:"It derives the approval route from the applicant's role, recalculates ledgers automatically, preserves official forms by converting the actual file, protects privileged accounts with two-factor verification, and gives each role a live dashboard. It does not claim artificial intelligence.",
+ d:["Say this carefully: smart means automated rules and decisions, not AI."]},
+{id:"cv6",c:"curve",q:"Can the system scale to all ISPSC campuses?",
+ a:"Not as built: it is single-campus by design. The structure would carry over, with colleges grouped under campuses and a campus level in the access rules, plus a larger server.",
+ d:[]}
+];
+
+// ---------------------------------------------------------------- UI
+const $ = s => document.querySelector(s);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+let ready = new Set(store.get("nexhris-reviewer-ready", []));
+let mode = store.get("nexhris-reviewer-mode", "read");
+let cat = "all";
+let query = "";
+let onlyNotReady = false;
+const revealed = new Set();
+
+function esc(t){ return t.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function hi(t){
+  const safe = esc(t);
+  if(!query) return safe;
+  const q = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return safe.replace(new RegExp("(" + esc(q) + ")", "ig"), "<mark>$1</mark>");
+}
+function matches(x){
+  if(cat !== "all" && x.c !== cat) return false;
+  if(onlyNotReady && ready.has(x.id)) return false;
+  if(!query) return true;
+  const hay = (x.q + " " + x.a + " " + x.d.join(" ") + " " + (x.s || "")).toLowerCase();
+  return hay.includes(query.toLowerCase());
+}
+
+function renderChips(){
+  const counts = {};
+  QA.forEach(x => counts[x.c] = (counts[x.c] || 0) + 1);
+  const items = [["all","All topics", QA.length]].concat(CATS.map(([k, n]) => [k, n, counts[k] || 0]));
+  $("#chips").innerHTML = items.map(([k, n, c]) =>
+    `<button type="button" class="chip" data-cat="${k}" aria-pressed="${cat === k}">${esc(n)}<span class="n">${c}</span></button>`
+  ).join("");
+}
+
+function renderList(){
+  let html = "";
+  let shown = 0;
+  CATS.forEach(([k, name]) => {
+    const rows = QA.filter(x => x.c === k && matches(x));
+    if(!rows.length) return;
+    shown += rows.length;
+    html += `<section class="section" aria-labelledby="h-${k}">
+      <div class="sec-head"><h2 id="h-${k}">${esc(name)}</h2>
+      <div class="owner">Best answered by <b>${esc(OWNERS[k])}</b></div></div><div class="cards">`;
+    rows.forEach(x => {
+      const isReady = ready.has(x.id);
+      const hidden = mode === "quiz" && !revealed.has(x.id);
+      html += `<article class="card${isReady ? " is-ready" : ""}" id="card-${x.id}">
+        <div class="q-row"><h3 class="q">${hi(x.q)}</h3>
+          <button type="button" class="ready" data-ready="${x.id}" aria-pressed="${isReady}">${isReady ? "Ready" : "Mark ready"}</button></div>`;
+      if(hidden){
+        html += `<button type="button" class="reveal" data-reveal="${x.id}">Answer it out loud, then show the answer</button>`;
+      } else {
+        html += `<p class="say">${hi(x.a)}</p>`;
+        if(x.d.length){
+          html += `<details class="more"${query ? " open" : ""}><summary>If they dig deeper</summary><ul>${x.d.map(li => `<li>${hi(li)}</li>`).join("")}</ul></details>`;
+        }
+        if(x.s){ html += `<div class="show"><b>Show</b><span class="mono">${hi(x.s)}</span></div>`; }
+      }
+      html += `</article>`;
+    });
+    html += `</div></section>`;
+  });
+  $("#list").innerHTML = html;
+  $("#empty").hidden = shown > 0;
+}
+
+function renderProgress(){
+  const total = QA.length;
+  const n = QA.filter(x => ready.has(x.id)).length;
+  $("#readyCount").textContent = n;
+  $("#totalCount").textContent = total;
+  $("#readyBar").style.width = (total ? n / total * 100 : 0) + "%";
+}
+
+function renderMode(){
+  $("#modeRead").setAttribute("aria-pressed", mode === "read");
+  $("#modeQuiz").setAttribute("aria-pressed", mode === "quiz");
+}
+
+function all(){ renderChips(); renderList(); renderProgress(); renderMode(); }
+
+document.addEventListener("click", e => {
+  const chip = e.target.closest("[data-cat]");
+  if(chip){ cat = chip.dataset.cat; renderChips(); renderList(); return; }
+  const r = e.target.closest("[data-ready]");
+  if(r){
+    const id = r.dataset.ready;
+    ready.has(id) ? ready.delete(id) : ready.add(id);
+    store.set("nexhris-reviewer-ready", [...ready]);
+    const card = document.getElementById("card-" + id);
+    const on = ready.has(id);
+    r.setAttribute("aria-pressed", on); r.textContent = on ? "Ready" : "Mark ready";
+    card && card.classList.toggle("is-ready", on);
+    renderProgress();
+    if(onlyNotReady) renderList();
+    return;
+  }
+  const rv = e.target.closest("[data-reveal]");
+  if(rv){ revealed.add(rv.dataset.reveal); renderList(); const c = document.getElementById("card-" + rv.dataset.reveal); c && c.querySelector(".say") && c.querySelector(".ready").focus(); }
+});
+$("#modeRead").addEventListener("click", () => { mode = "read"; store.set("nexhris-reviewer-mode", mode); renderMode(); renderList(); });
+$("#modeQuiz").addEventListener("click", () => { mode = "quiz"; revealed.clear(); store.set("nexhris-reviewer-mode", mode); renderMode(); renderList(); });
+$("#q").addEventListener("input", e => { query = e.target.value.trim(); renderList(); });
+$("#notReady").addEventListener("change", e => { onlyNotReady = e.target.checked; renderList(); });
+
+all();
+</script>

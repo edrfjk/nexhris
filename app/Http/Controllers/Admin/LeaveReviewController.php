@@ -230,7 +230,13 @@ class LeaveReviewController extends Controller
     /** Reviewers print the same approval sheet the employee gets. */
     public function printApproved(LeaveApplication $application)
     {
-        abort_unless(auth()->user()->isReviewer(), 403);
+        $reviewer = auth()->user();
+
+        abort_unless($reviewer->isReviewer(), 403);
+        if ($reviewer->isDean()) {
+            abort_unless($this->workflow->deanCoversEmployee($reviewer, $application->user), 403,
+                'This employee is not registered under your program.');
+        }
         abort_unless($application->isFullyApproved(), 403,
             'This form is not fully approved yet.');
 

@@ -14,7 +14,7 @@
 </x-page-header>
 
 <form method="POST" action="{{ route('admin.employees.update', $employee) }}"
-      class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      enctype="multipart/form-data" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
     @csrf @method('PUT')
 
     {{-- Left: whose record this is. Editing a form with no name on it is how
@@ -53,9 +53,12 @@
                 </div>
             </div>
 
-            <p class="hint mt-5 leading-relaxed">
-                The photo is changed from the employee's own page, under Digital ID.
-            </p>
+            <div class="mt-5 border-t border-sand-100 pt-5 text-left">
+                <label class="label">Profile Photo <span class="font-normal text-sand-400">(optional)</span></label>
+                <input type="file" name="photo" accept="image/*" class="file-input w-full text-xs">
+                <p class="hint mt-1">JPG or PNG, maximum 2 MB. Leave blank to keep the current photo.</p>
+                @error('photo') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+            </div>
         </div>
     </div>
 
@@ -72,7 +75,8 @@
             <div class="space-y-6 p-6">
                 <div>
                     <p class="section-label mb-3">Identity</p>
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    @php($ledgerName = $employee->nameParts())
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <div>
                             <label class="label">Employee Number</label>
                             <input type="text" name="employee_number"
@@ -81,10 +85,17 @@
                             @error('employee_number') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                         </div>
                         <div>
-                            <label class="label">Full Name</label>
-                            <input type="text" name="name" value="{{ old('name', $employee->name) }}"
-                                   class="input @error('name') input-error @enderror">
-                            @error('name') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                            <label class="label">First Name</label>
+                            <input type="text" name="first_name" value="{{ old('first_name', $employee->first_name ?: $ledgerName['first']) }}" class="input @error('first_name') input-error @enderror">
+                        </div>
+                        <div>
+                            <label class="label">Middle Name</label>
+                            <input type="text" name="middle_name" value="{{ old('middle_name', $employee->middle_name) }}" class="input">
+                            <span class="hint">Optional; the ledger uses its initial.</span>
+                        </div>
+                        <div>
+                            <label class="label">Last Name</label>
+                            <input type="text" name="last_name" value="{{ old('last_name', $employee->last_name ?: $ledgerName['family']) }}" class="input @error('last_name') input-error @enderror">
                         </div>
                     </div>
                 </div>
@@ -110,11 +121,10 @@
                 <div class="border-t border-sand-100 pt-5">
                     <p class="section-label mb-3">Employment</p>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <label class="label">Position</label>
-                            <input type="text" name="position" value="{{ old('position', $employee->position) }}"
-                                   class="input">
-                        </div>
+                        @include('admin.employees.partials.position-fields', [
+                            'selectedPosition' => old('position', $employee->position),
+                            'positionFieldId' => 'edit-employee',
+                        ])
 
                         <div>
                             <label class="label">System Role</label>
@@ -134,7 +144,11 @@
                             <span class="hint">Printed on the leave ledger card.</span>
                         </div>
 
-                        @include('admin.employees.partials.college-program-fields', ['employee' => $employee])
+                        @include('admin.employees.partials.college-program-fields', [
+                            'employee' => $employee,
+                            'organizationFieldId' => 'edit-employee',
+                            'positionFieldId' => 'edit-employee',
+                        ])
                     </div>
                 </div>
 
