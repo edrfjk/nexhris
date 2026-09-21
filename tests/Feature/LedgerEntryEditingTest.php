@@ -115,6 +115,19 @@ class LedgerEntryEditingTest extends TestCase
         $this->assertEqualsWithDelta(5.0, (float) $this->employee->leaveBalance->fresh()->vl_balance, 0.001);
     }
 
+    public function test_a_correction_that_would_make_the_balance_negative_is_rejected(): void
+    {
+        $entry = $this->line();
+
+        $this->correct($entry, ['vl_earned' => 0, 'vl_used' => 2])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertEqualsWithDelta(1.25, (float) $entry->fresh()->vl_earned, 0.001);
+        $this->assertEqualsWithDelta(0.0, (float) $entry->fresh()->vl_used, 0.001);
+        $this->assertEqualsWithDelta(1.25, (float) $this->employee->leaveBalance->fresh()->vl_balance, 0.001);
+    }
+
     public function test_removing_a_line_replays_the_card(): void
     {
         $first = $this->line();
@@ -129,6 +142,21 @@ class LedgerEntryEditingTest extends TestCase
         // The surviving line is now the whole card.
         $this->assertEqualsWithDelta(1.25, (float) $second->fresh()->vl_balance, 0.001);
         $this->assertEqualsWithDelta(1.25, (float) $this->employee->leaveBalance->fresh()->vl_balance, 0.001);
+    }
+
+    public function test_an_earned_line_needed_by_later_leave_cannot_be_removed(): void
+    {
+        $earned = $this->line();
+        $used = $this->line(['vl_earned' => 0, 'sl_earned' => 0, 'vl_used' => 1]);
+
+        $this->actingAs($this->hr)
+            ->delete(route('admin.leave.ledger.entry.destroy', $earned))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('leave_ledger_entries', ['id' => $earned->id]);
+        $this->assertDatabaseHas('leave_ledger_entries', ['id' => $used->id]);
+        $this->assertEqualsWithDelta(0.25, (float) $this->employee->leaveBalance->fresh()->vl_balance, 0.001);
     }
 
     public function test_a_correction_reaches_the_printed_card(): void

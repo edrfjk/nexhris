@@ -63,7 +63,20 @@ class AnnouncementController extends Controller
     {
         abort_unless($request->user()->isAdmin(), 403);
 
-        $announcement->update($this->validated($request));
+        $data = $this->validated($request);
+        $wasPublished = $announcement->is_published;
+        $willBePublished = (bool) ($data['is_published'] ?? false);
+
+        // A draft becomes new to staff only when it is published. Clearing
+        // this timestamp when it returns to draft makes publishing it later
+        // place it correctly at the top of the feed.
+        if (! $wasPublished && $willBePublished) {
+            $data['published_at'] = now();
+        } elseif (! $willBePublished) {
+            $data['published_at'] = null;
+        }
+
+        $announcement->update($data);
 
         $this->log->log('announcement.updated',
             "Updated announcement \"{$announcement->title}\".", $announcement);

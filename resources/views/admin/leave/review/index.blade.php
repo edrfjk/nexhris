@@ -47,7 +47,7 @@
      Filters
      ------------------------------------------------------------------ --}}
 @php
-    $typeLabels = ['VL' => 'Vacation Leave', 'SL' => 'Sick Leave'];
+    $typeLabels = \App\Models\LeaveApplication::TYPES;
     $allDepartments = $colleges->pluck('activeDepartments')->flatten();
 
     $chips = [
@@ -142,7 +142,7 @@
                             </td>
                             <td>
                                 <x-badge :color="$application->leave_type === 'VL' ? 'blue' : 'purple'">
-                                    {{ $application->leave_type === 'VL' ? 'Vacation' : 'Sick' }}
+                                    {{ $application->typeLabel() }}
                                 </x-badge>
                             </td>
                             <td class="whitespace-nowrap">
@@ -211,7 +211,7 @@
                     <div class="min-w-0">
                         <p class="text-sm font-medium text-sand-800 truncate">{{ $application->user->name }}</p>
                         <p class="text-xs text-sand-400">
-                            {{ $application->leave_type === 'VL' ? 'Vacation' : 'Sick' }} leave ·
+                            {{ $application->typeLabel() }} ·
                             {{ $application->date_from?->format('M j, Y') }}
                         </p>
                     </div>

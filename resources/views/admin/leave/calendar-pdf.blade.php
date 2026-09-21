@@ -16,8 +16,9 @@
         table.cal td.blank { background: #fafafa; }
         .day-num { font-weight: bold; font-size: 10px; color: #374151; margin-bottom: 3px; }
         .entry { font-size: 8px; padding: 1px 3px; border-radius: 3px; margin-bottom: 1px; display: block; }
-        .entry.vl { background: #dbeafe; color: #1d4ed8; }
-        .entry.sl { background: #dcfce7; color: #15803d; }
+        /* This export contains fully approved leaves only. Keep its status
+           colour aligned with the on-screen calendar. */
+        .entry.approved { background: #dcfce7; color: #15803d; }
         .legend { margin-bottom: 10px; font-size: 9px; color: #6b7280; }
         .legend span { margin-right: 14px; }
         .legend-dot { display: inline-block; width: 8px; height: 8px; margin-right: 4px; }
@@ -31,8 +32,7 @@
     ])
 
     <div class="legend">
-        <span><span class="legend-dot" style="background:#1d4ed8;"></span>Vacation Leave</span>
-        <span><span class="legend-dot" style="background:#15803d;"></span>Sick Leave</span>
+        <span><span class="legend-dot" style="background:#15803d;"></span>Approved Leave</span>
     </div>
 
     <table class="cal">
@@ -61,7 +61,7 @@
                             <td>
                                 <div class="day-num">{{ $dateObj->day }}</div>
                                 @foreach ($apps as $app)
-                                    <span class="entry {{ strtolower($app->leave_type) }}">{{ Str::limit($app->user->name, 14) }}</span>
+                                    <span class="entry approved">{{ Str::limit($app->user->name, 14) }} · {{ $app->typeLabel() }}</span>
                                 @endforeach
                             </td>
                         @endif

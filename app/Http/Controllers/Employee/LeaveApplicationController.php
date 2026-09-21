@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\XlsxToPdfService;
 use App\Support\DocumentName;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class LeaveApplicationController extends Controller
 {
@@ -85,7 +86,7 @@ class LeaveApplicationController extends Controller
     public function store(Request $request, LeaveWorkflowService $workflow)
     {
         $data = $request->validate([
-            'leave_type' => ['required', 'in:VL,SL'],
+            'leave_type' => ['required', \Illuminate\Validation\Rule::in(array_keys(LeaveApplication::TYPES))],
             'date_from' => ['required', 'date'],
             'date_to' => ['required', 'date', 'after_or_equal:date_from'],
             'reason' => ['nullable', 'string', 'max:500'],
@@ -107,7 +108,8 @@ class LeaveApplicationController extends Controller
             ? ($balance->vl_balance ?? 0)
             : ($balance->sl_balance ?? 0));
 
-        $shortfall = $days > $available ? round($days - $available, 2) : 0;
+        $shortfall = in_array($data['leave_type'], ['VL', 'SL'], true) && $days > $available
+            ? round($days - $available, 2) : 0;
 
         // Stamp the template version in force at submission, so the form can
         // still be read against the exact blank the employee downloaded.
@@ -121,17 +123,36 @@ class LeaveApplicationController extends Controller
             'date_to' => $data['date_to'],
             'reason' => $data['reason'] ?? null,
             'days' => $days,
-            'status' => 'submitted',
+            // Save the correct first stage immediately. If later audit or
+            // notification work fails, a Dean's form must not remain in the
+            // Dean queue by mistake.
+            'status' => $workflow->chain()->initialStatus($request->user()),
             'file_path' => $file->store('leave-applications', 'local'),
             'file_original_name' => $file->getClientOriginalName(),
             'uploaded_at' => now(),
         ]);
 
-        // The chain decides where this starts, based on who is applying.
-        $workflow->submit($application);
+        // The file and leave record now exist. Routing, audit logging and
+        // reviewer notifications are important, but an outage in one of
+        // those follow-up services must never turn a successful submission
+        // into a misleading 500 page that invites the employee to submit the
+        // same form again.
+        try {
+            $workflow->submit($application);
+            $nextStage = $application->fresh()->currentStage();
+            $nextLabel = $nextStage ? \App\Services\LeaveChain::LABELS[$nextStage] : 'review';
+        } catch (\Throwable $e) {
+            report($e);
+            Log::error('Leave form saved, but its follow-up routing failed.', [
+                'leave_application_id' => $application->id,
+                'user_id' => $application->user_id,
+                'error' => $e->getMessage(),
+            ]);
 
-        $nextStage = $application->fresh()->currentStage();
-        $nextLabel = $nextStage ? \App\Services\LeaveChain::LABELS[$nextStage] : 'review';
+            return back()
+                ->with('success', 'Your leave form was saved successfully.')
+                ->with('warning', 'The reviewer notification could not be completed right now. Do not submit the form again; HR can still find the saved form in the leave queue.');
+        }
 
         $message = "Leave form submitted ({$days} working day(s)). It is now with the {$nextLabel}.";
 
@@ -181,7 +202,10 @@ class LeaveApplicationController extends Controller
 
         $workflow->resetForResubmission($application);
 
-        return back()->with('success', 'Corrected form uploaded. It is back with your Dean for review.');
+        $nextStage = $application->fresh()->currentStage();
+        $nextLabel = $nextStage ? \App\Services\LeaveChain::LABELS[$nextStage] : 'reviewer';
+
+        return back()->with('success', "Corrected form uploaded. It is now with the {$nextLabel} for review.");
     }
 
     /**

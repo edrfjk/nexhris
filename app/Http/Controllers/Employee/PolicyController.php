@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Models\HrPolicy;
 use App\Models\HrPolicyView;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PolicyController extends Controller
 {
@@ -59,10 +61,7 @@ class PolicyController extends Controller
     {
         abort_unless($policy->is_published, 404);
 
-        HrPolicyView::firstOrCreate(
-            ['hr_policy_id' => $policy->id, 'user_id' => Auth::id()],
-            ['viewed_at' => now()]
-        );
+        $this->recordView($policy);
 
         $myView = HrPolicyView::where('hr_policy_id', $policy->id)->where('user_id', Auth::id())->first();
 
@@ -80,13 +79,24 @@ class PolicyController extends Controller
     {
         abort_unless($policy->requires_acknowledgment, 404);
 
-        $view = HrPolicyView::firstOrCreate(
-            ['hr_policy_id' => $policy->id, 'user_id' => Auth::id()],
-            ['viewed_at' => now()]
-        );
+        $view = $this->recordView($policy);
 
         $view->update(['acknowledged_at' => now()]);
 
         return back()->with('success', 'Thank you — your acknowledgment has been recorded.');
+    }
+
+    /** Create the one policy-view row safely when two tabs load together. */
+    private function recordView(HrPolicy $policy): HrPolicyView
+    {
+        return DB::transaction(function () use ($policy) {
+            $userId = Auth::id();
+            User::whereKey($userId)->lockForUpdate()->firstOrFail();
+
+            return HrPolicyView::firstOrCreate(
+                ['hr_policy_id' => $policy->id, 'user_id' => $userId],
+                ['viewed_at' => now()],
+            );
+        });
     }
 }

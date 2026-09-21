@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Announcement;
 use App\Models\User;
+use App\Notifications\AnnouncementPosted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -183,6 +185,24 @@ class SidebarNavigationTest extends TestCase
             $this->assertStringNotContainsString($adminOnly, $nav,
                 "An employee is offered the {$adminOnly} link.");
         }
+    }
+
+    public function test_an_employee_dashboard_opens_with_an_unread_announcement(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee', 'status' => 'active']);
+        $announcement = Announcement::create([
+            'title' => 'Unread campus notice',
+            'body' => 'Please read this notice.',
+            'is_published' => true,
+            'published_at' => now(),
+        ]);
+
+        $employee->notify(new AnnouncementPosted($announcement));
+
+        $this->actingAs($employee)
+            ->get(route('employee.dashboard'))
+            ->assertOk()
+            ->assertSee('Announcements');
     }
 
     public function test_a_dean_is_not_offered_other_peoples_ledger_cards(): void

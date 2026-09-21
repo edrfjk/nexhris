@@ -53,6 +53,15 @@ class EmployeeLedgerService
         }
 
         return DB::transaction(function () use ($employee, $master, $ledger) {
+            // Serialise first-time setup for one employee. Otherwise two
+            // requests can both see no row and race the unique user_id key.
+            User::whereKey($employee->id)->lockForUpdate()->firstOrFail();
+
+            $ledger = EmployeeLedger::where('user_id', $employee->id)->first();
+            if ($ledger && $ledger->exists()) {
+                return $ledger;
+            }
+
             $path = self::DIRECTORY . '/ledger_' . $employee->id . '.xlsx';
 
             Storage::disk('local')->put(

@@ -103,7 +103,7 @@
                 <div class="min-w-0 flex-1">
                     <p class="text-[13px] font-medium text-sand-900 truncate">{{ $application->user->name }}</p>
                     <p class="text-[11px] text-sand-500">
-                        {{ $application->leave_type === 'VL' ? 'Vacation' : 'Sick' }} leave ·
+                        {{ $application->typeLabel() }} ·
                         {{ rtrim(rtrim(number_format((float) $application->days, 2), '0'), '.') }} day(s)
                         @if ($application->date_to && ! $application->date_to->eq($application->date_from))
                             · until {{ $application->date_to->format('M j') }}

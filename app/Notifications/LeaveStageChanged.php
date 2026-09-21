@@ -41,7 +41,7 @@ class LeaveStageChanged extends Notification
             ->greeting('Hello ' . $notifiable->name . ',')
             ->line($this->detail)
             ->line('Employee: ' . ($employee->name ?? '—'))
-            ->line('Leave type: ' . ($this->application->leave_type === 'VL' ? 'Vacation Leave' : 'Sick Leave'))
+            ->line('Leave type: ' . $this->application->typeLabel())
             ->line('Inclusive dates: ' . $this->application->date_from?->format('F j, Y')
                 . ($this->application->date_to && ! $this->application->date_to->eq($this->application->date_from)
                     ? ' to ' . $this->application->date_to->format('F j, Y') : ''))

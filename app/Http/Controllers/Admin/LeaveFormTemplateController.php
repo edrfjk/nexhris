@@ -29,14 +29,17 @@ class LeaveFormTemplateController extends Controller
             // withCount, because the version table prints a filed-forms tally
             // on every row and counting per row is a query per row.
             'templates' => LeaveFormTemplate::with('uploader')
-                ->withCount('applications')->orderByDesc('version')->get(),
-            'ledgerTemplates' => LedgerTemplate::with('uploader')->orderByDesc('version')->get(),
+                ->withCount('applications')->orderByDesc('version')
+                ->paginate(10, ['*'], 'leave_templates_page')->withQueryString(),
+            'ledgerTemplates' => LedgerTemplate::with('uploader')->orderByDesc('version')
+                ->paginate(10, ['*'], 'ledger_templates_page')->withQueryString(),
             'activeLedger' => LedgerTemplate::active(),
             'ledgersInUse' => \App\Models\EmployeeLedger::count(),
             // All three blank forms HR publishes live on one screen, rather
             // than the PDS one hiding inside a panel on another page.
             'pdsTemplates' => \App\Models\PdsTemplate::with('uploader')
-                ->withCount('submissions')->orderByDesc('version')->get(),
+                ->withCount('submissions')->orderByDesc('version')
+                ->paginate(10, ['*'], 'pds_templates_page')->withQueryString(),
         ]);
     }
 

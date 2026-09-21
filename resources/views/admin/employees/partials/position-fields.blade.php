@@ -18,6 +18,7 @@
             <option value="{{ $category }}" @selected($selectedCategory === $category)>{{ $category }}</option>
         @endforeach
     </select>
+    @error('position_category')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
 </div>
 
 <div>
@@ -26,6 +27,7 @@
         <option value="">Select position</option>
     </select>
     <span class="hint">Choose a category, then the exact position level.</span>
+    @error('position')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
 </div>
 
 <script>

@@ -66,6 +66,22 @@ class LeaveChainTest extends TestCase
         $this->assertSame('campus_director', $this->chain()->finalStage($dean));
     }
 
+    public function test_an_officially_appointed_dean_skips_dean_stage_even_if_legacy_role_is_stale(): void
+    {
+        $college = College::where('code', 'CAS')->firstOrFail();
+        $dean = $this->user('employee', ['college_id' => $college->id]);
+        $college->update(['dean_id' => $dean->id]);
+
+        $this->assertTrue($dean->holdsDeanOffice());
+        $this->assertSame(['hr', 'campus_director'], $this->chain()->stagesFor($dean));
+        $this->assertSame('dean_approved', $this->chain()->initialStatus($dean));
+
+        $application = $this->fileLeave($dean);
+
+        $this->assertSame('dean_approved', $application->status);
+        $this->assertSame('hr', $application->currentStage());
+    }
+
     public function test_the_campus_director_ends_at_hr_as_final_approver(): void
     {
         $director = $this->user('campus_director');

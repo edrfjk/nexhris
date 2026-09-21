@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 760" width="620" height="760">
+<title>Use Case Diagram &#8212; NexHRIS, ISPSC Tagudin Campus</title>
+<rect x="0" y="0" width="620" height="760" fill="#ffffff"/>
+
+        <defs>
+          <marker id="uda" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0.8 L9.2,5 L0,9.2 z" fill="#000"/>
+          </marker>
+          <marker id="udg" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto">
+            <path d="M0.5,0.5 L11,6 L0.5,11.5 z" fill="#fff" stroke="#000" stroke-width="1"/>
+          </marker>
+          <marker id="udcrow" viewBox="0 0 12 12" refX="12" refY="6" markerWidth="12" markerHeight="12" orient="auto">
+            <path d="M12,0.5 L1,6 L12,11.5 M1,6 H12 M0,0.5 V11.5" fill="none" stroke="#000" stroke-width="1"/>
+          </marker>
+          <marker id="udone" viewBox="0 0 12 12" refX="12" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+            <path d="M3,0.5 V11.5 M7,0.5 V11.5 M0,6 H12" fill="none" stroke="#000" stroke-width="1"/>
+          </marker>
+        </defs>
+
+        <rect x="180" y="14" width="276" height="734" fill="#fff" stroke="#000" stroke-width="1.4"/>
+        <text x="318" y="32" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="10" font-weight="bold">NEXHRIS</text>
+        <ellipse cx="318" cy="58" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="61" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">FILE LEAVE APPLICATION</text>
+        <ellipse cx="318" cy="92.4" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="95.4" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">VIEW MY LEAVE LEDGER</text>
+        <ellipse cx="318" cy="126.8" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="129.8" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">SUBMIT PERSONAL DATA SHEET</text>
+        <ellipse cx="318" cy="161.2" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="164.2" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">VIEW MY DIGITAL ID</text>
+        <ellipse cx="318" cy="195.6" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="198.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">VIEW ANNOUNCEMENTS</text>
+        <ellipse cx="318" cy="230" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="233" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">READ AND ACKNOWLEDGE HR POLICIES</text>
+        <ellipse cx="318" cy="264.4" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="267.4" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">LOG IN</text>
+        <ellipse cx="318" cy="298.8" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="301.8" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">VIEW DASHBOARD</text>
+        <ellipse cx="318" cy="333.2" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="336.2" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">MANAGE MY PROFILE</text>
+        <ellipse cx="318" cy="367.6" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="370.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">REVIEW LEAVE APPLICATIONS</text>
+        <ellipse cx="318" cy="402" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="405" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">VIEW LEAVE CALENDAR</text>
+        <ellipse cx="318" cy="436.4" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="439.4" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">VIEW EMPLOYEE LEDGER CARDS</text>
+        <ellipse cx="318" cy="470.8" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="473.8" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">MANAGE LEDGER CARDS</text>
+        <ellipse cx="318" cy="505.2" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="508.2" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">MANAGE EMPLOYEE ACCOUNTS</text>
+        <ellipse cx="318" cy="539.6" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="542.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">MANAGE COLLEGES AND DEPARTMENTS</text>
+        <ellipse cx="318" cy="574" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="577" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">REVIEW PDS REQUESTS</text>
+        <ellipse cx="318" cy="608.4" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="611.4" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">MANAGE FORM TEMPLATES</text>
+        <ellipse cx="318" cy="642.8" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="645.8" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">POST ANNOUNCEMENTS</text>
+        <ellipse cx="318" cy="677.2" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="680.2" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">MANAGE HR POLICIES</text>
+        <ellipse cx="318" cy="711.6" rx="112" ry="14.5" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <text x="318" y="714.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">VIEW ACTIVITY LOG</text>
+        <g fill="none" stroke="#000" stroke-width="1"><circle cx="52" cy="250" r="9" fill="#fff"/><path d="M52,259 V281 M37,268 H67 M52,281 L40,299 M52,281 L64,299"/></g>
+        <text x="52" y="222" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="9" font-weight="bold">HR</text>
+        <text x="52" y="233" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="9" font-weight="bold">ADMINISTRATOR</text>
+        <g fill="none" stroke="#000" stroke-width="1"><circle cx="560" cy="170" r="9" fill="#fff"/><path d="M560,179 V201 M545,188 H575 M560,201 L548,219 M560,201 L572,219"/></g>
+        <text x="560" y="231" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="9" font-weight="bold">EMPLOYEE</text>
+        <g fill="none" stroke="#000" stroke-width="1"><circle cx="522" cy="356" r="9" fill="#fff"/><path d="M522,365 V387 M507,374 H537 M522,387 L510,405 M522,387 L534,405"/></g>
+        <text x="522" y="417" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="9" font-weight="bold">DEAN</text>
+        <g fill="none" stroke="#000" stroke-width="1"><circle cx="580" cy="470" r="9" fill="#fff"/><path d="M580,479 V501 M565,488 H595 M580,501 L568,519 M580,501 L592,519"/></g>
+        <text x="580" y="531" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="9" font-weight="bold">CAMPUS</text>
+        <text x="580" y="542" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="9" font-weight="bold">DIRECTOR</text>
+        <path d="M544,188 L430,58" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M544,188 L430,92.4" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M544,188 L430,126.8" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M544,188 L430,161.2" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M544,188 L430,195.6" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M544,188 L430,230" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M68,268 L206,264.4" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M544,188 L430,264.4" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M68,268 L206,298.8" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M544,188 L430,298.8" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M68,268 L206,333.2" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M544,188 L430,333.2" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M68,268 L206,367.6" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M506,374 L430,367.6" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M564,488 L430,367.6" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M68,268 L206,402" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M506,374 L430,402" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M564,488 L430,402" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M564,488 L430,436.4" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M68,268 L206,470.8" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M68,268 L206,505.2" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M68,268 L206,539.6" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M68,268 L206,574" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M68,268 L206,608.4" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M68,268 L206,642.8" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M68,268 L206,677.2" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M68,268 L206,711.6" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M522,346 L548,236" marker-end="url(#udg)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M580,460 L566,236" marker-end="url(#udg)" fill="none" stroke="#000" stroke-width="1"/>
+      
+
+</svg>

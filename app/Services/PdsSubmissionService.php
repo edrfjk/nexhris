@@ -33,10 +33,16 @@ class PdsSubmissionService
     /** The employee's submission for a year, created on first visit. */
     public function forYear(User $employee, ?int $year = null): PdsSubmission
     {
-        return PdsSubmission::firstOrCreate(
-            ['user_id' => $employee->id, 'applicable_year' => $year ?? now()->year],
-            ['status' => 'not_started', 'version' => 1],
-        );
+        return DB::transaction(function () use ($employee, $year) {
+            // firstOrCreate is two queries. Lock the parent account so two
+            // browser tabs cannot both attempt the unique user/year insert.
+            User::whereKey($employee->id)->lockForUpdate()->firstOrFail();
+
+            return PdsSubmission::firstOrCreate(
+                ['user_id' => $employee->id, 'applicable_year' => $year ?? now()->year],
+                ['status' => 'not_started', 'version' => 1],
+            );
+        });
     }
 
     /**

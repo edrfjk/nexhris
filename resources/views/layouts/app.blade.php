@@ -1,11 +1,42 @@
 @php
     $user = auth()->user();
     $reviewQueue = 0;
+    $announcementUnread = 0;
+    $policyUnread = 0;
 
     // Badge on the review link, so a Dean or the Campus Director can see at a
     // glance that something is waiting on them.
     if ($user?->isReviewer()) {
         $reviewQueue = app(\App\Services\LeaveWorkflowService::class)->queueFor($user)->count();
+    }
+
+    // Resource badges mirror the user's own outstanding items. They are not
+    // global counters: an announcement read from the bell, or a policy opened
+    // from its page, disappears only for that particular account.
+    if ($user && ! $user->isAdmin()) {
+        // Read the cast notification payload from the model. Query Builder's
+        // pluck('data->announcement_id') treats the JSON path as a PHP object
+        // property on some Laravel/MySQL combinations and crashes the first
+        // page opened after login when an unread notice exists.
+        $unreadAnnouncementIds = $user->unreadNotifications()
+            ->where('type', \App\Notifications\AnnouncementPosted::class)
+            ->get(['data'])
+            ->map(fn ($notification) => $notification->data['announcement_id'] ?? null)
+            ->filter();
+
+        // The audience can be corrected after posting. Count only notices
+        // the account can still open, not an old in-app notification aimed at
+        // a college HR later removed from the announcement.
+        $announcementUnread = \App\Models\Announcement::visibleTo($user)
+            ->whereIn('id', $unreadAnnouncementIds)
+            ->count();
+
+        $policyUnread = \App\Models\HrPolicy::query()
+            ->where('is_published', true)
+            ->where(fn ($query) => $query->whereNull('effective_date')->orWhere('effective_date', '<=', now()))
+            ->where(fn ($query) => $query->whereNull('expiry_date')->orWhere('expiry_date', '>=', now()->startOfDay()))
+            ->whereDoesntHave('views', fn ($query) => $query->where('user_id', $user->id))
+            ->count();
     }
 
 @endphp
@@ -158,10 +189,10 @@
                 </x-nav.section>
 
                 <x-nav.section label="Resources">
-                    <x-nav.item :href="route('announcements.index')" :active="request()->routeIs('announcements.*')" icon="megaphone">
+                    <x-nav.item :href="route('announcements.index')" :active="request()->routeIs('announcements.*')" icon="megaphone" :badge="$announcementUnread">
                         Announcements
                     </x-nav.item>
-                    <x-nav.item :href="route('policies.index')" :active="request()->routeIs('policies.*')" icon="clipboard-document-list">
+                    <x-nav.item :href="route('policies.index')" :active="request()->routeIs('policies.*')" icon="clipboard-document-list" :badge="$policyUnread">
                         HR Policies
                     </x-nav.item>
                 </x-nav.section>
@@ -198,10 +229,10 @@
                 </x-nav.section>
 
                 <x-nav.section label="Resources">
-                    <x-nav.item :href="route('announcements.index')" :active="request()->routeIs('announcements.*')" icon="megaphone">
+                    <x-nav.item :href="route('announcements.index')" :active="request()->routeIs('announcements.*')" icon="megaphone" :badge="$announcementUnread">
                         Announcements
                     </x-nav.item>
-                    <x-nav.item :href="route('policies.index')" :active="request()->routeIs('policies.*')" icon="clipboard-document-list">
+                    <x-nav.item :href="route('policies.index')" :active="request()->routeIs('policies.*')" icon="clipboard-document-list" :badge="$policyUnread">
                         HR Policies
                     </x-nav.item>
                 </x-nav.section>

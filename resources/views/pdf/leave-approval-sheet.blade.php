@@ -114,7 +114,7 @@
     </tr>
     <tr>
         <th>Type of Leave</th>
-        <td>{{ $application->leave_type === 'VL' ? 'Vacation Leave' : 'Sick Leave' }}</td>
+        <td>{{ $application->typeLabel() }}</td>
         <th>Working Days</th>
         <td>{{ number_format((float) $application->days, 2) }}</td>
     </tr>

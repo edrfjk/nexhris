@@ -90,10 +90,10 @@
         </x-card>
 
         {{-- What has happened to this sheet before now. --}}
-        @if ($submission && $submission->revisions->isNotEmpty())
+        @if ($revisions->isNotEmpty())
             <x-card title="Revision history">
                 <ol class="space-y-3">
-                    @foreach ($submission->revisions as $revision)
+                    @foreach ($revisions as $revision)
                         <li class="flex gap-3">
                             <div class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sand-100 text-sand-600">
                                 <x-heroicon-o-arrow-path class="h-3.5 w-3.5" />
@@ -114,6 +114,9 @@
                         </li>
                     @endforeach
                 </ol>
+                <div class="mt-4 border-t border-sand-100 pt-3">
+                    {{ $revisions->links() }}
+                </div>
             </x-card>
         @endif
     </div>

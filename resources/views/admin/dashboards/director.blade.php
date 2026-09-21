@@ -81,7 +81,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="min-w-0">
                 <p class="text-[13px] font-medium text-sand-900">
-                    {{ $mine->leave_type === 'VL' ? 'Vacation' : 'Sick' }} leave ·
+                    {{ $mine->typeLabel() }} ·
                     {{ rtrim(rtrim(number_format((float) $mine->days, 2), '0'), '.') }} day(s)
                 </p>
                 <p class="text-[11px] text-sand-500 mt-0.5">

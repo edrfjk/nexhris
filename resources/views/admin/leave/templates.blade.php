@@ -140,6 +140,9 @@
                             </table>
                         </div>
                     </div>
+                    <div class="px-5 py-3 border-t border-sand-200 bg-sand-50">
+                        {{ $pdsTemplates->links() }}
+                    </div>
                 @endif
             </x-card>
         </div>
@@ -261,6 +264,9 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    <div class="px-5 py-3 border-t border-sand-200 bg-sand-50">
+                        {{ $templates->links() }}
                     </div>
                 @endif
             </x-card>

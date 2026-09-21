@@ -345,6 +345,40 @@ class TwoLedgerCardsTest extends TestCase
         $this->assertEqualsWithDelta(0.0, (float) $this->balance()->vl_balance, 0.001);
     }
 
+    public function test_a_manual_service_adjustment_reaches_the_service_card(): void
+    {
+        $this->actingAs($this->hr)
+            ->post(route('admin.leave.adjust.store', $this->employee), [
+                'date' => now()->format('Y-m-d'),
+                'service_adjustment' => 3.5,
+                'remarks' => 'Correct service opening balance',
+            ])->assertRedirect()->assertSessionMissing('error');
+
+        $entry = LeaveLedgerEntry::where('user_id', $this->employee->id)->latest('id')->firstOrFail();
+
+        $this->assertSame(LeaveLedgerEntry::SERVICE, $entry->ledger);
+        $this->assertEqualsWithDelta(3.5, (float) $entry->service_earned, 0.001);
+        $this->assertEqualsWithDelta(3.5, (float) $this->balance()->service_balance, 0.001);
+    }
+
+    public function test_a_mixed_manual_adjustment_is_split_between_the_two_cards(): void
+    {
+        $this->actingAs($this->hr)
+            ->post(route('admin.leave.adjust.store', $this->employee), [
+                'date' => now()->format('Y-m-d'),
+                'vl_adjustment' => 2,
+                'service_adjustment' => 4,
+                'remarks' => 'Opening balances',
+            ])->assertRedirect()->assertSessionMissing('error');
+
+        $entries = LeaveLedgerEntry::where('user_id', $this->employee->id)->orderBy('id')->get();
+
+        $this->assertCount(2, $entries);
+        $this->assertSame([LeaveLedgerEntry::LEAVE, LeaveLedgerEntry::SERVICE], $entries->pluck('ledger')->all());
+        $this->assertEqualsWithDelta(2.0, (float) $this->balance()->vl_balance, 0.001);
+        $this->assertEqualsWithDelta(4.0, (float) $this->balance()->service_balance, 0.001);
+    }
+
     public function test_each_posting_form_names_the_card_it_writes_on(): void
     {
         $html = $this->actingAs($this->hr)
