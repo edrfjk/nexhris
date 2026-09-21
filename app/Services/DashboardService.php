@@ -212,15 +212,9 @@ class DashboardService
             ->keyBy('leave_type');
 
         return [
-            'labels' => ['Vacation Leave', 'Sick Leave'],
-            'counts' => [
-                (int) ($counts['VL']->total ?? 0),
-                (int) ($counts['SL']->total ?? 0),
-            ],
-            'days' => [
-                round((float) ($counts['VL']->days ?? 0), 2),
-                round((float) ($counts['SL']->days ?? 0), 2),
-            ],
+            'labels' => array_values(\App\Models\LeaveApplication::TYPES),
+            'counts' => array_map(fn ($code) => (int) ($counts[$code]->total ?? 0), array_keys(\App\Models\LeaveApplication::TYPES)),
+            'days' => array_map(fn ($code) => round((float) ($counts[$code]->days ?? 0), 2), array_keys(\App\Models\LeaveApplication::TYPES)),
         ];
     }
 

@@ -172,6 +172,25 @@ class DesignSystemConsistencyTest extends TestCase
         }
     }
 
+    /**
+     * The employee and HR ledger pages show the same underlying balances.
+     * They must therefore use one visual component, not three copied boxes
+     * that can slowly diverge in font size, colour, radius or spacing.
+     */
+    public function test_leave_balance_summaries_use_the_shared_card(): void
+    {
+        foreach ([
+            'employee/leave/index.blade.php',
+            'leave/my-ledger.blade.php',
+            'admin/leave/ledger.blade.php',
+        ] as $view) {
+            $source = file_get_contents(self::VIEWS . '/' . $view);
+
+            $this->assertStringContainsString('<x-leave.balance-card', $source,
+                "{$view} must use the shared leave balance card.");
+        }
+    }
+
     public function test_pdf_templates_stay_off_the_tailwind_bundle(): void
     {
         // dompdf never loads the compiled CSS, so a PDF view that reaches for

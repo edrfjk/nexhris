@@ -154,6 +154,26 @@ public function isDean(): bool
     return $this->role === 'dean';
 }
 
+/**
+ * Whether this account currently holds the Dean appointment used by the
+ * leave workflow. Older records can have a stale employee role even though
+ * the college already names the person as its Dean.
+ */
+public function holdsDeanOffice(): bool
+{
+    if ($this->isDean()) {
+        return true;
+    }
+
+    if (! $this->exists || ! $this->college_id) {
+        return false;
+    }
+
+    return College::whereKey($this->college_id)
+        ->where('dean_id', $this->getKey())
+        ->exists();
+}
+
 public function isCampusDirector(): bool
 {
     return $this->role === 'campus_director';

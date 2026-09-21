@@ -7,7 +7,9 @@ use App\Models\College;
 use App\Models\User;
 use App\Notifications\AnnouncementPosted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class AnnouncementAndIdTest extends TestCase
@@ -110,6 +112,41 @@ class AnnouncementAndIdTest extends TestCase
             ->get(route('announcements.index'))
             ->assertOk()
             ->assertDontSee('Draft Notice');
+    }
+
+    public function test_opening_the_announcement_feed_clears_only_the_announcement_badge(): void
+    {
+        $employee = $this->user('employee');
+        $announcement = Announcement::create([
+            'title' => 'Please read this',
+            'body' => 'An announcement for everyone.',
+            'is_published' => true,
+            'published_at' => now(),
+        ]);
+
+        $employee->notify(new AnnouncementPosted($announcement));
+
+        DB::table('notifications')->insert([
+            'id' => (string) Str::uuid(),
+            'type' => 'App\\Notifications\\UnrelatedAlert',
+            'notifiable_type' => User::class,
+            'notifiable_id' => $employee->id,
+            'data' => json_encode(['headline' => 'Keep me unread']),
+            'read_at' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertSame(2, $employee->unreadNotifications()->count());
+
+        $this->actingAs($employee)
+            ->get(route('announcements.index'))
+            ->assertOk()
+            ->assertSee('Please read this');
+
+        $this->assertSame(1, $employee->fresh()->unreadNotifications()->count());
+        $this->assertSame(0, $employee->unreadNotifications()
+            ->where('type', AnnouncementPosted::class)->count());
     }
 
     public function test_only_hr_manages_announcements(): void

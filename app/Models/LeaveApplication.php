@@ -8,6 +8,24 @@ use Illuminate\Support\Facades\Storage;
 
 class LeaveApplication extends Model
 {
+    public const TYPES = [
+        'VL' => 'Vacation Leave',
+        'SL' => 'Sick Leave',
+        'SERVICE' => 'Service Leave',
+        'SPL' => 'Special Privilege Leave (SPL)',
+        'WELLNESS' => 'Wellness Leave',
+    ];
+
+    public function typeLabel(): string
+    {
+        return self::TYPES[$this->leave_type] ?? $this->leave_type;
+    }
+
+    public function hasCreditCategory(): bool
+    {
+        return in_array($this->leave_type, ['VL', 'SL'], true);
+    }
+
     protected $fillable = [
         'user_id', 'leave_type', 'date_from', 'date_to', 'days', 'reason',
         'status', 'reviewed_by', 'reviewed_at', 'remarks',
@@ -89,6 +107,10 @@ class LeaveApplication extends Model
      */
     public function creditShortfall(): float
     {
+        if (! $this->hasCreditCategory()) {
+            return 0.0; // HR determines the charge when posting these filing types.
+        }
+
         return max(0.0, round((float) $this->days - $this->availableCredits(), 2));
     }
 

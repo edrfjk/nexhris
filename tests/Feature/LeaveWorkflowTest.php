@@ -69,6 +69,53 @@ class LeaveWorkflowTest extends TestCase
         return LeaveApplication::where('user_id', $employee->id)->firstOrFail();
     }
 
+    public function test_additional_filing_types_can_be_approved_and_posted_to_either_ledger(): void
+    {
+        Storage::fake('local');
+        \Illuminate\Support\Facades\Notification::fake();
+
+        foreach (['SERVICE', 'SPL', 'WELLNESS'] as $type) {
+            foreach (['leave', 'service'] as $ledger) {
+                [$employee, $dean, $hr, $director] = $this->cast();
+                $this->actingAs($employee)->post(route('leave.store'), [
+                    'leave_type' => $type,
+                    'date_from' => '2026-10-05',
+                    'date_to' => '2026-10-06',
+                    'leave_form' => UploadedFile::fake()->create('leave.pdf', 20, 'application/pdf'),
+                ])->assertRedirect()->assertSessionHasNoErrors()->assertSessionMissing('warning');
+
+                $application = $employee->leaveApplications()->firstOrFail();
+                $this->assertSame($type, $application->leave_type);
+                $this->assertFalse($application->exceedsAvailableCredits());
+                foreach ([$dean, $hr, $director] as $reviewer) {
+                    $this->actingAs($reviewer)->post(route('admin.leave.review.approve', $application))
+                        ->assertRedirect()->assertSessionHasNoErrors();
+                }
+                $this->actingAs($hr)->get(route('admin.leave.review.show', $application))
+                    ->assertOk()->assertSee($application->typeLabel());
+                $this->get(route('admin.leave.calendar', ['month' => '2026-10']))
+                    ->assertOk()->assertSee($application->typeLabel());
+
+                $this->post(route('admin.leave.review.post-to-ledger', $application), [
+                    'ledger' => $ledger,
+                    'period_from' => '2026-10-05',
+                    'period_to' => '2026-10-06',
+                    'days' => 2,
+                    'vl_used' => $ledger === 'leave' ? 2 : 0,
+                    'service_used' => $ledger === 'service' ? 2 : 0,
+                    'remarks' => $application->typeLabel(),
+                ])->assertRedirect()->assertSessionHasNoErrors()->assertSessionMissing('error');
+
+                $application->refresh();
+                $this->assertSame('completed', $application->status);
+                $this->assertSame($type, $application->leave_type);
+                $this->assertSame($ledger, $application->ledgerEntry->ledger);
+                $this->assertEquals($ledger === 'leave' ? 2 : 0, $application->ledgerEntry->vl_used);
+                $this->assertEquals($ledger === 'service' ? 2 : 0, $application->ledgerEntry->service_used);
+            }
+        }
+    }
+
     public function test_uploaded_form_goes_to_the_dean_first(): void
     {
         [$employee] = $this->cast();

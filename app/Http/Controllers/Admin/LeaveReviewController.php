@@ -9,6 +9,8 @@ use App\Services\LeaveLedgerService;
 use App\Services\LeaveWorkflowService;
 use App\Services\XlsxToPdfService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -93,7 +95,41 @@ class LeaveReviewController extends Controller
     {
         $data = $request->validate(['remarks' => ['nullable', 'string', 'max:500']]);
 
-        $message = $this->workflow->approve(auth()->user(), $application, $data['remarks'] ?? null);
+        try {
+            $message = $this->workflow->approve(auth()->user(), $application, $data['remarks'] ?? null);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface | \Illuminate\Validation\ValidationException $e) {
+            // Authorization and validation failures are deliberate responses,
+            // not failed follow-up work. Preserve their real status codes.
+            throw $e;
+        } catch (\Throwable $e) {
+            report($e);
+            Log::error('Leave approval response failed.', [
+                'leave_application_id' => $application->id,
+                'reviewer_id' => $request->user()->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            // The database transaction in the workflow may already have
+            // committed before a later concern (such as a notification) fails.
+            // Check the persisted stage before telling the Dean what happened,
+            // so a retry is never encouraged after a successful approval.
+            $stage = $request->user()->approvalStage();
+            $prefix = $stage ? \App\Services\LeaveChain::PREFIX[$stage] : null;
+            $wasApproved = $prefix && LeaveApplication::whereKey($application->id)
+                ->where($prefix . '_status', 'approved')
+                ->exists();
+
+            if ($wasApproved) {
+                return redirect()
+                    ->route('admin.leave.review.index')
+                    ->with('success', 'The leave form was approved successfully.')
+                    ->with('warning', 'A follow-up notification could not be completed. Do not approve the form again; the next reviewer can already see it in their queue.');
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', 'The leave form could not be approved. No approval was recorded; please try again or contact HR.');
+        }
 
         return redirect()
             ->route('admin.leave.review.index')
@@ -196,32 +232,56 @@ class LeaveReviewController extends Controller
         ]);
 
         try {
-            $entry = $ledger->postEntry(
-                employee: $application->user,
-                periodFrom: $data['period_from'],
-                periodTo: $data['period_to'],
-                type: 'leave_deduction',
-                remarks: $data['remarks'],
-                vlUsed: (float) ($data['vl_used'] ?? 0),
-                vlUsedWop: (float) ($data['vl_used_wop'] ?? 0),
-                slUsed: (float) ($data['sl_used'] ?? 0),
-                slUsedWop: (float) ($data['sl_used_wop'] ?? 0),
-                serviceUsed: (float) ($data['service_used'] ?? 0),
-                leaveApplicationId: $application->id,
-                ledger: $data['ledger'],
-            );
+            $entry = DB::transaction(function () use ($application, $data, $ledger) {
+                // The page-level check above is only a convenience. Lock and
+                // re-check here so two simultaneous HR submissions cannot
+                // each write a deduction for the same leave application.
+                $application = LeaveApplication::query()
+                    ->with('user')
+                    ->lockForUpdate()
+                    ->findOrFail($application->id);
+
+                if (! $application->isFullyApproved()) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'ledger' => 'This form is no longer fully approved and cannot be posted.',
+                    ]);
+                }
+
+                if ($application->ledger_posted) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'ledger' => 'This leave has already been posted to the ledger.',
+                    ]);
+                }
+
+                $entry = $ledger->postEntry(
+                    employee: $application->user,
+                    periodFrom: $data['period_from'],
+                    periodTo: $data['period_to'],
+                    type: 'leave_deduction',
+                    remarks: $data['remarks'],
+                    vlUsed: (float) ($data['vl_used'] ?? 0),
+                    vlUsedWop: (float) ($data['vl_used_wop'] ?? 0),
+                    slUsed: (float) ($data['sl_used'] ?? 0),
+                    slUsedWop: (float) ($data['sl_used_wop'] ?? 0),
+                    serviceUsed: (float) ($data['service_used'] ?? 0),
+                    leaveApplicationId: $application->id,
+                    ledger: $data['ledger'],
+                );
+
+                $application->update([
+                    'status' => 'completed',
+                    'ledger_posted' => true,
+                    'leave_ledger_entry_id' => $entry->id,
+                    'days' => $data['days'],
+                    'date_from' => $data['period_from'],
+                    'date_to' => $data['period_to'],
+                ]);
+
+                return $entry;
+            });
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }
-
-        $application->update([
-            'status' => 'completed',
-            'ledger_posted' => true,
-            'leave_ledger_entry_id' => $entry->id,
-            'days' => $data['days'],
-            'date_from' => $data['period_from'],
-            'date_to' => $data['period_to'],
-        ]);
 
         return back()->with('success',
             'Leave posted to ' . $application->user->name . "'s ledger card.");

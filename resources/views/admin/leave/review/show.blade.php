@@ -47,7 +47,7 @@
                 <div>
                     <dt class="text-xs text-sand-400">Type of leave</dt>
                     <dd class="mt-0.5 font-medium text-sand-800">
-                        {{ $application->leave_type === 'VL' ? 'Vacation Leave' : 'Sick Leave' }}
+                        {{ $application->typeLabel() }}
                     </dd>
                 </div>
                 <div>
@@ -219,7 +219,9 @@
                 'bg-gold-50 border-gold-200 text-gold-900' => $shortfall > 0,
                 'bg-forest-50 border-forest-200 text-forest-800' => $shortfall <= 0,
             ])>
-                @if ($shortfall > 0)
+                @if (! $application->hasCreditCategory())
+                    HR will choose the leave or service ledger and the credits to charge when posting this leave.
+                @elseif ($shortfall > 0)
                     @php
                         // Built in one piece: split across lines in the
                         // template it renders as "Short by 5\n days".

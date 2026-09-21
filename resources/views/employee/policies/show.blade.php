@@ -199,7 +199,7 @@
                             <form method="POST" action="{{ route('policies.acknowledge', $policy) }}"
                                   onsubmit="return confirm('Confirm that you have read and understood this policy? This will be recorded with your name and timestamp.')">
                                 @csrf
-                                <button class="inline-flex items-center gap-1.5 bg-forest-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-forest-800 transition shadow-soft">
+                                <button class="btn btn-md btn-success">
                                     <x-heroicon-o-check class="w-4 h-4" />
                                     I have read and understood this
                                 </button>

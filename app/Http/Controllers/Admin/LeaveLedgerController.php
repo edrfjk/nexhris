@@ -65,9 +65,19 @@ class LeaveLedgerController extends Controller
                 'This employee is not registered under your program.');
         }
 
+        $entries = $employee->leaveLedgerEntries()->orderBy('period_from')->orderBy('id');
+
         return view('admin.leave.ledger', [
             'employee' => $employee,
-            'ledger' => $employee->leaveLedgerEntries()->orderBy('period_from')->get(),
+            // Each card has its own paginator. A lengthy service-credit
+            // history must not make the ordinary leave card slow to open.
+            'leaveLines' => (clone $entries)->where('ledger', LeaveLedgerEntry::LEAVE)
+                ->paginate(20, ['*'], 'leave_ledger_page')->withQueryString(),
+            'serviceLines' => (clone $entries)->where('ledger', LeaveLedgerEntry::SERVICE)
+                ->paginate(20, ['*'], 'service_ledger_page')->withQueryString(),
+            'leaveLineCount' => (clone $entries)->where('ledger', LeaveLedgerEntry::LEAVE)->count(),
+            'earnedPeriods' => $employee->leaveLedgerEntries()->where('type', 'earned')
+                ->get(['ledger', 'period_from', 'period_to']),
             'balance' => $employee->leaveBalance,
             'applications' => $employee->leaveApplications()->latest()->paginate(10, ['*'], 'apps_page'),
         ]);
@@ -167,22 +177,50 @@ class LeaveLedgerController extends Controller
         $sl = (float) ($data['sl_adjustment'] ?? 0);
         $service_ = (float) ($data['service_adjustment'] ?? 0);
 
+        if ($vl == 0.0 && $sl == 0.0 && $service_ == 0.0
+            && (float) ($data['vl_used_wop'] ?? 0) == 0.0
+            && (float) ($data['sl_used_wop'] ?? 0) == 0.0) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'adjustment' => 'Enter at least one adjustment or without-pay value.',
+            ]);
+        }
+
         try {
-            $service->postEntry(
-                employee: $employee,
-                periodFrom: $data['date'],
-                periodTo: $data['date'],
-                type: 'adjustment',
-                remarks: $data['remarks'],
-                vlEarned: max(0, $vl),
-                vlUsed: abs(min(0, $vl)),
-                vlUsedWop: (float) ($data['vl_used_wop'] ?? 0),
-                slEarned: max(0, $sl),
-                slUsed: abs(min(0, $sl)),
-                slUsedWop: (float) ($data['sl_used_wop'] ?? 0),
-                serviceEarned: max(0, $service_),
-                serviceUsed: abs(min(0, $service_)),
-            );
+            \Illuminate\Support\Facades\DB::transaction(function () use ($data, $employee, $service, $vl, $sl, $service_) {
+                $hasLeaveAdjustment = $vl != 0.0 || $sl != 0.0
+                    || (float) ($data['vl_used_wop'] ?? 0) != 0.0
+                    || (float) ($data['sl_used_wop'] ?? 0) != 0.0;
+
+                if ($hasLeaveAdjustment) {
+                    $service->postEntry(
+                        employee: $employee,
+                        periodFrom: $data['date'],
+                        periodTo: $data['date'],
+                        type: 'adjustment',
+                        remarks: $data['remarks'],
+                        vlEarned: max(0, $vl),
+                        vlUsed: abs(min(0, $vl)),
+                        vlUsedWop: (float) ($data['vl_used_wop'] ?? 0),
+                        slEarned: max(0, $sl),
+                        slUsed: abs(min(0, $sl)),
+                        slUsedWop: (float) ($data['sl_used_wop'] ?? 0),
+                        ledger: LeaveLedgerEntry::LEAVE,
+                    );
+                }
+
+                if ($service_ != 0.0) {
+                    $service->postEntry(
+                        employee: $employee,
+                        periodFrom: $data['date'],
+                        periodTo: $data['date'],
+                        type: 'adjustment',
+                        remarks: $data['remarks'],
+                        serviceEarned: max(0, $service_),
+                        serviceUsed: abs(min(0, $service_)),
+                        ledger: LeaveLedgerEntry::SERVICE,
+                    );
+                }
+            });
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -215,7 +253,11 @@ class LeaveLedgerController extends Controller
             'service_used' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $service->updateEntry($entry, $data);
+        try {
+            $service->updateEntry($entry, $data);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage())->withInput();
+        }
 
         return back()->with('success', 'The ledger line has been corrected and the card recalculated.');
     }
@@ -226,7 +268,12 @@ class LeaveLedgerController extends Controller
         abort_unless($request->user()->isAdmin(), 403, 'Only HR can remove a ledger line.');
 
         $employee = $entry->user;
-        $service->deleteEntry($entry);
+
+        try {
+            $service->deleteEntry($entry);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', "The line has been removed from {$employee->name}'s card.");
     }

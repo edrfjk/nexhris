@@ -59,8 +59,12 @@
                                     </div>
                                 </td>
                                 <td class="text-right">
+                                    <button type="button" class="btn btn-xs btn-secondary"
+                                            onclick="document.getElementById('edit-announcement-{{ $announcement->id }}').showModal()">
+                                        Edit
+                                    </button>
                                     <form method="POST" action="{{ route('admin.announcements.destroy', $announcement) }}"
-                                          onsubmit="return confirm('Delete this announcement?')">
+                                          class="inline" onsubmit="return confirm('Delete this announcement?')">
                                         @csrf @method('DELETE')
                                         <button class="btn btn-xs btn-danger-soft">Delete</button>
                                     </form>
@@ -140,5 +144,71 @@
         </div>
     </form>
 </dialog>
+
+{{-- Each edit dialog is scoped to its announcement so HR can change the
+     audience, wording, pin and publication state without leaving the list. --}}
+@foreach ($announcements as $announcement)
+    <dialog id="edit-announcement-{{ $announcement->id }}" class="card w-[min(34rem,92vw)] p-0 backdrop:bg-sand-900/40">
+        <form method="POST" action="{{ route('admin.announcements.update', $announcement) }}">
+            @csrf @method('PUT')
+            <div class="card-header">
+                <h3 class="card-title"><x-heroicon-o-pencil-square />Edit announcement</h3>
+            </div>
+
+            <div class="card-body space-y-4">
+                <div>
+                    <label class="label label-required">Title</label>
+                    <input type="text" name="title" required maxlength="150" class="input"
+                           value="{{ $announcement->title }}">
+                </div>
+
+                <div>
+                    <label class="label label-required">Message</label>
+                    <textarea name="body" required rows="6" maxlength="8000" class="textarea">{{ $announcement->body }}</textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="label">Category</label>
+                        <input type="text" name="category" maxlength="60" class="input"
+                               value="{{ $announcement->category }}" placeholder="General">
+                    </div>
+                    <div>
+                        <label class="label">Audience</label>
+                        <select name="college_id" class="select">
+                            <option value="">Campus-wide</option>
+                            @foreach ($colleges as $college)
+                                <option value="{{ $college->id }}" @selected($announcement->college_id === $college->id)>
+                                    {{ $college->code }} â€” {{ $college->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-2 border-t border-sand-100 pt-2">
+                    <label class="flex cursor-pointer items-center gap-2.5 text-[13px] text-sand-700">
+                        <input type="hidden" name="is_published" value="0">
+                        <input type="checkbox" name="is_published" value="1" @checked($announcement->is_published)
+                               class="rounded border-sand-300 text-maroon-800 focus:ring-maroon-500">
+                        Publish to staff
+                    </label>
+                    <label class="flex cursor-pointer items-center gap-2.5 text-[13px] text-sand-700">
+                        <input type="hidden" name="is_pinned" value="0">
+                        <input type="checkbox" name="is_pinned" value="1" @checked($announcement->is_pinned)
+                               class="rounded border-sand-300 text-maroon-800 focus:ring-maroon-500">
+                        Pin to the top of the feed
+                    </label>
+                </div>
+            </div>
+
+            <div class="card-footer flex justify-end gap-2">
+                <button type="button" class="btn btn-md btn-secondary"
+                        onclick="document.getElementById('edit-announcement-{{ $announcement->id }}').close()">Cancel</button>
+                <button class="btn btn-md btn-primary">Save changes</button>
+            </div>
+        </form>
+    </dialog>
+@endforeach
 
 @endsection

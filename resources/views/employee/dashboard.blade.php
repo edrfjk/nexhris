@@ -73,7 +73,7 @@
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
                         <x-badge :color="$active->leave_type === 'VL' ? 'blue' : 'violet'">
-                            {{ $active->leave_type === 'VL' ? 'Vacation' : 'Sick' }}
+                            {{ $active->typeLabel() }}
                         </x-badge>
                         <span class="text-[13px] font-semibold text-sand-900">
                             {{ $active->date_from?->format('M j, Y') }}

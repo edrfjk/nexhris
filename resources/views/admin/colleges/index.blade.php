@@ -24,13 +24,13 @@
      Org summary
      ------------------------------------------------------------------ --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-    <x-stat-card label="Colleges & Offices" :value="$colleges->count()" icon="building-library" />
+    <x-stat-card label="Colleges & Offices" :value="$collegeCount" icon="building-library" />
 
     <x-stat-card label="Departments" :value="$totalDepartments" color="blue" icon="rectangle-group" />
 
     <x-stat-card label="Without a Dean"
-                 :value="$colleges->whereNull('dean_id')->count()"
-                 :color="$colleges->whereNull('dean_id')->count() > 0 ? 'amber' : 'gray'"
+                 :value="$withoutDeanCount"
+                 :color="$withoutDeanCount > 0 ? 'amber' : 'gray'"
                  icon="user-minus" />
 
     <x-stat-card label="Staff Unassigned" :value="$unassigned"
@@ -223,6 +223,9 @@
                 </div>
             </div>
         @endforeach
+    </div>
+    <div class="mt-5">
+        {{ $colleges->links() }}
     </div>
 @endif
 
@@ -454,7 +457,7 @@
                 <label class="label">Category</label>
                 <select name="category" class="select">
                     <option value="">No category</option>
-                    @foreach ($positions->pluck('category')->filter()->unique()->sort() as $category)
+                    @foreach ($positionCategories as $category)
                         <option value="{{ $category }}">{{ $category }}</option>
                     @endforeach
                 </select>
@@ -500,6 +503,9 @@
         @empty
             <x-empty-state message="No positions yet. Add the first title above." />
         @endforelse
+    </div>
+    <div class="border-t border-sand-100 bg-sand-50 px-4 py-3">
+        {{ $positions->links() }}
     </div>
 </dialog>
 

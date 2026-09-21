@@ -25,27 +25,7 @@
         ['Sick leave', $balance->sl_balance ?? 0, 'heart'],
         ['Service credits', $balance->service_balance ?? 0, 'clock'],
     ] as [$label, $value, $icon])
-        @php $value = (float) $value; @endphp
-        <x-card>
-            <div class="flex items-start justify-between gap-3">
-                <div>
-                    <p class="section-label">{{ $label }}</p>
-                    <p class="text-2xl font-semibold text-sand-900 tabular mt-1">
-                        {{ number_format($value, 2) }}
-                    </p>
-                    <p class="text-[11px] text-sand-400 mt-0.5">
-                        day{{ $value == 1 ? '' : 's' }} available
-                    </p>
-                </div>
-                <div @class([
-                    'w-9 h-9 rounded border flex items-center justify-center shrink-0',
-                    'bg-red-50 text-red-700 border-red-200' => $value < 5,
-                    'bg-forest-50 text-forest-700 border-forest-200' => $value >= 5,
-                ])>
-                    <x-dynamic-component :component="'heroicon-o-' . $icon" class="w-[18px] h-[18px]" />
-                </div>
-            </div>
-        </x-card>
+        <x-leave.balance-card :label="$label" :value="$value" :icon="$icon" />
     @endforeach
 </div>
 

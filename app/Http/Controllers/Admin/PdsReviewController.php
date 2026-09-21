@@ -80,12 +80,16 @@ class PdsReviewController extends Controller
 
     public function show(User $employee)
     {
-        $submission = PdsSubmission::with(['revisions.reviewer', 'template', 'reviewer'])
+        $submission = PdsSubmission::with(['template', 'reviewer'])
             ->where('user_id', $employee->id)
             ->where('applicable_year', request('year', now()->year))
             ->first();
 
-        return view('admin.pds.show', compact('employee', 'submission'));
+        $revisions = $submission
+            ? $submission->revisions()->with('reviewer')->paginate(10, ['*'], 'revisions_page')->withQueryString()
+            : collect();
+
+        return view('admin.pds.show', compact('employee', 'submission', 'revisions'));
     }
 
     public function approve(Request $request, User $employee)

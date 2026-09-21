@@ -13,7 +13,7 @@
         "laravel/tinker": "^2.10.1",
         "phpoffice/phpspreadsheet": "^5.9",
         "setasign/fpdf": "1.8",
-        "setasign/fpdi": "2.6",
+        "setasign/fpdi": "^2.6.7",
         "simplesoftwareio/simple-qrcode": "^4.2",
         "symfony/html-sanitizer": "^7.4"
     },

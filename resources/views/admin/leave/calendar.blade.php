@@ -67,13 +67,19 @@
         @else
             <div class="flex flex-wrap gap-2">
                 @foreach ($todayApps as $app)
-                    @php $isPending = ! in_array($app->status, ['cd_approved', 'completed'], true); @endphp
+                    @php
+                        $isPending = ! in_array($app->status, ['cd_approved', 'completed'], true);
+                        $statusChipClass = $isPending
+                            ? 'bg-gold-50 border-gold-300 text-gold-700'
+                            : 'bg-forest-50 border-forest-300 text-forest-700';
+                        $statusAvatarClass = $isPending ? 'bg-gold-500' : 'bg-forest-500';
+                    @endphp
                     <a href="{{ route('admin.leave.ledger', $app->user) }}"
                        class="flex items-center gap-2 rounded-full pl-1.5 pr-3 py-1.5 text-sm font-medium border transition hover:shadow-soft
                        {{ $isPending ? 'border-dashed' : '' }}
-                       {{ $app->leave_type === 'VL' ? 'bg-sky-50 border-sky-100 text-sky-700' : 'bg-forest-50 border-forest-100 text-forest-700' }}">
+                       {{ $statusChipClass }}">
                         <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white
-                            {{ $app->leave_type === 'VL' ? 'bg-sky-500' : 'bg-forest-500' }}">
+                            {{ $statusAvatarClass }}">
                             {{ strtoupper(substr($app->user->name, 0, 1)) }}
                         </span>
                         {{ $app->user->name }}
@@ -189,7 +195,7 @@
 
         {{-- Legend + type filter --}}
         <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-4 border-b border-sand-100">
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <button type="button" @click="typeFilter = 'all'"
                         :class="typeFilter === 'all' ? 'bg-sand-800 text-white' : 'bg-sand-50 text-sand-500 hover:bg-sand-100'"
                         class="text-xs font-medium rounded-full px-3 py-1 transition">
@@ -207,9 +213,17 @@
                     <span class="w-1.5 h-1.5 rounded-full" :class="typeFilter === 'SL' ? 'bg-white' : 'bg-forest-500'"></span>
                     Sick Leave
                 </button>
+                @foreach (array_diff_key(\App\Models\LeaveApplication::TYPES, array_flip(['VL', 'SL'])) as $code => $label)
+                    <button type="button" @click="typeFilter = (typeFilter === '{{ $code }}' ? 'all' : '{{ $code }}')"
+                            :class="typeFilter === '{{ $code }}' ? 'bg-sand-800 text-white' : 'bg-sand-50 text-sand-600 hover:bg-sand-100'"
+                            class="text-xs font-medium rounded-full px-3 py-1 transition">
+                        {{ $label }}
+                    </button>
+                @endforeach
             </div>
             <span class="inline-flex items-center gap-1.5 text-xs text-sand-400">
-                <span class="w-3 h-0 border-t-2 border-dashed border-sand-400"></span> Dashed = pending approval
+                <span class="w-3 h-3 rounded-sm bg-gold-100 border border-dashed border-gold-400"></span> Pending
+                <span class="w-3 h-3 rounded-sm bg-forest-100 border border-forest-300 ml-2"></span> Approved
             </span>
         </div>
 
@@ -247,18 +261,24 @@
 
                         <div class="space-y-1 flex-1">
                             @foreach ($apps->take(3) as $app)
-                                @php $isPending = ! in_array($app->status, ['cd_approved', 'completed'], true); @endphp
+                                @php
+                                    $isPending = ! in_array($app->status, ['cd_approved', 'completed'], true);
+                                    $statusChipClass = $isPending
+                                        ? 'bg-gold-50 border-gold-300 text-gold-700'
+                                        : 'bg-forest-50 border-forest-300 text-forest-700';
+                                    $statusAvatarClass = $isPending ? 'bg-gold-500' : 'bg-forest-500';
+                                @endphp
                                 <a href="{{ route('admin.leave.ledger', $app->user) }}"
                                    title="{{ $app->user->name }} ({{ $app->leave_type }}{{ $isPending ? ', pending' : '' }})"
                                    x-show="typeFilter === 'all' || typeFilter === '{{ $app->leave_type }}'"
                                    class="flex items-center gap-1.5 rounded-md pl-1 pr-2 py-1 text-[11px] font-medium transition hover:opacity-80
                                    {{ $isPending ? 'border border-dashed' : '' }}
-                                   {{ $app->leave_type === 'VL' ? ($isPending ? 'bg-sky-50 border-sky-300 text-sky-600' : 'bg-sky-100 text-sky-700') : ($isPending ? 'bg-forest-50 border-forest-300 text-forest-600' : 'bg-forest-100 text-forest-700') }}">
+                                   {{ $statusChipClass }}">
                                     <span class="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold
-                                        {{ $app->leave_type === 'VL' ? 'bg-sky-500 text-white' : 'bg-forest-500 text-white' }}">
+                                        {{ $statusAvatarClass }} text-white">
                                         {{ strtoupper(substr($app->user->name, 0, 1)) }}
                                     </span>
-                                    <span class="truncate">{{ Str::limit($app->user->name, 10) }}</span>
+                                    <span class="truncate">{{ Str::limit($app->user->name, 10) }} · {{ $app->leave_type }}</span>
                                 </a>
                             @endforeach
 
@@ -275,13 +295,17 @@
                                  class="popover absolute z-10 top-full left-0 mt-1 w-56">
                                 <p class="text-[10px] font-semibold text-sand-400 uppercase tracking-wide px-1.5 py-1">{{ $dateObj->format('M d') }} · {{ $apps->count() }} on leave</p>
                                 @foreach ($apps as $app)
-                                    @php $isPending = ! in_array($app->status, ['cd_approved', 'completed'], true); @endphp
+                                    @php
+                                        $isPending = ! in_array($app->status, ['cd_approved', 'completed'], true);
+                                        $statusTextClass = $isPending ? 'text-gold-700' : 'text-forest-700';
+                                        $statusAvatarClass = $isPending ? 'bg-gold-500' : 'bg-forest-500';
+                                    @endphp
                                     <a href="{{ route('admin.leave.ledger', $app->user) }}"
                                        x-show="typeFilter === 'all' || typeFilter === '{{ $app->leave_type }}'"
                                        class="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs font-medium transition hover:bg-sand-50
-                                       {{ $app->leave_type === 'VL' ? 'text-sky-700' : 'text-forest-700' }}">
+                                       {{ $statusTextClass }}">
                                         <span class="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white
-                                            {{ $app->leave_type === 'VL' ? 'bg-sky-500' : 'bg-forest-500' }}">
+                                            {{ $statusAvatarClass }}">
                                             {{ strtoupper(substr($app->user->name, 0, 1)) }}
                                         </span>
                                         {{ $app->user->name }}
@@ -312,13 +336,18 @@
                     <p class="text-xs font-semibold text-sand-500 mb-2">{{ $dateObj->format('D, M d') }}</p>
                     <div class="flex flex-wrap gap-1.5">
                         @foreach ($apps as $app)
-                            @php $isPending = ! in_array($app->status, ['cd_approved', 'completed'], true); @endphp
+                            @php
+                                $isPending = ! in_array($app->status, ['cd_approved', 'completed'], true);
+                                $statusChipClass = $isPending
+                                    ? 'bg-gold-50 border-gold-300 text-gold-700'
+                                    : 'bg-forest-50 border-forest-300 text-forest-700';
+                            @endphp
                             <a href="{{ route('admin.leave.ledger', $app->user) }}"
                                x-show="typeFilter === 'all' || typeFilter === '{{ $app->leave_type }}'"
                                class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium
                                {{ $isPending ? 'border border-dashed' : '' }}
-                               {{ $app->leave_type === 'VL' ? ($isPending ? 'bg-sky-50 border-sky-300 text-sky-600' : 'bg-sky-100 text-sky-700') : ($isPending ? 'bg-forest-50 border-forest-300 text-forest-600' : 'bg-forest-100 text-forest-700') }}">
-                                {{ $app->user->name }}{{ $isPending ? ' (Pending)' : '' }}
+                               {{ $statusChipClass }}">
+                                {{ $app->user->name }} · {{ $app->typeLabel() }}{{ $isPending ? ' (Pending)' : '' }}
                             </a>
                         @endforeach
                     </div>

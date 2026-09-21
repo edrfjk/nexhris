@@ -6,7 +6,7 @@
 @php
     $me = auth()->user();
     $isHr = $me->isAdmin();
-    $earnedPeriods = $ledger->where('type', 'earned')
+    $earnedPeriods = $earnedPeriods
         ->map(fn ($line) => [
             'ledger' => $line->ledger,
             'from' => $line->period_from?->format('Y-m-d'),
@@ -57,18 +57,9 @@
      Balances
      ------------------------------------------------------------------ --}}
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-    <div class="bg-maroon-800 text-white rounded p-5 shadow-soft">
-        <p class="text-[11px] font-medium text-white/70 uppercase tracking-wide">Vacation Leave</p>
-        <p class="text-3xl font-bold mt-1">{{ number_format((float) ($balance->vl_balance ?? 0), 2) }}</p>
-    </div>
-    <div class="card p-5">
-        <p class="section-label">Sick Leave</p>
-        <p class="text-3xl font-bold mt-1 text-sand-800">{{ number_format((float) ($balance->sl_balance ?? 0), 2) }}</p>
-    </div>
-    <div class="card p-5">
-        <p class="section-label">Service Credits</p>
-        <p class="text-3xl font-bold mt-1 text-sand-800">{{ number_format((float) ($balance->service_balance ?? 0), 2) }}</p>
-    </div>
+    <x-leave.balance-card label="Vacation leave" :value="$balance->vl_balance ?? 0" icon="sun" />
+    <x-leave.balance-card label="Sick leave" :value="$balance->sl_balance ?? 0" icon="heart" />
+    <x-leave.balance-card label="Service credits" :value="$balance->service_balance ?? 0" icon="clock" />
 </div>
 
 {{-- ------------------------------------------------------------------
@@ -196,11 +187,11 @@
             </p>
         </div>
         <span class="text-xs text-sand-400">
-            {{ $ledger->reject->isOnServiceCard()->count() }} entries
+            {{ $leaveLineCount }} entries
         </span>
     </div>
 
-    @if ($ledger->reject->isOnServiceCard()->isEmpty())
+    @if ($leaveLines->isEmpty())
         <x-empty-state message="No leave has been charged to this card yet." />
     @else
         <div class="overflow-x-auto">
@@ -234,7 +225,7 @@
                      and every line threw "editing is not defined". <tbody> is
                      the one element HTML allows to group rows. --}}
                 @php $lastYear = null; @endphp
-                @foreach ($ledger->reject->isOnServiceCard() as $row)
+                @foreach ($leaveLines as $row)
                     @php $year = $row->year_label ?: $row->period_from?->format('Y'); @endphp
 
                     @if ($year && $year !== $lastYear)
@@ -351,18 +342,15 @@
                 @endforeach
             </table>
         </div>
+        <div class="px-5 py-3 border-t border-sand-100 bg-sand-50">
+            {{ $leaveLines->links() }}
+        </div>
     @endif
 </div>
 
 {{-- ------------------------------------------------------------------
      Service credits — the lines that print on the second card
      ------------------------------------------------------------------ --}}
-@php
-    // The service credit ledger is the same card filtered to the lines that
-    // move service credits, so this section edits exactly those.
-    $serviceLines = $ledger->filter->touchesServiceCredits()->values();
-@endphp
-
 <div x-data="{ adding: false }" class="card overflow-hidden mb-6">
     <div class="px-5 py-3.5 border-b border-sand-100 flex items-center justify-between gap-3">
         <div>
@@ -473,6 +461,9 @@
         <div class="px-5 py-3 border-t border-sand-100 text-xs text-sand-500">
             These lines belong to the service credit card only; they do not appear on the leave card.
         </div>
+        <div class="px-5 py-3 border-t border-sand-100 bg-sand-50">
+            {{ $serviceLines->links() }}
+        </div>
     @endif
 </div>
 
@@ -493,7 +484,7 @@
                     <div class="min-w-0">
                         <div class="flex items-center gap-2 flex-wrap">
                             <x-badge :color="$application->leave_type === 'VL' ? 'blue' : 'purple'">
-                                {{ $application->leave_type === 'VL' ? 'Vacation' : 'Sick' }}
+                                {{ $application->typeLabel() }}
                             </x-badge>
                             <p class="text-sm font-medium text-sand-800">
                                 {{ $application->date_from?->format('M j, Y') }}

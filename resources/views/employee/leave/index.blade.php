@@ -21,29 +21,10 @@
      Balances
      ------------------------------------------------------------------ --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    <div class="bg-maroon-800 text-white rounded p-5 shadow-soft">
-        <p class="text-[11px] font-medium text-white/70 uppercase tracking-wide">Vacation Leave</p>
-        <p class="text-3xl font-bold mt-1">{{ number_format((float) ($balance->vl_balance ?? 0), 2) }}</p>
-        <p class="text-[11px] text-white/60 mt-0.5">days available</p>
-    </div>
-
-    <div class="card p-5">
-        <p class="section-label">Sick Leave</p>
-        <p class="text-3xl font-bold mt-1 text-sand-800">{{ number_format((float) ($balance->sl_balance ?? 0), 2) }}</p>
-        <p class="text-[11px] text-sand-400 mt-0.5">days available</p>
-    </div>
-
-    <div class="card p-5">
-        <p class="section-label">Service Credits</p>
-        <p class="text-3xl font-bold mt-1 text-sand-800">{{ number_format((float) ($balance->service_balance ?? 0), 2) }}</p>
-        <p class="text-[11px] text-sand-400 mt-0.5">days available</p>
-    </div>
-
-    <div class="card p-5">
-        <p class="section-label">Used this year</p>
-        <p class="text-3xl font-bold mt-1 text-sand-800">{{ number_format((float) $approvedThisYear, 2) }}</p>
-        <p class="text-[11px] text-sand-400 mt-0.5">approved days</p>
-    </div>
+    <x-leave.balance-card label="Vacation leave" :value="$balance->vl_balance ?? 0" icon="sun" />
+    <x-leave.balance-card label="Sick leave" :value="$balance->sl_balance ?? 0" icon="heart" />
+    <x-leave.balance-card label="Service credits" :value="$balance->service_balance ?? 0" icon="clock" />
+    <x-leave.balance-card label="Used this year" :value="$approvedThisYear" detail="approved days" icon="calendar-days" />
 </div>
 
 {{-- ------------------------------------------------------------------
@@ -132,8 +113,9 @@
                     <span class="label">Type of leave</span>
                     <select name="leave_type" required
                             class="select mt-1">
-                        <option value="VL" @selected(old('leave_type') === 'VL')>Vacation Leave</option>
-                        <option value="SL" @selected(old('leave_type') === 'SL')>Sick Leave</option>
+                        @foreach (\App\Models\LeaveApplication::TYPES as $code => $label)
+                            <option value="{{ $code }}" @selected(old('leave_type') === $code)>{{ $label }}</option>
+                        @endforeach
                     </select>
                 </label>
 
@@ -245,7 +227,7 @@
                                 <div class="min-w-0">
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <x-badge :color="$application->leave_type === 'VL' ? 'blue' : 'purple'">
-                                            {{ $application->leave_type === 'VL' ? 'Vacation' : 'Sick' }}
+                                            {{ $application->typeLabel() }}
                                         </x-badge>
                                         <p class="text-sm font-semibold text-sand-800">
                                             {{ $application->date_from?->format('M j, Y') }}

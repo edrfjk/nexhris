@@ -24,7 +24,7 @@ class CollegeController extends Controller
 
     public function index(Request $request)
     {
-        $colleges = College::query()
+        $collegeQuery = College::query()
             ->with(['dean', 'departments' => fn ($q) => $q->withCount('employees')])
             ->withCount(['employees', 'staff', 'departments'])
             ->when($request->search, fn ($q, $s) => $q->where(function ($inner) use ($s) {
@@ -32,11 +32,18 @@ class CollegeController extends Controller
             }))
             ->when($request->status === 'active', fn ($q) => $q->where('is_active', true))
             ->when($request->status === 'inactive', fn ($q) => $q->where('is_active', false))
-            ->orderBy('name')
-            ->get();
+            ->orderBy('name');
+
+        // The summary describes the whole filtered set, while the cards stay
+        // short enough to scan as the institution adds more colleges/offices.
+        $collegeCount = (clone $collegeQuery)->count();
+        $withoutDeanCount = (clone $collegeQuery)->whereNull('dean_id')->count();
+        $colleges = $collegeQuery->paginate(10)->withQueryString();
 
         return view('admin.colleges.index', [
             'colleges' => $colleges,
+            'collegeCount' => $collegeCount,
+            'withoutDeanCount' => $withoutDeanCount,
             // A college may appoint only a Dean whose account already belongs
             // to it. Assigning a Dean is not a hidden way to move their staff
             // record to another college.
@@ -51,7 +58,12 @@ class CollegeController extends Controller
                 ->whereIn('role', ['employee', 'dean', 'campus_director'])
                 ->count(),
             'totalDepartments' => \App\Models\Department::count(),
-            'positions' => Position::orderBy('category')->orderBy('sort_order')->orderBy('name')->get(),
+            'positions' => Position::orderBy('category')->orderBy('sort_order')->orderBy('name')
+                ->paginate(15, ['*'], 'positions_page')->withQueryString(),
+            // The editor itself is paged, but this picker must still offer
+            // every existing category when HR adds a new title.
+            'positionCategories' => Position::whereNotNull('category')->distinct()
+                ->orderBy('category')->pluck('category'),
         ]);
     }
 

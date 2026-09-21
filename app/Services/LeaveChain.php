@@ -73,7 +73,11 @@ class LeaveChain
             return ['hr'];
         }
 
-        $ownStage = $applicant->approvalStage();
+        // College.dean_id is the official appointment. Honour it as well as
+        // the role column so a legacy Dean cannot be routed back to themself.
+        $ownStage = $applicant->holdsDeanOffice()
+            ? 'dean'
+            : $applicant->approvalStage();
 
         return array_values(array_filter(
             self::STAGES,

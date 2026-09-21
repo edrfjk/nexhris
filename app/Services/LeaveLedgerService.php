@@ -54,6 +54,11 @@ class LeaveLedgerService
             $vlEarned, $vlUsed, $vlUsedWop, $slEarned, $slUsed, $slUsedWop,
             $serviceEarned, $serviceUsed, $leaveApplicationId, $encodedBy, $yearLabel, $ledger
         ) {
+            // All balance-changing ledger operations take the employee row as
+            // their common lock. Without this, two HR requests can both read
+            // the same balance and the later write silently overwrites the
+            // first one.
+            User::whereKey($employee->id)->lockForUpdate()->firstOrFail();
             $balance = LeaveBalance::firstOrCreate(['user_id' => $employee->id]);
 
             if ($ledger === LeaveLedgerEntry::SERVICE) {
@@ -181,7 +186,7 @@ class LeaveLedgerService
                 array_map('strval', $before),
             ));
 
-            $this->recalculate($entry->user);
+            $this->recalculate($entry->user, rejectNegative: true);
 
             $this->log->log(
                 'ledger.edited',
@@ -221,7 +226,7 @@ class LeaveLedgerService
 
             $entry->delete();
 
-            $this->recalculate($employee);
+            $this->recalculate($employee, rejectNegative: true);
 
             $this->log->log(
                 'ledger.deleted',
@@ -243,9 +248,13 @@ class LeaveLedgerService
      * This is the only way a mid-card correction can be trusted: the figures
      * below it were all computed from the old value.
      */
-    public function recalculate(User $employee): void
+    public function recalculate(User $employee, bool $rejectNegative = false): void
     {
-        DB::transaction(function () use ($employee) {
+        DB::transaction(function () use ($employee, $rejectNegative) {
+            // Use the same lock as postEntry(), updateEntry(), and
+            // deleteEntry() so replaying a card cannot race a new posting.
+            User::whereKey($employee->id)->lockForUpdate()->firstOrFail();
+
             $vl = 0.0;
             $sl = 0.0;
             $service = 0.0;
@@ -264,6 +273,12 @@ class LeaveLedgerService
                         $service + (float) $entry->service_earned - $entry->daysCharged(), 3
                     );
 
+                    if ($rejectNegative && $service < 0) {
+                        throw new \RuntimeException(
+                            "This correction would make {$employee->name}'s service-credit balance negative."
+                        );
+                    }
+
                     // The leave columns are not this card's business; the
                     // printed form leaves them blank either way.
                     $entry->updateQuietly([
@@ -279,6 +294,12 @@ class LeaveLedgerService
                 // places, and never touches service credits.
                 $vl = round($vl + (float) $entry->vl_earned - (float) $entry->vl_used, 2);
                 $sl = round($sl + (float) $entry->sl_earned - (float) $entry->sl_used, 2);
+
+                if ($rejectNegative && ($vl < 0 || $sl < 0)) {
+                    throw new \RuntimeException(
+                        "This correction would make {$employee->name}'s leave balance negative."
+                    );
+                }
 
                 $entry->updateQuietly([
                     'vl_balance' => $vl,

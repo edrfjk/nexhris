@@ -16,12 +16,14 @@
         @endforeach
     </select>
     <span class="hint">Decides which Dean approves this person's leave.</span>
+    @error('college_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
 </div>
 
 <div>
     <label class="label">Department / Programme</label>
     <select name="department_id" id="{{ $organizationFieldId }}-department" class="select"><option value="">Select Department</option></select>
     <span class="hint" id="{{ $organizationFieldId }}-department-hint">Pick a college first.</span>
+    @error('department_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
 </div>
 
 <input type="hidden" name="confirm_replace_dean" value="0">
