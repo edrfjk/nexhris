@@ -83,7 +83,7 @@
                             {{ strtoupper(substr($app->user->name, 0, 1)) }}
                         </span>
                         {{ $app->user->name }}
-                        <span class="text-xs opacity-70">{{ $app->leave_type }}{{ $isPending ? ' · Pending' : '' }}</span>
+                        <span class="text-xs opacity-70">{{ $app->typeLabel() }}{{ $isPending ? ' · Pending' : '' }}</span>
                     </a>
                 @endforeach
             </div>
@@ -269,7 +269,7 @@
                                     $statusAvatarClass = $isPending ? 'bg-gold-500' : 'bg-forest-500';
                                 @endphp
                                 <a href="{{ route('admin.leave.ledger', $app->user) }}"
-                                   title="{{ $app->user->name }} ({{ $app->leave_type }}{{ $isPending ? ', pending' : '' }})"
+                                   title="{{ $app->user->name }} ({{ $app->typeLabel() }}{{ $isPending ? ', pending' : '' }})"
                                    x-show="typeFilter === 'all' || typeFilter === '{{ $app->leave_type }}'"
                                    class="flex items-center gap-1.5 rounded-md pl-1 pr-2 py-1 text-[11px] font-medium transition hover:opacity-80
                                    {{ $isPending ? 'border border-dashed' : '' }}
@@ -278,7 +278,7 @@
                                         {{ $statusAvatarClass }} text-white">
                                         {{ strtoupper(substr($app->user->name, 0, 1)) }}
                                     </span>
-                                    <span class="truncate">{{ Str::limit($app->user->name, 10) }} · {{ $app->leave_type }}</span>
+                                    <span class="truncate">{{ Str::limit($app->user->name, 10) }} · {{ $app->typeLabel() }}</span>
                                 </a>
                             @endforeach
 
@@ -309,7 +309,7 @@
                                             {{ strtoupper(substr($app->user->name, 0, 1)) }}
                                         </span>
                                         {{ $app->user->name }}
-                                        <span class="ml-auto text-[10px] opacity-60">{{ $app->leave_type }}{{ $isPending ? ' · Pending' : '' }}</span>
+                                        <span class="ml-auto text-[10px] opacity-60">{{ $app->typeLabel() }}{{ $isPending ? ' · Pending' : '' }}</span>
                                     </a>
                                 @endforeach
                             </div>

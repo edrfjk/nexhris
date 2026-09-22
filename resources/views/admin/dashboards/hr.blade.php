@@ -210,7 +210,7 @@
                 <div class="min-w-0">
                     <p class="text-[13px] font-medium text-sand-900 truncate">{{ $application->user->name }}</p>
                     <p class="text-[11px] text-sand-400">
-                        {{ $application->leave_type }} ·
+                        {{ $application->typeLabel() }} ·
                         {{ rtrim(rtrim(number_format((float) $application->days, 2), '0'), '.') }} day(s)
                     </p>
                 </div>

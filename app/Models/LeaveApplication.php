@@ -11,7 +11,7 @@ class LeaveApplication extends Model
     public const TYPES = [
         'VL' => 'Vacation Leave',
         'SL' => 'Sick Leave',
-        'SERVICE' => 'Service Leave',
+        'SERVICE' => 'Service Credits',
         'SPL' => 'Special Privilege Leave (SPL)',
         'WELLNESS' => 'Wellness Leave',
     ];
@@ -23,7 +23,15 @@ class LeaveApplication extends Model
 
     public function hasCreditCategory(): bool
     {
-        return in_array($this->leave_type, ['VL', 'SL'], true);
+        return in_array($this->leave_type, ['VL', 'SL', 'SERVICE'], true);
+    }
+
+    /** Service Credits normally belongs on page 2, the service ledger. */
+    public function preferredLedger(): string
+    {
+        return $this->leave_type === 'SERVICE'
+            ? LeaveLedgerEntry::SERVICE
+            : LeaveLedgerEntry::LEAVE;
     }
 
     protected $fillable = [
@@ -93,9 +101,11 @@ class LeaveApplication extends Model
             return 0.0;
         }
 
-        return (float) ($this->leave_type === 'SL'
-            ? $balance->sl_balance
-            : $balance->vl_balance);
+        return (float) match ($this->leave_type) {
+            'SL' => $balance->sl_balance,
+            'SERVICE' => $balance->service_balance,
+            default => $balance->vl_balance,
+        };
     }
 
     /**
