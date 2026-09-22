@@ -116,6 +116,39 @@ class LeaveWorkflowTest extends TestCase
         }
     }
 
+    public function test_service_credits_uses_the_service_balance_and_defaults_to_page_two(): void
+    {
+        [$employee, , $hr] = $this->cast();
+
+        $application = LeaveApplication::create([
+            'user_id' => $employee->id,
+            'leave_type' => 'SERVICE',
+            'date_from' => '2026-10-05',
+            'date_to' => '2026-10-06',
+            'days' => 2,
+            'status' => 'cd_approved',
+            'file_path' => 'leave-applications/service.pdf',
+            'file_original_name' => 'service.pdf',
+            'uploaded_at' => now(),
+        ]);
+
+        $this->assertSame('Service Credits', $application->typeLabel());
+        $this->assertSame('service', $application->preferredLedger());
+        $this->assertSame(5.0, $application->availableCredits());
+
+        $html = $this->actingAs($hr)
+            ->get(route('admin.leave.review.show', $application))
+            ->assertOk()
+            ->assertSee('Service Credits')
+            ->getContent();
+
+        $this->assertStringContainsString("card: 'service'", $html);
+        $this->assertMatchesRegularExpression(
+            '/name="service_used"[^>]*value="2\.00"|value="2\.00"[^>]*name="service_used"/',
+            $html,
+        );
+    }
+
     public function test_uploaded_form_goes_to_the_dean_first(): void
     {
         [$employee] = $this->cast();

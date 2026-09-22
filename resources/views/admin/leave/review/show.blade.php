@@ -210,7 +210,11 @@
             {{-- Whoever signs this should not have to open the ledger and
                  subtract by hand to see whether the credits cover it. --}}
             @php
-                $typeLabel = $application->leave_type === 'SL' ? 'sick leave' : 'vacation leave';
+                $typeLabel = match ($application->leave_type) {
+                    'SL' => 'sick leave',
+                    'SERVICE' => 'service',
+                    default => 'vacation leave',
+                };
                 $shortfall = $application->creditShortfall();
             @endphp
 
@@ -369,12 +373,15 @@
                             {{-- The campus keeps two cards. A day charged to service
                                  credits comes off that balance even when the leave
                                  itself was sick or vacation. --}}
-                            <div x-data="{ card: 'leave' }" class="mb-4">
+                            @php
+                                $defaultLedger = old('ledger', $application->preferredLedger());
+                            @endphp
+                            <div x-data="{ card: @js($defaultLedger) }" class="mb-4">
                                 <span class="label">Record on</span>
                                 <div class="grid grid-cols-2 gap-2 mt-1">
                                     <label class="cursor-pointer">
                                         <input type="radio" name="ledger" value="leave" x-model="card"
-                                               class="sr-only" checked>
+                                               class="sr-only" @checked($defaultLedger === 'leave')>
                                         <span :class="card === 'leave'
                                                 ? 'border-maroon-700 bg-maroon-50 text-maroon-900'
                                                 : 'border-sand-200 text-sand-600 hover:border-sand-300'"
@@ -385,7 +392,7 @@
                                     </label>
                                     <label class="cursor-pointer">
                                         <input type="radio" name="ledger" value="service" x-model="card"
-                                               class="sr-only">
+                                               class="sr-only" @checked($defaultLedger === 'service')>
                                         <span :class="card === 'service'
                                                 ? 'border-maroon-700 bg-maroon-50 text-maroon-900'
                                                 : 'border-sand-200 text-sand-600 hover:border-sand-300'"
@@ -460,14 +467,15 @@
 
                             <label class="block pt-2 border-t border-sand-100">
                                 <span class="label">Service credits used</span>
-                                <input type="number" step="0.01" min="0" name="service_used" value="{{ old('service_used', '0') }}"
+                                <input type="number" step="0.01" min="0" name="service_used"
+                                       value="{{ old('service_used', $application->leave_type === 'SERVICE' ? number_format((float) $application->days, 2, '.', '') : '0') }}"
                                        class="input mt-1">
                             </label>
 
                             <label class="block">
                                 <span class="label">Remarks on the card <span class="text-red-500">*</span></span>
                                 <input type="text" name="remarks" required maxlength="255"
-                                       value="{{ old('remarks', $application->leave_type . ' — ' . ($application->reason ?: 'Approved leave')) }}"
+                                       value="{{ old('remarks', $application->typeLabel() . ' — ' . ($application->reason ?: 'Approved leave')) }}"
                                        class="input mt-1">
                             </label>
 

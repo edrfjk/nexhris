@@ -104,11 +104,14 @@ class LeaveApplicationController extends Controller
         // a block: HR may still approve leave without pay, and the ledger is
         // reconciled by hand after the Campus Director signs off.
         $balance = Auth::user()->leaveBalance;
-        $available = (float) ($data['leave_type'] === 'VL'
-            ? ($balance->vl_balance ?? 0)
-            : ($balance->sl_balance ?? 0));
+        $available = (float) match ($data['leave_type']) {
+            'VL' => $balance->vl_balance ?? 0,
+            'SL' => $balance->sl_balance ?? 0,
+            'SERVICE' => $balance->service_balance ?? 0,
+            default => 0,
+        };
 
-        $shortfall = in_array($data['leave_type'], ['VL', 'SL'], true) && $days > $available
+        $shortfall = in_array($data['leave_type'], ['VL', 'SL', 'SERVICE'], true) && $days > $available
             ? round($days - $available, 2) : 0;
 
         // Stamp the template version in force at submission, so the form can
@@ -164,7 +167,7 @@ class LeaveApplicationController extends Controller
                     . 'HR will confirm whether the excess is charged without pay.',
                     rtrim(rtrim(number_format($days, 2), '0'), '.'),
                     rtrim(rtrim(number_format($available, 2), '0'), '.'),
-                    $data['leave_type'],
+                    LeaveApplication::TYPES[$data['leave_type']],
                     rtrim(rtrim(number_format($shortfall, 2), '0'), '.'),
                 ));
         }
