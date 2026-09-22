@@ -212,6 +212,29 @@ class LeaveFormPdfTest extends TestCase
             ->assertOk();
     }
 
+    public function test_a_legacy_embedded_object_does_not_turn_the_review_preview_into_a_download(): void
+    {
+        config(['pdf.renderer' => 'php']);
+
+        $application = $this->application();
+        $path = Storage::disk('local')->path($application->file_path);
+        $zip = new \ZipArchive();
+
+        $this->assertTrue($zip->open($path) === true);
+        $zip->addFromString('xl/embeddings/oleObject1.bin', 'legacy embedded object');
+        $zip->close();
+
+        $response = $this->actingAs($this->reviewer('admin'))
+            ->get(route('admin.leave.review.form.pdf', $application))
+            ->assertOk();
+
+        $this->assertSame('application/pdf', $response->headers->get('content-type'));
+        $this->assertStringStartsWith(
+            'inline;',
+            (string) $response->headers->get('content-disposition'),
+        );
+    }
+
     public function test_a_missing_file_is_reported_rather_than_crashing(): void
     {
         $application = $this->application();

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100" viewBox="0 0 1600 1100">
+<title>NexHRIS UML Use Case Diagram</title>
+<rect width="1600" height="1100" fill="white"/>
+<defs>
+ <style>
+  text{font-family:Arial,Helvetica,sans-serif;fill:#111}.boundary{fill:#fcfcfc;stroke:#111;stroke-width:2}.group{fill:#f7f9fc;stroke:#8b98a8;stroke-width:1;stroke-dasharray:5 4}.uc{fill:#fff;stroke:#222;stroke-width:1.5}.assoc{fill:none;stroke:#333;stroke-width:1.3}.gen{fill:none;stroke:#333;stroke-width:1.3;marker-end:url(#genArrow)}.include{fill:none;stroke:#555;stroke-width:1.1;stroke-dasharray:6 4;marker-end:url(#arrow)}.title{font-size:22px;font-weight:bold}.label{font-size:14px}.small{font-size:12px}.stereo{font-size:11px;font-style:italic}.actorLine{fill:none;stroke:#222;stroke-width:2}
+ </style>
+ <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#555"/></marker>
+ <marker id="genArrow" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M0,0 L11,6 L0,12 z" fill="white" stroke="#333" stroke-width="1.2"/></marker>
+</defs>
+<text x="800" y="30" text-anchor="middle" class="title">NexHRIS UML Use Case Diagram</text>
+<text x="800" y="53" text-anchor="middle" class="label">Human Resource Information System — ISPSC Tagudin Campus</text>
+
+<!-- System boundary -->
+<rect x="240" y="75" width="1120" height="970" rx="5" class="boundary"/>
+<text x="800" y="103" text-anchor="middle" class="title">NEXHRIS</text>
+<text x="800" y="124" text-anchor="middle" class="small">All protected use cases require successful authentication</text>
+
+<!-- authentication use cases -->
+<ellipse cx="520" cy="180" rx="130" ry="29" class="uc"/><text x="520" y="185" text-anchor="middle" class="label">Log in</text>
+<ellipse cx="800" cy="180" rx="145" ry="29" class="uc"/><text x="800" y="185" text-anchor="middle" class="label">Accept Terms and Conditions</text>
+<ellipse cx="1090" cy="180" rx="145" ry="29" class="uc"/><text x="1090" y="180" text-anchor="middle" class="stereo">&lt;&lt;extend&gt;&gt;</text><text x="1090" y="193" text-anchor="middle" class="label">Verify Two-Factor Code</text>
+<path d="M650 180H655" class="include"/><text x="655" y="166" class="stereo">&lt;&lt;include&gt;&gt;</text>
+<path d="M1090 209L650 209L600 201" class="include"/><text x="810" y="226" class="stereo">&lt;&lt;extend&gt;&gt; (HR Admin, Dean, Campus Director)</text>
+
+<!-- common authenticated use cases -->
+<ellipse cx="520" cy="275" rx="130" ry="27" class="uc"/><text x="520" y="280" text-anchor="middle" class="label">View Dashboard</text>
+<ellipse cx="800" cy="275" rx="130" ry="27" class="uc"/><text x="800" y="280" text-anchor="middle" class="label">Manage My Profile</text>
+<ellipse cx="1090" cy="275" rx="130" ry="27" class="uc"/><text x="1090" y="280" text-anchor="middle" class="label">Receive Notifications</text>
+<path d="M520 209V248 M800 209V248 M1090 209V248" class="include"/>
+
+<!-- grouping areas -->
+<rect x="270" y="340" width="250" height="660" rx="6" class="group"/><text x="395" y="365" text-anchor="middle" class="label">Employee functions</text>
+<rect x="545" y="340" width="250" height="660" rx="6" class="group"/><text x="670" y="365" text-anchor="middle" class="label">Dean functions</text>
+<rect x="820" y="340" width="250" height="660" rx="6" class="group"/><text x="945" y="365" text-anchor="middle" class="label">Campus Director functions</text>
+<rect x="1095" y="340" width="240" height="660" rx="6" class="group"/><text x="1215" y="365" text-anchor="middle" class="label">HR Administrator functions</text>
+
+<!-- employee use cases -->
+<ellipse cx="395" cy="420" rx="98" ry="25" class="uc"/><text x="395" y="425" text-anchor="middle" class="label">My Leave</text>
+<ellipse cx="395" cy="490" rx="98" ry="25" class="uc"/><text x="395" y="495" text-anchor="middle" class="label">Submit PDS</text>
+<ellipse cx="395" cy="560" rx="98" ry="25" class="uc"/><text x="395" y="565" text-anchor="middle" class="label">View My Leave Ledger</text>
+<ellipse cx="395" cy="630" rx="98" ry="25" class="uc"/><text x="395" y="635" text-anchor="middle" class="label">View Digital ID</text>
+<ellipse cx="395" cy="700" rx="98" ry="25" class="uc"/><text x="395" y="705" text-anchor="middle" class="label">Read HR Policies</text>
+<ellipse cx="395" cy="770" rx="98" ry="25" class="uc"/><text x="395" y="775" text-anchor="middle" class="label">Read Announcements</text>
+<ellipse cx="395" cy="840" rx="98" ry="25" class="uc"/><text x="395" y="845" text-anchor="middle" class="label">Manage Notifications</text>
+<path d="M110 420L297 420 M110 420L297 490 M110 420L297 560 M110 420L297 630 M110 420L297 700 M110 420L297 770 M110 420L297 840" class="assoc"/>
+
+<!-- dean use cases -->
+<ellipse cx="670" cy="420" rx="98" ry="25" class="uc"/><text x="670" y="425" text-anchor="middle" class="label">My Leave</text>
+<ellipse cx="670" cy="490" rx="98" ry="25" class="uc"/><text x="670" y="495" text-anchor="middle" class="label">Submit PDS</text>
+<ellipse cx="670" cy="560" rx="98" ry="25" class="uc"/><text x="670" y="565" text-anchor="middle" class="label">Review College Leave</text>
+<ellipse cx="670" cy="630" rx="98" ry="25" class="uc"/><text x="670" y="635" text-anchor="middle" class="label">College Leave Calendar</text>
+<ellipse cx="670" cy="700" rx="98" ry="25" class="uc"/><text x="670" y="705" text-anchor="middle" class="label">View My Leave Ledger</text>
+<ellipse cx="670" cy="770" rx="98" ry="25" class="uc"/><text x="670" y="775" text-anchor="middle" class="label">Read Policies / Announcements</text>
+<ellipse cx="670" cy="840" rx="98" ry="25" class="uc"/><text x="670" y="845" text-anchor="middle" class="label">Manage Notifications</text>
+<path d="M110 570L572 420 M110 570L572 490 M110 570L572 560 M110 570L572 630 M110 570L572 700 M110 570L572 770 M110 570L572 840" class="assoc"/>
+
+<!-- director use cases -->
+<ellipse cx="945" cy="420" rx="98" ry="25" class="uc"/><text x="945" y="425" text-anchor="middle" class="label">My Leave</text>
+<ellipse cx="945" cy="490" rx="98" ry="25" class="uc"/><text x="945" y="495" text-anchor="middle" class="label">Submit PDS</text>
+<ellipse cx="945" cy="560" rx="98" ry="25" class="uc"/><text x="945" y="565" text-anchor="middle" class="label">Review Campus Leave</text>
+<ellipse cx="945" cy="630" rx="98" ry="25" class="uc"/><text x="945" y="635" text-anchor="middle" class="label">Campus Leave Calendar</text>
+<ellipse cx="945" cy="700" rx="98" ry="25" class="uc"/><text x="945" y="705" text-anchor="middle" class="label">View Employee Directory</text>
+<ellipse cx="945" cy="770" rx="98" ry="25" class="uc"/><text x="945" y="775" text-anchor="middle" class="label">View My Leave Ledger</text>
+<ellipse cx="945" cy="840" rx="98" ry="25" class="uc"/><text x="945" y="845" text-anchor="middle" class="label">Manage Notifications</text>
+<path d="M110 720L847 420 M110 720L847 490 M110 720L847 560 M110 720L847 630 M110 720L847 700 M110 720L847 770 M110 720L847 840" class="assoc"/>
+
+<!-- HR use cases -->
+<ellipse cx="1215" cy="420" rx="100" ry="25" class="uc"/><text x="1215" y="425" text-anchor="middle" class="label">Manage Employee Accounts</text>
+<ellipse cx="1215" cy="490" rx="100" ry="25" class="uc"/><text x="1215" y="495" text-anchor="middle" class="label">Manage Colleges / Departments</text>
+<ellipse cx="1215" cy="560" rx="100" ry="25" class="uc"/><text x="1215" y="565" text-anchor="middle" class="label">Manage Form Templates</text>
+<ellipse cx="1215" cy="630" rx="100" ry="25" class="uc"/><text x="1215" y="635" text-anchor="middle" class="label">Review PDS Requests</text>
+<ellipse cx="1215" cy="700" rx="100" ry="25" class="uc"/><text x="1215" y="705" text-anchor="middle" class="label">Review Leave Applications</text>
+<ellipse cx="1215" cy="770" rx="100" ry="25" class="uc"/><text x="1215" y="775" text-anchor="middle" class="label">Manage Leave Ledgers</text>
+<ellipse cx="1215" cy="840" rx="100" ry="25" class="uc"/><text x="1215" y="845" text-anchor="middle" class="label">Manage Policies / Reports</text>
+<ellipse cx="1215" cy="910" rx="100" ry="25" class="uc"/><text x="1215" y="915" text-anchor="middle" class="label">View Activity Log</text>
+<path d="M110 880L1115 420 M110 880L1115 490 M110 880L1115 560 M110 880L1115 630 M110 880L1115 700 M110 880L1115 770 M110 880L1115 840 M110 880L1115 910" class="assoc"/>
+
+<!-- actors -->
+<g transform="translate(85,250)"><circle cx="28" cy="15" r="13" fill="white" stroke="#222" stroke-width="2"/><path d="M28 28v42m-27-26h54M28 70L7 100m21-30l21 30" class="actorLine"/><text x="28" y="125" text-anchor="middle" class="label">User</text></g>
+<path d="M130 280L520 180" class="assoc"/>
+<g transform="translate(65,390)"><circle cx="28" cy="15" r="13" fill="white" stroke="#222" stroke-width="2"/><path d="M28 28v42m-27-26h54M28 70L7 100m21-30l21 30" class="actorLine"/><text x="28" y="125" text-anchor="middle" class="label">Employee</text></g>
+<g transform="translate(65,540)"><circle cx="28" cy="15" r="13" fill="white" stroke="#222" stroke-width="2"/><path d="M28 28v42m-27-26h54M28 70L7 100m21-30l21 30" class="actorLine"/><text x="28" y="125" text-anchor="middle" class="label">Dean</text></g>
+<g transform="translate(65,690)"><circle cx="28" cy="15" r="13" fill="white" stroke="#222" stroke-width="2"/><path d="M28 28v42m-27-26h54M28 70L7 100m21-30l21 30" class="actorLine"/><text x="28" y="125" text-anchor="middle" class="label">Campus Director</text></g>
+<g transform="translate(65,850)"><circle cx="28" cy="15" r="13" fill="white" stroke="#222" stroke-width="2"/><path d="M28 28v42m-27-26h54M28 70L7 100m21-30l21 30" class="actorLine"/><text x="28" y="125" text-anchor="middle" class="label">HR Administrator</text></g>
+
+<!-- actor generalization to User -->
+<text x="20" y="1030" class="note">UML interpretation: Log in is an authentication use case. Other protected use cases include authentication as a prerequisite; the role groups show the functions exposed through each navbar.</text>
+</svg>
