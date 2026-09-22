@@ -196,11 +196,14 @@ class XlsxToPdfService
         string $downloadName,
         bool $forceA4 = true,
         ?string $cacheKey = null,
+        bool $allowIncompletePreview = false,
     ) {
         // A misleading PDF of an official form is worse than no PDF: someone
         // prints it, signs it and files it, and the missing half is only found
         // when the form is rejected.
-        if ($this->renderer() === 'php' && $this->phpRendererWouldLoseContent($xlsxPath)) {
+        if (! $allowIncompletePreview
+            && $this->renderer() === 'php'
+            && $this->phpRendererWouldLoseContent($xlsxPath)) {
             return $this->streamWorkbook($xlsxPath, $downloadName);
         }
 

@@ -199,6 +199,11 @@ class LeaveReviewController extends Controller
             Storage::disk('local')->path($application->file_path),
             $application->formPdfName(),
             cacheKey: 'leave-form:' . $application->id,
+            // This endpoint is embedded in the review page. Returning an
+            // .xlsx attachment here makes Chrome download it and leaves the
+            // preview blank on hosts without LibreOffice. The original file
+            // remains separately available from the Original button.
+            allowIncompletePreview: true,
         );
     }
 

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200">
+<title>NexHRIS Use Case Diagram</title>
+<rect width="900" height="1200" fill="white"/>
+<defs><style>text{font-family:Arial,Helvetica,sans-serif;fill:#111}.boundary{fill:#fff;stroke:#111;stroke-width:2}.uc{fill:#fff;stroke:#111;stroke-width:1.8}.actor{fill:none;stroke:#111;stroke-width:2}.assoc{fill:none;stroke:#111;stroke-width:1.5}.label{font-size:16px;font-weight:bold}.ucText{font-size:16px}</style></defs>
+
+<!-- system boundary -->
+<rect x="265" y="28" width="370" height="1138" class="boundary"/>
+
+<!-- actor association lines, behind use cases -->
+<g class="assoc">
+  <!-- HR Administrator: login, records, college, templates, PDS review, leave review, ledgers, policy, reports, notification -->
+  <path d="M150 300L290 90 M150 300L290 170 M150 300L290 250 M150 300L290 330 M150 300L290 490 M150 300L290 650 M150 300L290 730 M150 300L290 810 M150 300L290 890 M150 300L290 970 M150 300L290 1050"/>
+  <!-- Dean: login, submit PDS, file leave, review leave, dashboard, notification -->
+  <path d="M150 820L290 90 M150 820L290 410 M150 820L290 570 M150 820L290 650 M150 820L290 890 M150 820L290 970"/>
+  <!-- Employee: login, submit PDS, file leave, dashboard, notification -->
+  <path d="M750 300L610 90 M750 300L610 410 M750 300L610 570 M750 300L610 890 M750 300L610 970"/>
+  <!-- Campus Director: login, submit PDS, file leave, leave review, ledgers, policy, reports, notification -->
+  <path d="M750 820L610 90 M750 820L610 410 M750 820L610 570 M750 820L610 650 M750 820L610 730 M750 820L610 810 M750 820L610 890 M750 820L610 970"/>
+</g>
+
+<!-- use cases, matching the requested vertical layout -->
+<ellipse cx="450" cy="90" rx="160" ry="35" class="uc"/><text x="450" y="96" text-anchor="middle" class="ucText">LOGIN</text>
+<ellipse cx="450" cy="170" rx="160" ry="35" class="uc"/><text x="450" y="164" text-anchor="middle" class="ucText">MANAGE EMPLOYEE</text><text x="450" y="185" text-anchor="middle" class="ucText">RECORDS</text>
+<ellipse cx="450" cy="250" rx="160" ry="35" class="uc"/><text x="450" y="244" text-anchor="middle" class="ucText">MANAGE COLLEGE</text><text x="450" y="265" text-anchor="middle" class="ucText">AND DEPARTMENT</text>
+<ellipse cx="450" cy="330" rx="160" ry="35" class="uc"/><text x="450" y="324" text-anchor="middle" class="ucText">MANAGE FORM</text><text x="450" y="345" text-anchor="middle" class="ucText">TEMPLATES</text>
+<ellipse cx="450" cy="410" rx="160" ry="35" class="uc"/><text x="450" y="404" text-anchor="middle" class="ucText">SUBMIT PERSONAL</text><text x="450" y="425" text-anchor="middle" class="ucText">DATA SHEET</text>
+<ellipse cx="450" cy="490" rx="160" ry="35" class="uc"/><text x="450" y="484" text-anchor="middle" class="ucText">REVIEW PDS</text><text x="450" y="505" text-anchor="middle" class="ucText">SUBMISSION</text>
+<ellipse cx="450" cy="570" rx="160" ry="35" class="uc"/><text x="450" y="564" text-anchor="middle" class="ucText">FILE LEAVE</text><text x="450" y="585" text-anchor="middle" class="ucText">APPLICATION</text>
+<ellipse cx="450" cy="650" rx="160" ry="35" class="uc"/><text x="450" y="644" text-anchor="middle" class="ucText">REVIEW AND</text><text x="450" y="665" text-anchor="middle" class="ucText">APPROVE LEAVE</text>
+<ellipse cx="450" cy="730" rx="160" ry="35" class="uc"/><text x="450" y="724" text-anchor="middle" class="ucText">MANAGE LEDGER</text><text x="450" y="745" text-anchor="middle" class="ucText">CARDS</text>
+<ellipse cx="450" cy="810" rx="160" ry="35" class="uc"/><text x="450" y="804" text-anchor="middle" class="ucText">MANAGE POLICY AND</text><text x="450" y="825" text-anchor="middle" class="ucText">ANNOUNCEMENT</text>
+<ellipse cx="450" cy="890" rx="160" ry="35" class="uc"/><text x="450" y="884" text-anchor="middle" class="ucText">VIEW DASHBOARD</text><text x="450" y="905" text-anchor="middle" class="ucText">AND REPORTS</text>
+<ellipse cx="450" cy="970" rx="160" ry="35" class="uc"/><text x="450" y="964" text-anchor="middle" class="ucText">RECEIVE</text><text x="450" y="985" text-anchor="middle" class="ucText">NOTIFICATION</text>
+<ellipse cx="450" cy="1050" rx="160" ry="35" class="uc"/><text x="450" y="1056" text-anchor="middle" class="ucText">VIEW SYSTEM LOGS</text>
+
+<!-- actors -->
+<g transform="translate(90,220)"><circle cx="30" cy="15" r="14" class="actor"/><path d="M30 29V75 M2 48H58 M30 75L8 108 M30 75L52 108" class="actor"/><text x="30" y="143" text-anchor="middle" class="label">HR</text><text x="30" y="164" text-anchor="middle" class="label">ADMINISTRATOR</text></g>
+<g transform="translate(90,740)"><circle cx="30" cy="15" r="14" class="actor"/><path d="M30 29V75 M2 48H58 M30 75L8 108 M30 75L52 108" class="actor"/><text x="30" y="143" text-anchor="middle" class="label">DEAN</text></g>
+<g transform="translate(720,220)"><circle cx="30" cy="15" r="14" class="actor"/><path d="M30 29V75 M2 48H58 M30 75L8 108 M30 75L52 108" class="actor"/><text x="30" y="143" text-anchor="middle" class="label">EMPLOYEE</text></g>
+<g transform="translate(720,740)"><circle cx="30" cy="15" r="14" class="actor"/><path d="M30 29V75 M2 48H58 M30 75L8 108 M30 75L52 108" class="actor"/><text x="30" y="143" text-anchor="middle" class="label">CAMPUS</text><text x="30" y="164" text-anchor="middle" class="label">DIRECTOR</text></g>
+</svg>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120">
+<title>NexHRIS Use Case Diagram — Login and Role-Based Navigation</title>
+<rect width="1600" height="1120" fill="#ffffff"/>
+<defs>
+  <style>
+    text{font-family:Arial,Helvetica,sans-serif;fill:#111}.boundary{fill:#fbfbfb;stroke:#111;stroke-width:2}.auth{fill:#eaf2ff;stroke:#1e4f8a;stroke-width:2}.uc{fill:#fff;stroke:#333;stroke-width:1.5}.role{fill:#f6f6f6;stroke:#777;stroke-width:1.2}.actor{stroke:#222;stroke-width:2;fill:none}.line{stroke:#555;stroke-width:1.3;fill:none}.dash{stroke:#555;stroke-width:1.1;stroke-dasharray:6 4;fill:none}.title{font-size:22px;font-weight:bold}.section{font-size:15px;font-weight:bold}.normal{font-size:14px}.small{font-size:12px}.note{font-size:13px;font-style:italic;fill:#444}
+  </style>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#555"/></marker>
+</defs>
+
+<text x="800" y="32" text-anchor="middle" class="title">NexHRIS Use Case Diagram</text>
+<text x="800" y="56" text-anchor="middle" class="normal">Login first, then access is limited to the functions represented by the user’s role and navbar</text>
+
+<!-- Authentication sequence -->
+<rect x="310" y="78" width="980" height="116" rx="8" class="auth"/>
+<text x="800" y="101" text-anchor="middle" class="section">AUTHENTICATION PROCESS</text>
+<ellipse cx="500" cy="145" rx="145" ry="25" class="uc"/><text x="500" y="150" text-anchor="middle" class="normal">1. Log in / Accept Terms</text>
+<path d="M645 145H710" class="line" marker-end="url(#arrow)"/>
+<ellipse cx="830" cy="145" rx="145" ry="25" class="uc"/><text x="830" y="150" text-anchor="middle" class="normal">2. Verify account if required</text>
+<path d="M975 145H1040" class="line" marker-end="url(#arrow)"/>
+<ellipse cx="1160" cy="145" rx="105" ry="25" class="uc"/><text x="1160" y="150" text-anchor="middle" class="normal">3. Open dashboard</text>
+
+<!-- actors -->
+<g transform="translate(70,115)"><circle cx="30" cy="15" r="13" fill="white" stroke="#222" stroke-width="2"/><path d="M30 28v42m-27-26h54M30 70L9 100m21-30l21 30" class="actor"/><text x="30" y="125" text-anchor="middle" class="section">Employee</text></g>
+<g transform="translate(70,385)"><circle cx="30" cy="15" r="13" fill="white" stroke="#222" stroke-width="2"/><path d="M30 28v42m-27-26h54M30 70L9 100m21-30l21 30" class="actor"/><text x="30" y="125" text-anchor="middle" class="section">Dean</text></g>
+<g transform="translate(70,655)"><circle cx="30" cy="15" r="13" fill="white" stroke="#222" stroke-width="2"/><path d="M30 28v42m-27-26h54M30 70L9 100m21-30l21 30" class="actor"/><text x="30" y="125" text-anchor="middle" class="section">Campus Director</text></g>
+<g transform="translate(70,925)"><circle cx="30" cy="15" r="13" fill="white" stroke="#222" stroke-width="2"/><path d="M30 28v42m-27-26h54M30 70L9 100m21-30l21 30" class="actor"/><text x="30" y="125" text-anchor="middle" class="section">HR Administrator</text></g>
+<path d="M130 145H355 M130 415H355 M130 685H355 M130 955H355" class="line"/>
+
+<!-- system boundary -->
+<rect x="355" y="215" width="1190" height="850" rx="8" class="boundary"/>
+<text x="950" y="244" text-anchor="middle" class="section">NEXHRIS ROLE-BASED NAVIGATION</text>
+<path d="M1160 170V260" class="line" marker-end="url(#arrow)"/>
+
+<!-- employee column -->
+<rect x="380" y="270" width="260" height="755" rx="6" class="role"/>
+<text x="510" y="298" text-anchor="middle" class="section">EMPLOYEE NAVBAR</text>
+<ellipse cx="510" cy="340" rx="102" ry="22" class="uc"/><text x="510" y="345" text-anchor="middle" class="normal">Dashboard</text>
+<ellipse cx="510" cy="400" rx="102" ry="22" class="uc"/><text x="510" y="405" text-anchor="middle" class="normal">My Leave</text>
+<ellipse cx="510" cy="460" rx="102" ry="22" class="uc"/><text x="510" y="465" text-anchor="middle" class="normal">My Personal Data Sheet</text>
+<ellipse cx="510" cy="520" rx="102" ry="22" class="uc"/><text x="510" y="525" text-anchor="middle" class="normal">My Leave Ledger</text>
+<ellipse cx="510" cy="580" rx="102" ry="22" class="uc"/><text x="510" y="585" text-anchor="middle" class="normal">My Digital ID</text>
+<ellipse cx="510" cy="640" rx="102" ry="22" class="uc"/><text x="510" y="645" text-anchor="middle" class="normal">Policies</text>
+<ellipse cx="510" cy="700" rx="102" ry="22" class="uc"/><text x="510" y="705" text-anchor="middle" class="normal">Announcements</text>
+<ellipse cx="510" cy="760" rx="102" ry="22" class="uc"/><text x="510" y="765" text-anchor="middle" class="normal">Notifications</text>
+<ellipse cx="510" cy="820" rx="102" ry="22" class="uc"/><text x="510" y="825" text-anchor="middle" class="normal">My Profile</text>
+<ellipse cx="510" cy="880" rx="102" ry="22" class="uc"/><text x="510" y="885" text-anchor="middle" class="normal">Logout</text>
+<path d="M1160 260H510V318 M510 362V378 M510 422V438 M510 482V498 M510 542V558 M510 602V618 M510 662V678 M510 722V738 M510 782V798 M510 842V858" class="dash" marker-end="url(#arrow)"/>
+
+<!-- dean column -->
+<rect x="660" y="270" width="260" height="755" rx="6" class="role"/>
+<text x="790" y="298" text-anchor="middle" class="section">DEAN NAVBAR</text>
+<ellipse cx="790" cy="340" rx="102" ry="22" class="uc"/><text x="790" y="345" text-anchor="middle" class="normal">Dashboard</text>
+<ellipse cx="790" cy="400" rx="102" ry="22" class="uc"/><text x="790" y="405" text-anchor="middle" class="normal">My Leave</text>
+<ellipse cx="790" cy="460" rx="102" ry="22" class="uc"/><text x="790" y="465" text-anchor="middle" class="normal">My Personal Data Sheet</text>
+<ellipse cx="790" cy="520" rx="102" ry="22" class="uc"/><text x="790" y="525" text-anchor="middle" class="normal">My Leave Ledger</text>
+<ellipse cx="790" cy="580" rx="102" ry="22" class="uc"/><text x="790" y="585" text-anchor="middle" class="normal">Review Leave Applications</text>
+<ellipse cx="790" cy="640" rx="102" ry="22" class="uc"/><text x="790" y="645" text-anchor="middle" class="normal">College Leave Calendar</text>
+<ellipse cx="790" cy="700" rx="102" ry="22" class="uc"/><text x="790" y="705" text-anchor="middle" class="normal">Policies / Announcements</text>
+<ellipse cx="790" cy="760" rx="102" ry="22" class="uc"/><text x="790" y="765" text-anchor="middle" class="normal">Notifications</text>
+<ellipse cx="790" cy="820" rx="102" ry="22" class="uc"/><text x="790" y="825" text-anchor="middle" class="normal">My Profile</text>
+<ellipse cx="790" cy="880" rx="102" ry="22" class="uc"/><text x="790" y="885" text-anchor="middle" class="normal">Logout</text>
+<path d="M1160 260H790V318 M790 362V378 M790 422V438 M790 482V498 M790 542V558 M790 602V618 M790 662V678 M790 722V738 M790 782V798 M790 842V858" class="dash" marker-end="url(#arrow)"/>
+
+<!-- campus director column -->
+<rect x="940" y="270" width="260" height="755" rx="6" class="role"/>
+<text x="1070" y="298" text-anchor="middle" class="section">CAMPUS DIRECTOR NAVBAR</text>
+<ellipse cx="1070" cy="340" rx="102" ry="22" class="uc"/><text x="1070" y="345" text-anchor="middle" class="normal">Dashboard</text>
+<ellipse cx="1070" cy="400" rx="102" ry="22" class="uc"/><text x="1070" y="405" text-anchor="middle" class="normal">My Leave</text>
+<ellipse cx="1070" cy="460" rx="102" ry="22" class="uc"/><text x="1070" y="465" text-anchor="middle" class="normal">My Personal Data Sheet</text>
+<ellipse cx="1070" cy="520" rx="102" ry="22" class="uc"/><text x="1070" y="525" text-anchor="middle" class="normal">My Leave Ledger</text>
+<ellipse cx="1070" cy="580" rx="102" ry="22" class="uc"/><text x="1070" y="585" text-anchor="middle" class="normal">Review Leave Applications</text>
+<ellipse cx="1070" cy="640" rx="102" ry="22" class="uc"/><text x="1070" y="645" text-anchor="middle" class="normal">Campus Leave Calendar</text>
+<ellipse cx="1070" cy="700" rx="102" ry="22" class="uc"/><text x="1070" y="705" text-anchor="middle" class="normal">Employee Directory</text>
+<ellipse cx="1070" cy="760" rx="102" ry="22" class="uc"/><text x="1070" y="765" text-anchor="middle" class="normal">Policies / Announcements</text>
+<ellipse cx="1070" cy="820" rx="102" ry="22" class="uc"/><text x="1070" y="825" text-anchor="middle" class="normal">Notifications</text>
+<ellipse cx="1070" cy="880" rx="102" ry="22" class="uc"/><text x="1070" y="885" text-anchor="middle" class="normal">Logout</text>
+<path d="M1160 260H1070V318 M1070 362V378 M1070 422V438 M1070 482V498 M1070 542V558 M1070 602V618 M1070 662V678 M1070 722V738 M1070 782V798 M1070 842V858" class="dash" marker-end="url(#arrow)"/>
+
+<!-- HR admin column -->
+<rect x="1220" y="270" width="300" height="755" rx="6" class="role"/>
+<text x="1370" y="298" text-anchor="middle" class="section">HR ADMIN NAVBAR</text>
+<ellipse cx="1370" cy="340" rx="120" ry="22" class="uc"/><text x="1370" y="345" text-anchor="middle" class="normal">Dashboard</text>
+<ellipse cx="1370" cy="400" rx="120" ry="22" class="uc"/><text x="1370" y="405" text-anchor="middle" class="normal">Manage Employee Accounts</text>
+<ellipse cx="1370" cy="460" rx="120" ry="22" class="uc"/><text x="1370" y="465" text-anchor="middle" class="normal">Manage Colleges &amp; Departments</text>
+<ellipse cx="1370" cy="520" rx="120" ry="22" class="uc"/><text x="1370" y="525" text-anchor="middle" class="normal">Manage Form Templates</text>
+<ellipse cx="1370" cy="580" rx="120" ry="22" class="uc"/><text x="1370" y="585" text-anchor="middle" class="normal">Review PDS Requests</text>
+<ellipse cx="1370" cy="640" rx="120" ry="22" class="uc"/><text x="1370" y="645" text-anchor="middle" class="normal">Review Leave Applications</text>
+<ellipse cx="1370" cy="700" rx="120" ry="22" class="uc"/><text x="1370" y="705" text-anchor="middle" class="normal">Manage Leave Ledgers</text>
+<ellipse cx="1370" cy="760" rx="120" ry="22" class="uc"/><text x="1370" y="765" text-anchor="middle" class="normal">Reports / Calendar</text>
+<ellipse cx="1370" cy="820" rx="120" ry="22" class="uc"/><text x="1370" y="825" text-anchor="middle" class="normal">Policies / Announcements</text>
+<ellipse cx="1370" cy="880" rx="120" ry="22" class="uc"/><text x="1370" y="885" text-anchor="middle" class="normal">Activity Log / Logout</text>
+<path d="M1160 260H1370V318 M1370 362V378 M1370 422V438 M1370 482V498 M1370 542V558 M1370 602V618 M1370 662V678 M1370 722V738 M1370 782V798 M1370 842V858" class="dash" marker-end="url(#arrow)"/>
+
+<text x="800" y="1095" text-anchor="middle" class="note">Note: The diagram shows navigation access; approval routing and data restrictions are enforced by the application according to role and college scope.</text>
+</svg>
