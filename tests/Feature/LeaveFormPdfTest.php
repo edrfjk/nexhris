@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xls as XlsWriter;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx as XlsxWriter;
 use Tests\TestCase;
 
@@ -233,6 +234,54 @@ class LeaveFormPdfTest extends TestCase
             'inline;',
             (string) $response->headers->get('content-disposition'),
         );
+    }
+
+    public function test_a_legacy_xls_upload_is_rendered_inline(): void
+    {
+        config(['pdf.renderer' => 'php']);
+
+        $spreadsheet = new Spreadsheet();
+        $spreadsheet->getActiveSheet()->setCellValue('A1', 'LEGACY LEAVE FORM');
+        $temporary = tempnam(sys_get_temp_dir(), 'leave-xls');
+        (new XlsWriter($spreadsheet))->save($temporary);
+        $spreadsheet->disconnectWorksheets();
+
+        Storage::disk('local')->put('leave-applications/legacy.xls', file_get_contents($temporary));
+        @unlink($temporary);
+
+        $application = $this->application([
+            'file_path' => 'leave-applications/legacy.xls',
+            'file_original_name' => 'Legacy Form.xls',
+        ]);
+
+        $response = $this->actingAs($this->reviewer('admin'))
+            ->get(route('admin.leave.review.form.pdf', $application))
+            ->assertOk();
+
+        $this->assertSame('application/pdf', $response->headers->get('content-type'));
+        $this->assertStringStartsWith('inline;', (string) $response->headers->get('content-disposition'));
+    }
+
+    public function test_a_failed_embedded_preview_never_triggers_an_automatic_download(): void
+    {
+        config(['pdf.renderer' => 'php']);
+
+        Storage::disk('local')->put(
+            'leave-applications/broken.xlsx',
+            'not a workbook ' . bin2hex(random_bytes(12)),
+        );
+        $application = $this->application([
+            'file_path' => 'leave-applications/broken.xlsx',
+            'file_original_name' => 'Broken Form.xlsx',
+        ]);
+
+        $response = $this->actingAs($this->reviewer('admin'))
+            ->get(route('admin.leave.review.form.pdf', $application))
+            ->assertOk();
+
+        $disposition = (string) $response->headers->get('content-disposition');
+        $this->assertStringStartsWith('inline', $disposition);
+        $this->assertStringNotContainsString('attachment', $disposition);
     }
 
     public function test_a_missing_file_is_reported_rather_than_crashing(): void

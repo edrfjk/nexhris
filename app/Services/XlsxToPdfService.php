@@ -149,7 +149,12 @@ class XlsxToPdfService
         $work = $this->makeWorkspace();
 
         try {
-            $source = $work . DIRECTORY_SEPARATOR . 'source.xlsx';
+            // Keep the real spreadsheet extension. LibreOffice and the PHP
+            // reader both support legacy .xls, but renaming its binary bytes
+            // to .xlsx can make either renderer reject the upload.
+            $extension = strtolower(pathinfo($xlsxPath, PATHINFO_EXTENSION));
+            $extension = in_array($extension, ['xls', 'xlsx'], true) ? $extension : 'xlsx';
+            $source = $work . DIRECTORY_SEPARATOR . 'source.' . $extension;
             copy($xlsxPath, $source);
 
             $this->prepareWorkbook($source, $forceA4);
@@ -209,13 +214,24 @@ class XlsxToPdfService
 
         try {
             $pdf = $this->convert($xlsxPath, $forceA4, true, $cacheKey);
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $e) {
+            if ($allowIncompletePreview) {
+                Log::warning('Document could not be rendered in the embedded preview.', [
+                    'file' => basename($xlsxPath),
+                    'error' => $e->getMessage(),
+                ]);
+
+                return $this->previewUnavailableResponse();
+            }
+
             return $this->streamWorkbook($xlsxPath, $downloadName);
         }
 
         return response()->file($pdf, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => DocumentName::disposition($downloadName),
+            'Cache-Control' => 'private, no-store, max-age=0',
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 
@@ -270,6 +286,42 @@ class XlsxToPdfService
             $name,
             ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
         );
+    }
+
+    /**
+     * An iframe endpoint must never answer with an attachment: browsers start
+     * downloading it while leaving a blank review panel. Keep the reviewer on
+     * the page and direct them to the explicit Original button instead.
+     */
+    private function previewUnavailableResponse()
+    {
+        $html = <<<'HTML'
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Preview unavailable</title>
+    <style>
+        body { margin: 0; background: #faf8f3; color: #4b4038; font: 14px/1.55 system-ui, sans-serif; }
+        main { min-height: 70vh; display: grid; place-content: center; padding: 32px; text-align: center; }
+        h1 { margin: 0 0 8px; color: #7f1d1d; font-size: 18px; }
+        p { margin: 0; max-width: 520px; }
+    </style>
+</head>
+<body><main><div>
+    <h1>This file cannot be previewed on this server</h1>
+    <p>Use the Original button above to open the submitted file. No file was downloaded automatically.</p>
+</div></main></body>
+</html>
+HTML;
+
+        return response($html, 200, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'Content-Disposition' => 'inline',
+            'Cache-Control' => 'private, no-store, max-age=0',
+            'X-Document-Preview' => 'unavailable',
+        ]);
     }
 
     // ------------------------------------------------------------------
@@ -518,7 +570,9 @@ class XlsxToPdfService
     private function convertWithPhp(string $xlsxPath, string $cachePath, bool $forceA4): string
     {
         try {
-            $reader = IOFactory::createReader('Xlsx');
+            // Select Xlsx or Xls from the actual file instead of forcing every
+            // upload through the Xlsx reader.
+            $reader = IOFactory::createReaderForFile($xlsxPath);
             $reader->setIncludeCharts(false);
             $book = $reader->load($xlsxPath);
 
