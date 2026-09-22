@@ -47,6 +47,38 @@
     // $days is only populated for the month currently being viewed, so "today" is
     // only meaningful when that happens to be the month on screen.
     $todayApps = $isCurrentMonth ? ($days[now()->format('Y-m-d')] ?? collect()) : collect();
+
+    // One scoped data set powers the day-details modal. Only applications
+    // already allowed by the controller's college boundary reach this view.
+    $calendarDetails = collect($days)->mapWithKeys(function ($apps, $date) {
+        $dateObj = \Carbon\Carbon::parse($date);
+
+        return [$date => [
+            'label' => $dateObj->format('l, F j, Y'),
+            'entries' => $apps->map(function ($app) {
+                $pending = ! in_array($app->status, ['cd_approved', 'completed'], true);
+
+                return [
+                    'id' => $app->id,
+                    'employee' => $app->user->name,
+                    'employeeNumber' => $app->user->employee_number ?: 'No employee number',
+                    'position' => $app->user->position ?: 'Position not set',
+                    'college' => $app->user->college?->code ?: 'No college',
+                    'department' => $app->user->departmentRecord?->code
+                        ?: ($app->user->program ?: 'No department'),
+                    'type' => $app->typeLabel(),
+                    'typeCode' => $app->leave_type,
+                    'status' => $app->currentStageLabel(),
+                    'pending' => $pending,
+                    'period' => $app->date_from->format('M j, Y') . ' – ' . $app->date_to->format('M j, Y'),
+                    'days' => number_format((float) $app->days, 2),
+                    'reason' => $app->reason ?: 'No reason provided.',
+                    'reviewUrl' => route('admin.leave.review.show', $app),
+                    'ledgerUrl' => route('admin.leave.ledger', $app->user),
+                ];
+            })->values()->all(),
+        ]];
+    })->all();
 @endphp
 
 @if ($isCurrentMonth)
@@ -146,7 +178,22 @@
     </div>
 @endif
 
-<div x-data="{ typeFilter: 'all' }">
+<div x-data="{
+        typeFilter: 'all',
+        selectedDate: null,
+        calendarDetails: @js($calendarDetails),
+        visibleEntries(date) {
+            const entries = this.calendarDetails[date]?.entries ?? [];
+            return this.typeFilter === 'all'
+                ? entries
+                : entries.filter(entry => entry.typeCode === this.typeFilter);
+        },
+        openDay(date) {
+            if (this.visibleEntries(date).length > 0) this.selectedDate = date;
+        }
+    }"
+    x-effect="document.body.style.overflow = selectedDate ? 'hidden' : ''"
+    @keydown.escape.window="selectedDate = null">
     <div class="card p-5">
 
         {{-- Month navigation --}}
@@ -228,7 +275,7 @@
         </div>
 
         {{-- Desktop / tablet grid --}}
-        <div class="hidden sm:block" x-data="{ expanded: null }" @click.outside="expanded = null">
+        <div class="hidden sm:block">
             <div class="grid grid-cols-7 gap-2 mb-2">
                 @foreach (['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] as $day)
                     <div class="text-center text-xs font-semibold text-sand-400 uppercase tracking-wide py-2">
@@ -246,8 +293,16 @@
                 @foreach ($days as $date => $apps)
                     @php $dateObj = \Carbon\Carbon::parse($date); @endphp
                     <div class="border rounded min-h-[130px] p-2 transition-all duration-150 hover:shadow-soft flex flex-col relative
+                        {{ $apps->count() ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-maroon-400 focus:ring-offset-1' : '' }}
                         {{ $dateObj->isToday() ? 'bg-maroon-50 border-maroon-300 shadow-soft' : 'border-sand-200 bg-white' }}
-                        {{ $dateObj->isWeekend() && !$dateObj->isToday() ? 'bg-sand-50/60' : '' }}">
+                        {{ $dateObj->isWeekend() && !$dateObj->isToday() ? 'bg-sand-50/60' : '' }}"
+                        @if ($apps->count())
+                            role="button" tabindex="0"
+                            aria-label="View employees on leave on {{ $dateObj->format('F j, Y') }}"
+                            @click="openDay('{{ $date }}')"
+                            @keydown.enter.prevent="openDay('{{ $date }}')"
+                            @keydown.space.prevent="openDay('{{ $date }}')"
+                        @endif>
 
                         <div class="flex justify-between items-center mb-2">
                             <span class="flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold
@@ -255,7 +310,9 @@
                                 {{ $dateObj->day }}
                             </span>
                             @if ($apps->count())
-                                <span class="text-[10px] font-medium text-sand-400 bg-sand-50 rounded-full px-1.5 py-0.5">{{ $apps->count() }}</span>
+                                <span x-show="visibleEntries('{{ $date }}').length > 0"
+                                      x-text="visibleEntries('{{ $date }}').length"
+                                      class="text-[10px] font-medium text-sand-400 bg-sand-50 rounded-full px-1.5 py-0.5"></span>
                             @endif
                         </div>
 
@@ -268,10 +325,9 @@
                                         : 'bg-forest-50 border-forest-300 text-forest-700';
                                     $statusAvatarClass = $isPending ? 'bg-gold-500' : 'bg-forest-500';
                                 @endphp
-                                <a href="{{ route('admin.leave.ledger', $app->user) }}"
-                                   title="{{ $app->user->name }} ({{ $app->typeLabel() }}{{ $isPending ? ', pending' : '' }})"
+                                <div title="{{ $app->user->name }} ({{ $app->typeLabel() }}{{ $isPending ? ', pending' : '' }})"
                                    x-show="typeFilter === 'all' || typeFilter === '{{ $app->leave_type }}'"
-                                   class="flex items-center gap-1.5 rounded-md pl-1 pr-2 py-1 text-[11px] font-medium transition hover:opacity-80
+                                   class="flex items-center gap-1.5 rounded-md pl-1 pr-2 py-1 text-[11px] font-medium
                                    {{ $isPending ? 'border border-dashed' : '' }}
                                    {{ $statusChipClass }}">
                                     <span class="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold
@@ -279,41 +335,17 @@
                                         {{ strtoupper(substr($app->user->name, 0, 1)) }}
                                     </span>
                                     <span class="truncate">{{ Str::limit($app->user->name, 10) }} · {{ $app->typeLabel() }}</span>
-                                </a>
+                                </div>
                             @endforeach
 
                             @if ($apps->count() > 3)
-                                <button type="button" @click="expanded = (expanded === '{{ $date }}' ? null : '{{ $date }}')"
-                                        class="text-[10px] font-medium text-maroon-700 hover:text-maroon-900 px-2 underline underline-offset-2">
-                                    +{{ $apps->count() - 3 }} more
+                                <button type="button" @click.stop="openDay('{{ $date }}')"
+                                        class="text-[10px] font-medium text-maroon-700 hover:text-maroon-900 px-2 text-left underline underline-offset-2">
+                                    View all <span x-text="visibleEntries('{{ $date }}').length"></span> employees
                                 </button>
                             @endif
                         </div>
 
-                        @if ($apps->count() > 3)
-                            <div x-show="expanded === '{{ $date }}'" x-cloak @click.stop
-                                 class="popover absolute z-10 top-full left-0 mt-1 w-56">
-                                <p class="text-[10px] font-semibold text-sand-400 uppercase tracking-wide px-1.5 py-1">{{ $dateObj->format('M d') }} · {{ $apps->count() }} on leave</p>
-                                @foreach ($apps as $app)
-                                    @php
-                                        $isPending = ! in_array($app->status, ['cd_approved', 'completed'], true);
-                                        $statusTextClass = $isPending ? 'text-gold-700' : 'text-forest-700';
-                                        $statusAvatarClass = $isPending ? 'bg-gold-500' : 'bg-forest-500';
-                                    @endphp
-                                    <a href="{{ route('admin.leave.ledger', $app->user) }}"
-                                       x-show="typeFilter === 'all' || typeFilter === '{{ $app->leave_type }}'"
-                                       class="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs font-medium transition hover:bg-sand-50
-                                       {{ $statusTextClass }}">
-                                        <span class="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white
-                                            {{ $statusAvatarClass }}">
-                                            {{ strtoupper(substr($app->user->name, 0, 1)) }}
-                                        </span>
-                                        {{ $app->user->name }}
-                                        <span class="ml-auto text-[10px] opacity-60">{{ $app->typeLabel() }}{{ $isPending ? ' · Pending' : '' }}</span>
-                                    </a>
-                                @endforeach
-                            </div>
-                        @endif
                     </div>
                 @endforeach
 
@@ -332,8 +364,16 @@
 
             @forelse ($daysWithLeave as $date => $apps)
                 @php $dateObj = \Carbon\Carbon::parse($date); @endphp
-                <div class="border border-sand-200 rounded p-3 {{ $dateObj->isToday() ? 'bg-maroon-50 border-maroon-300' : '' }}">
-                    <p class="text-xs font-semibold text-sand-500 mb-2">{{ $dateObj->format('D, M d') }}</p>
+                <div class="border border-sand-200 rounded p-3 cursor-pointer transition hover:shadow-soft focus:outline-none focus:ring-2 focus:ring-maroon-400
+                    {{ $dateObj->isToday() ? 'bg-maroon-50 border-maroon-300' : '' }}"
+                    role="button" tabindex="0"
+                    @click="openDay('{{ $date }}')"
+                    @keydown.enter.prevent="openDay('{{ $date }}')"
+                    @keydown.space.prevent="openDay('{{ $date }}')">
+                    <div class="flex items-center justify-between gap-3 mb-2">
+                        <p class="text-xs font-semibold text-sand-500">{{ $dateObj->format('D, M d') }}</p>
+                        <span class="text-[10px] font-medium text-maroon-700">View details</span>
+                    </div>
                     <div class="flex flex-wrap gap-1.5">
                         @foreach ($apps as $app)
                             @php
@@ -342,19 +382,92 @@
                                     ? 'bg-gold-50 border-gold-300 text-gold-700'
                                     : 'bg-forest-50 border-forest-300 text-forest-700';
                             @endphp
-                            <a href="{{ route('admin.leave.ledger', $app->user) }}"
-                               x-show="typeFilter === 'all' || typeFilter === '{{ $app->leave_type }}'"
+                            <span x-show="typeFilter === 'all' || typeFilter === '{{ $app->leave_type }}'"
                                class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium
                                {{ $isPending ? 'border border-dashed' : '' }}
                                {{ $statusChipClass }}">
                                 {{ $app->user->name }} · {{ $app->typeLabel() }}{{ $isPending ? ' (Pending)' : '' }}
-                            </a>
+                            </span>
                         @endforeach
                     </div>
                 </div>
             @empty
                 <x-empty-state message="No leaves this month." />
             @endforelse
+        </div>
+    </div>
+
+    {{-- One modal serves every date, so a busy month does not create dozens of
+         hidden dialogs. Its data is already restricted by the viewer's role. --}}
+    <div x-show="selectedDate" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
+         role="dialog" aria-modal="true" aria-labelledby="leave-day-modal-title">
+        <div class="absolute inset-0 bg-sand-900/60 backdrop-blur-sm"
+             @click="selectedDate = null" x-transition.opacity></div>
+
+        <div class="relative w-full max-w-3xl max-h-[88vh] overflow-hidden rounded-xl bg-white shadow-xl border border-sand-200"
+             @click.stop x-transition>
+            <div class="flex items-start justify-between gap-4 px-5 py-4 border-b border-sand-200 bg-sand-50">
+                <div>
+                    <p class="section-label">Employees on leave</p>
+                    <h2 id="leave-day-modal-title" class="text-lg font-semibold text-sand-900"
+                        x-text="calendarDetails[selectedDate]?.label ?? ''"></h2>
+                    <p class="text-xs text-sand-500 mt-1">
+                        <span x-text="visibleEntries(selectedDate).length"></span>
+                        <span x-text="visibleEntries(selectedDate).length === 1 ? 'employee' : 'employees'"></span>
+                        <span x-show="typeFilter !== 'all'"> under the selected leave filter</span>
+                    </p>
+                </div>
+                <button type="button" class="icon-btn icon-btn-round shrink-0"
+                        aria-label="Close day details" @click="selectedDate = null">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-4 sm:p-5 overflow-y-auto max-h-[calc(88vh-92px)] bg-sand-50/40">
+                <div class="space-y-3">
+                    <template x-for="entry in visibleEntries(selectedDate)" :key="entry.id">
+                        <article class="rounded-lg border border-sand-200 bg-white p-4 shadow-soft">
+                            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h3 class="font-semibold text-sand-900" x-text="entry.employee"></h3>
+                                        <span class="badge"
+                                              :class="entry.pending ? 'badge-amber' : 'badge-green'"
+                                              x-text="entry.pending ? 'Pending' : 'Approved'"></span>
+                                        <span class="badge badge-slate" x-text="entry.type"></span>
+                                    </div>
+                                    <p class="text-xs text-sand-500 mt-1">
+                                        <span x-text="entry.employeeNumber"></span>
+                                        <span aria-hidden="true"> · </span>
+                                        <span x-text="entry.position"></span>
+                                    </p>
+                                </div>
+                                <p class="text-xs font-medium text-sand-600 whitespace-nowrap" x-text="entry.period"></p>
+                            </div>
+
+                            <dl class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 text-xs">
+                                <div><dt class="text-sand-400">College</dt><dd class="font-medium text-sand-700 mt-0.5" x-text="entry.college"></dd></div>
+                                <div><dt class="text-sand-400">Department</dt><dd class="font-medium text-sand-700 mt-0.5" x-text="entry.department"></dd></div>
+                                <div><dt class="text-sand-400">Working days</dt><dd class="font-medium text-sand-700 mt-0.5" x-text="entry.days"></dd></div>
+                                <div><dt class="text-sand-400">Workflow status</dt><dd class="font-medium text-sand-700 mt-0.5" x-text="entry.status"></dd></div>
+                            </dl>
+
+                            <div class="mt-3 rounded-md bg-sand-50 px-3 py-2 text-xs text-sand-600">
+                                <span class="font-medium text-sand-700">Reason:</span>
+                                <span x-text="entry.reason"></span>
+                            </div>
+
+                            <div class="flex flex-wrap justify-end gap-2 mt-3">
+                                <a :href="entry.ledgerUrl" class="btn btn-sm btn-secondary">Open ledger</a>
+                                <a :href="entry.reviewUrl" class="btn btn-sm btn-primary">View leave details</a>
+                            </div>
+                        </article>
+                    </template>
+                </div>
+            </div>
         </div>
     </div>
 </div>

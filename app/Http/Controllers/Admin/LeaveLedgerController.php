@@ -411,7 +411,7 @@ class LeaveLedgerController extends Controller
      */
     private function calendarQuery(\App\Models\User $viewer, Request $request)
     {
-        $query = LeaveApplication::with('user.college')
+        $query = LeaveApplication::with(['user.college', 'user.departmentRecord'])
             ->whereNotIn('status', ['draft', 'dean_returned', 'hr_returned', 'cd_returned']);
 
         if ($viewer->isDean()) {
