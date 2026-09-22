@@ -108,6 +108,25 @@ class LeaveCalendarScopingTest extends TestCase
             ->assertDontSee('Bob In CTE');
     }
 
+    public function test_a_busy_day_opens_one_detailed_employee_list(): void
+    {
+        $cas = College::where('code', 'CAS')->firstOrFail();
+
+        foreach (range(1, 5) as $number) {
+            $this->leaveFor($this->user('employee', $cas->id, "Calendar Employee {$number}"));
+        }
+
+        $this->actingAs($this->user('admin'))
+            ->get(route('admin.leave.calendar'))
+            ->assertOk()
+            ->assertSee('View all')
+            ->assertSee("visibleEntries('", false)
+            ->assertSee('leave-day-modal-title', false)
+            ->assertSee("openDay('", false)
+            ->assertSee('Calendar Employee 5')
+            ->assertSee('View leave details');
+    }
+
     public function test_a_dean_cannot_widen_their_scope_with_a_query_string(): void
     {
         $cas = College::where('code', 'CAS')->firstOrFail();
