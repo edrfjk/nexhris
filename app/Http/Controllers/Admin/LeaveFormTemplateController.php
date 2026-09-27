@@ -79,7 +79,7 @@ class LeaveFormTemplateController extends Controller
 
         $request->validate([
             'label' => ['required', 'string', 'max:120'],
-            'template' => ['required', 'file', 'mimes:xlsx', 'max:20480'],
+            'template' => ['required', 'file', 'mimes:xlsx', 'max:10240'],
             'notes' => ['nullable', 'string', 'max:255'],
         ], [
             'template.mimes' => 'The master ledger must be an .xlsx workbook.',

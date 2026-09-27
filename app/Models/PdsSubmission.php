@@ -23,6 +23,8 @@ class PdsSubmission extends Model
         'reviewed_by',
         'reviewed_at',
         'return_remarks',
+        'form_data',
+        'form_updated_at',
     ];
 
     protected $casts = [
@@ -30,6 +32,8 @@ class PdsSubmission extends Model
         'converted_at' => 'datetime',
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
+        'form_data' => 'array',
+        'form_updated_at' => 'datetime',
     ];
 
     public function user()

@@ -59,7 +59,7 @@ class XlsxToPdfService
     private const MARGIN_FLOOR_MM = 5.0;
 
     /** Bump whenever the painted output changes; it invalidates the cache. */
-    public const RENDERER_VERSION = '2026-09-11-painter';
+    public const RENDERER_VERSION = '2026-09-28-pds-margins';
 
     /**
      * A token safe to put in a filename, so anything that keeps a converted
@@ -376,6 +376,8 @@ HTML;
         }
 
         try {
+            $isPds = $this->isPersonalDataSheet($zip);
+
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $name = (string) $zip->getNameIndex($i);
 
@@ -396,6 +398,10 @@ HTML;
                     ? ($forceA4 ? $this->withA4PaperSize($xml) : $xml)
                     : $this->withUnclippedShapeText($xml);
 
+                if ($isSheet && $isPds) {
+                    $updated = $this->withUniformPdsPage($updated);
+                }
+
                 if ($updated !== $xml) {
                     $zip->addFromString($name, $updated);
                 }
@@ -403,6 +409,79 @@ HTML;
         } finally {
             $zip->close();
         }
+
+        // LibreOffice prints a ticked check box as ☒ and clips captions;
+        // redraw them as Excel prints them. See CheckboxFlattener. A fresh
+        // handle, because ZipArchive does not hand back an entry replaced
+        // earlier in the same session, and the loop above replaces drawings.
+        if ($zip->open($path) === true) {
+            try {
+                (new Xlsx\CheckboxFlattener())->flatten($zip);
+            } finally {
+                $zip->close();
+            }
+        }
+    }
+
+    /** CS Form 212: the workbook whose printable pages are the sheets C1 to C4. */
+    private function isPersonalDataSheet(\ZipArchive $zip): bool
+    {
+        $workbook = $zip->getFromName('xl/workbook.xml');
+
+        if ($workbook === false) {
+            return false;
+        }
+
+        preg_match_all('/<sheet\b[^>]*\bname="([^"]*)"/', $workbook, $names);
+
+        return ! array_diff(['C1', 'C2', 'C3', 'C4'], $names[1]);
+    }
+
+    /**
+     * Gives every page of a PDS the same margins.
+     *
+     * Each sheet of CS Form 212 carries a custom view — its own scale (67 to
+     * 77%) and its own margins — and LibreOffice prints from it; behind that,
+     * the main setup fits the whole sheet to the page, so whichever of width
+     * or height runs out first decides. The pages are not the same shape, so
+     * the right-hand margin wandered from page to page.
+     *
+     * Every page is instead fitted to the paper's width between the same
+     * margins and centred, so all four (and any continuation sheet) line up
+     * on both edges. At that width every page still fits its height.
+     */
+    private function withUniformPdsPage(string $sheetXml): string
+    {
+        // The custom view's page setup is the one LibreOffice honours.
+        $sheetXml = preg_replace('#<customSheetViews>.*?</customSheetViews>#s', '', $sheetXml);
+
+        // Fit to one page wide, any number tall (never more than one here).
+        if (! str_contains($sheetXml, '<pageSetUpPr')) {
+            $sheetXml = preg_match('#<sheetPr\b[^>]*/>#', $sheetXml)
+                ? preg_replace('#<sheetPr\b([^>]*)/>#', '<sheetPr$1><pageSetUpPr fitToPage="1"/></sheetPr>', $sheetXml, 1)
+                : (preg_match('#<sheetPr\b[^>]*>#', $sheetXml)
+                    ? preg_replace('#(<sheetPr\b[^>]*>)#', '$1<pageSetUpPr fitToPage="1"/>', $sheetXml, 1)
+                    : preg_replace('#(<worksheet\b[^>]*>)#', '$1<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>', $sheetXml, 1));
+        } else {
+            $sheetXml = preg_replace('#<pageSetUpPr\b[^>]*/>#', '<pageSetUpPr fitToPage="1"/>', $sheetXml);
+        }
+
+        $sheetXml = preg_replace_callback('#<pageSetup\b([^>]*?)(/?)>#', function (array $m): string {
+            $attributes = preg_replace('#\s+(scale|fitToWidth|fitToHeight)="[^"]*"#', '', $m[1]);
+
+            return '<pageSetup' . $attributes . ' fitToWidth="1" fitToHeight="0"' . $m[2] . '>';
+        }, $sheetXml);
+
+        // The same quarter-inch at the sides of every page.
+        $margins = '<pageMargins left="0.25" right="0.25" top="0.3" bottom="0.3" header="0" footer="0"/>';
+        $sheetXml = preg_match('#<pageMargins\b[^>]*/>#', $sheetXml)
+            ? preg_replace('#<pageMargins\b[^>]*/>#', $margins, $sheetXml)
+            : $sheetXml;
+
+        // Centred between those margins.
+        return preg_match('#<printOptions\b#', $sheetXml)
+            ? preg_replace('#<printOptions\b([^>]*?)(\s*/?)>#', '<printOptions horizontalCentered="1"$2>', $sheetXml, 1)
+            : preg_replace('#(<pageMargins\b)#', '<printOptions horizontalCentered="1"/>$1', $sheetXml, 1);
     }
 
     /**

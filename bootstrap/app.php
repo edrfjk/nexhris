@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     // Every authenticated web request passes the two-factor gate, so a
     // half-verified session cannot reach any page by typing its URL.
     $middleware->web(append: [
+        \App\Http\Middleware\EnsureAccountIsActive::class,
         \App\Http\Middleware\EnsureTwoFactorVerified::class,
         \App\Http\Middleware\PreventAuthenticatedPageCaching::class,
     ]);

@@ -358,13 +358,14 @@ class LeaveLedgerController extends Controller
     // Exports
     // ------------------------------------------------------------------
 
-    public function exportLedgerPdf(Request $request, User $employee)
+    public function exportLedgerPdf(Request $request, User $employee, LeaveWorkflowService $workflow)
     {
         $viewer = $request->user();
 
         abort_unless($viewer->isReviewer(), 403);
+        // The same boundary as the on-screen card in show().
         abort_unless(
-            ! $viewer->isDean() || $employee->college_id === $viewer->college_id,
+            ! $viewer->isDean() || $workflow->deanCoversEmployee($viewer, $employee),
             403,
             'This employee is not registered under your program.',
         );

@@ -5,7 +5,7 @@
 
 <x-page-header
     title="Templates"
-    subtitle="The blank PDS and leave forms employees download. Publishing never overwrites — each upload becomes a new version, and submissions keep the version they were filled on." />
+    subtitle="The official PDS and leave forms. Employees download these, and the on-screen PDS is printed into the active PDS version. Publishing never overwrites — each upload becomes a new version, and submissions keep the version they were filled on." />
 
 <div x-data="{ tab: '{{ request('tab', 'pds') }}' }">
 
@@ -40,7 +40,7 @@
                 <div>
                     <label class="label label-required">Label</label>
                     <input type="text" name="label" required maxlength="120"
-                           placeholder="CS Form No. 212 (Revised 2017)" class="input">
+                           placeholder="CS Form No. 212 (Revised 2026)" class="input">
                 </div>
 
                 <div>
@@ -48,6 +48,8 @@
                     <input type="file" name="file" required accept=".xlsx" class="file-input">
                     <span class="hint">
                         .xlsx only &mdash; the filled-in copy is converted to PDF with LibreOffice.
+                        The on-screen PDS prints into the CS Form 212 (Revised 2026) layout; a workbook
+                        with a different layout can still be downloaded and uploaded, but not filled in on screen.
                     </span>
                 </div>
 
