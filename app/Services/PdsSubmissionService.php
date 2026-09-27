@@ -93,7 +93,27 @@ class PdsSubmissionService
      */
     public function storeUpload(PdsSubmission $submission, UploadedFile $file, PdsTemplate $template): PdsSubmission
     {
-        $submission = DB::transaction(function () use ($submission, $file, $template) {
+        return $this->storeWorkbook($submission, $file->getPathname(), $file->getClientOriginalName(), $template);
+    }
+
+    /**
+     * The same, for a workbook the system printed from the on-screen form.
+     * It is filed exactly like an upload, so HR reviews, versions and
+     * converts it the same way.
+     */
+    public function storeGenerated(PdsSubmission $submission, string $workbookPath, string $name, PdsTemplate $template): PdsSubmission
+    {
+        return $this->storeWorkbook($submission, $workbookPath, $name, $template, generated: true);
+    }
+
+    private function storeWorkbook(
+        PdsSubmission $submission,
+        string $sourcePath,
+        string $originalName,
+        PdsTemplate $template,
+        bool $generated = false,
+    ): PdsSubmission {
+        $submission = DB::transaction(function () use ($submission, $sourcePath, $originalName, $template, $generated) {
             // Keep the previous attempt, together with the verdict it drew.
             if ($submission->workbookExists()) {
                 PdsSubmissionRevision::create([
@@ -112,15 +132,12 @@ class PdsSubmissionService
 
             $version = $submission->workbookExists() ? $submission->version + 1 : $submission->version;
 
-            $path = $file->storeAs(
-                'pds-working',
-                $submission->user_id . '_' . $submission->applicable_year . '_v' . $version . '.xlsx',
-                'local'
-            );
+            $path = 'pds-working/' . $submission->user_id . '_' . $submission->applicable_year . '_v' . $version . '.xlsx';
+            Storage::disk('local')->put($path, file_get_contents($sourcePath));
 
             $submission->update([
                 'file_path' => $path,
-                'file_original_name' => $file->getClientOriginalName(),
+                'file_original_name' => $originalName,
                 'pds_template_id' => $template->id,
                 'version' => $version,
                 'uploaded_at' => now(),
@@ -132,8 +149,10 @@ class PdsSubmissionService
             ]);
 
             $this->log->log(
-                'pds.uploaded',
-                "{$submission->user->name} uploaded their {$submission->applicable_year} PDS (v{$version}).",
+                $generated ? 'pds.generated' : 'pds.uploaded',
+                $generated
+                    ? "{$submission->user->name} filled in their {$submission->applicable_year} PDS on screen (v{$version})."
+                    : "{$submission->user->name} uploaded their {$submission->applicable_year} PDS (v{$version}).",
                 $submission,
                 ['version' => $version, 'template_version' => $template->version],
                 $submission->user,

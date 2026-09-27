@@ -85,7 +85,7 @@
                 <x-empty-state
                     title="Nothing submitted yet"
                     icon="document-text"
-                    message="This employee has not uploaded a Personal Data Sheet for this year." />
+                    message="This employee has not filed a Personal Data Sheet for this year — neither on screen nor by upload." />
             @endif
         </x-card>
 

@@ -319,7 +319,11 @@ public function scopePersonnel($query)
 public function scopeVisibleTo($query, User $viewer)
 {
     if ($viewer->isDean()) {
-        return $query->where('college_id', $viewer->college_id);
+        // where('college_id', null) compiles to IS NULL, which would hand a
+        // Dean with no college every unassigned employee. They see nobody.
+        return $viewer->college_id
+            ? $query->where('college_id', $viewer->college_id)
+            : $query->whereRaw('1 = 0');
     }
 
     if ($viewer->isAdmin() || $viewer->isCampusDirector()) {

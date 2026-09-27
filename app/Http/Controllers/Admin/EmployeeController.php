@@ -174,6 +174,8 @@ public function store(Request $request)
 
 public function edit(User $employee)
 {
+    $this->assertManagedHere($employee);
+
     $colleges = $this->organisations();
     $positions = Position::active()->orderBy('category')->orderBy('sort_order')->orderBy('name')->get();
 
@@ -182,6 +184,8 @@ public function edit(User $employee)
 
     public function update(Request $request, User $employee)
     {
+        $this->assertManagedHere($employee);
+
         $validated = $request->validate([
             'employee_number' => ['required', 'string', Rule::unique('users', 'employee_number')->ignore($employee->id)],
             'name' => ['nullable', 'string', 'max:255'],
@@ -424,6 +428,8 @@ public function edit(User $employee)
 
     public function updateStatus(Request $request, User $employee)
     {
+        $this->assertManagedHere($employee);
+
         $data = $request->validate([
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
@@ -443,7 +449,7 @@ public function show(Request $request, User $employee)
     abort_unless(
         $viewer->isAdmin()
             || $viewer->isCampusDirector()
-            || ($viewer->isDean() && $employee->college_id === $viewer->college_id),
+            || ($viewer->isDean() && app(\App\Services\LeaveWorkflowService::class)->deanCoversEmployee($viewer, $employee)),
         403,
         'This employee is not in your college.',
     );
@@ -470,6 +476,8 @@ public function show(Request $request, User $employee)
 
     public function updatePhoto(Request $request, User $employee)
     {
+        $this->assertManagedHere($employee);
+
         $request->validate([
             'photo' => ['required', 'image', 'max:2048'],
         ]);
@@ -482,6 +490,17 @@ public function show(Request $request, User $employee)
         $employee->update(['profile_photo_path' => $path]);
 
         return back()->with('success', 'Photo updated successfully.');
+    }
+
+    /**
+     * The directory manages personnel only. An HR account is not listed there
+     * and has no matching role option on the edit form, so saving that form
+     * for one would quietly demote it to Employee. HR edits itself through
+     * My Profile instead.
+     */
+    private function assertManagedHere(User $employee): void
+    {
+        abort_unless(in_array($employee->role, ['employee', 'dean', 'campus_director'], true), 404);
     }
 
     private function organisations()

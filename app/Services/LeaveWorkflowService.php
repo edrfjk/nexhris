@@ -217,7 +217,8 @@ class LeaveWorkflowService
 
         // Server-side college scoping for the Dean, in the query itself.
         if ($stage === 'dean') {
-            $query->whereHas('user', fn ($q) => $q->where('college_id', $reviewer->college_id));
+            // A Dean with no college covers nobody (see deanCoversEmployee).
+            $query->whereHas('user', fn ($q) => $q->where('college_id', $reviewer->college_id ?? 0));
         }
 
         return $query;
@@ -342,11 +343,15 @@ class LeaveWorkflowService
 
             $dean = $college?->dean;
 
-            $candidates = $dean
-                ? collect([$dean])
-                : User::where('role', 'dean')
+            // An applicant with no college has no Dean. Matching on a null
+            // college_id would instead notify every Dean who also lacks one.
+            $candidates = match (true) {
+                (bool) $dean => collect([$dean]),
+                ! $application->user->college_id => collect(),
+                default => User::where('role', 'dean')
                     ->where('college_id', $application->user->college_id)
-                    ->get();
+                    ->get(),
+            };
         } else {
             $role = $stage === 'hr' ? 'admin' : 'campus_director';
             $candidates = User::where('role', $role)->get();

@@ -183,7 +183,10 @@ class TemplateFidelityTest extends TestCase
 
         $zip->close();
 
-        $this->assertGreaterThan(4, $checked, 'no page setups were examined');
+        // One per page at least. The PDS's per-page custom views, which held
+        // their own page setups, are removed for printing so every page shares
+        // the same margins (see XlsxToPdfService::withUniformPdsPage).
+        $this->assertGreaterThanOrEqual(4, $checked, 'no page setups were examined');
     }
 
     public function test_shape_text_is_not_clipped_away(): void

@@ -42,6 +42,7 @@ use App\Http\Controllers\Admin\HrPolicyController;
 use App\Http\Controllers\Employee\LeaveApplicationController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Employee\PdsEditorController;
+use App\Http\Controllers\Employee\PdsFormController;
 use App\Http\Controllers\Employee\MyIdController;
 use App\Http\Controllers\Employee\MyLedgerController;
 use App\Http\Controllers\Employee\PolicyController;
@@ -716,6 +717,15 @@ Route::middleware('auth')->group(function () {
         // Two names for one action, both already in use across the views.
         Route::get('/export/{filename?}', [PdsEditorController::class, 'exportPdf'])->name('export');
         Route::get('/download/{filename?}', [PdsEditorController::class, 'exportPdf'])->name('download');
+
+        // Filled in on screen instead of in a downloaded workbook, then
+        // printed into the official form. The preview is declared before
+        // /form/{section} so "preview" is never taken for a section name.
+        Route::get('/form/preview/{filename?}', [PdsFormController::class, 'preview'])->name('form.preview');
+        Route::get('/form/workbook', [PdsFormController::class, 'downloadWorkbook'])->name('form.workbook');
+        Route::post('/form/submit', [PdsFormController::class, 'submit'])->name('form.submit');
+        Route::get('/form/{section?}', [PdsFormController::class, 'edit'])->name('form');
+        Route::put('/form/{section}', [PdsFormController::class, 'update'])->name('form.update');
 
     });
 

@@ -10,6 +10,15 @@
         $reviewQueue = app(\App\Services\LeaveWorkflowService::class)->queueFor($user)->count();
     }
 
+    // HR reviews every PDS, so HR alone gets the count of those waiting —
+    // this year's submissions, the same set PDS Requests lists as pending.
+    $pdsQueue = $user?->isAdmin()
+        ? \App\Models\PdsSubmission::where('status', 'submitted')
+            ->where('applicable_year', now()->year)
+            ->whereHas('user', fn ($q) => $q->personnel())
+            ->count()
+        : 0;
+
     // Resource badges mirror the user's own outstanding items. They are not
     // global counters: an announcement read from the bell, or a policy opened
     // from its page, disappears only for that particular account.
@@ -120,7 +129,7 @@
                 </x-nav.section>
 
                 <x-nav.section label="Records">
-                    <x-nav.item :href="route('admin.pds.index')" :active="request()->routeIs('admin.pds.*')" icon="document-text">
+                    <x-nav.item :href="route('admin.pds.index')" :active="request()->routeIs('admin.pds.*')" icon="document-text" :badge="$pdsQueue">
                         PDS Requests
                     </x-nav.item>
                     <x-nav.item :href="route('admin.leave.templates.index')" :active="request()->routeIs('admin.leave.templates.*')" icon="arrow-up-tray">

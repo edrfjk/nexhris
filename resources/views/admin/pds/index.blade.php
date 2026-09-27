@@ -65,7 +65,7 @@
                     </p>
                 @else
                     <p class="font-medium text-sand-800">No active PDS form</p>
-                    <p class="text-xs text-red-600 mt-0.5">Employees cannot download a blank PDS until one is published.</p>
+                    <p class="text-xs text-red-600 mt-0.5">Employees cannot fill in or download a PDS until one is published.</p>
                 @endif
             </div>
         </div>

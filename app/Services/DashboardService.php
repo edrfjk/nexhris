@@ -187,6 +187,12 @@ class DashboardService
             'returned' => LeaveApplication::where('user_id', $viewer->id)
                 ->whereIn('status', ['dean_returned', 'hr_returned', 'cd_returned'])
                 ->count(),
+            // The forms themselves, so the notice can say which one and why.
+            'returnedForms' => LeaveApplication::where('user_id', $viewer->id)
+                ->whereIn('status', ['dean_returned', 'hr_returned', 'cd_returned'])
+                ->latest('updated_at')
+                ->take(3)
+                ->get(),
             'usedThisYear' => LeaveApplication::where('user_id', $viewer->id)
                 ->whereIn('status', ['cd_approved', 'completed'])
                 ->whereYear('date_from', $year)
