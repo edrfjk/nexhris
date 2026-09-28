@@ -16,7 +16,8 @@ use Tests\TestCase;
  */
 class PdsPdfConversionTest extends TestCase
 {
-    private const A4_PORTRAIT = '595.3 x 841.9';
+    /** Legal (8.5 x 14 in): the paper CS Form 212 itself is set to. */
+    private const LEGAL_PORTRAIT = '612 x 1008';
 
     protected function setUp(): void
     {
@@ -61,14 +62,15 @@ class PdsPdfConversionTest extends TestCase
         return app(XlsxToPdfService::class)->convert($this->form(), true, false);
     }
 
-    public function test_the_pds_converts_to_one_a4_page_per_sheet(): void
+    public function test_the_pds_converts_to_one_legal_page_per_sheet(): void
     {
         $pdf = $this->convert();
 
         // Four printable sheets, each set to fit one page. Anything more means
         // the form is being split across sheets of paper it was not designed for.
         $this->assertSame(4, $this->pageCount($pdf));
-        $this->assertSame([self::A4_PORTRAIT], $this->pageBoxes($pdf));
+        // On the long bond paper the form is laid out for, like the template.
+        $this->assertSame([self::LEGAL_PORTRAIT], $this->pageBoxes($pdf));
     }
 
     public function test_the_hidden_lookup_sheet_is_not_printed(): void

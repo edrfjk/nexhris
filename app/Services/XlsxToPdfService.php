@@ -59,7 +59,12 @@ class XlsxToPdfService
     private const MARGIN_FLOOR_MM = 5.0;
 
     /** Bump whenever the painted output changes; it invalidates the cache. */
-    public const RENDERER_VERSION = '2026-09-28-pds-margins';
+    public const RENDERER_VERSION = '2026-09-28-pds-legal';
+
+    /** ECMA-376 paper-size codes. */
+    private const PAPER_A4 = 9;
+
+    private const PAPER_LEGAL = 5;
 
     /**
      * A token safe to put in a filename, so anything that keeps a converted
@@ -395,7 +400,10 @@ HTML;
                 }
 
                 $updated = $isSheet
-                    ? ($forceA4 ? $this->withA4PaperSize($xml) : $xml)
+                    // CS Form 212 is laid out for Legal (long bond) paper — its
+                    // own page setup says so — and prints on it; every other
+                    // form is normalised to A4.
+                    ? ($forceA4 ? $this->withPaperSize($xml, $isPds ? self::PAPER_LEGAL : self::PAPER_A4) : $xml)
                     : $this->withUnclippedShapeText($xml);
 
                 if ($isSheet && $isPds) {
@@ -420,6 +428,22 @@ HTML;
             } finally {
                 $zip->close();
             }
+        }
+    }
+
+    /** The same test, for a workbook on disk. */
+    private function isPersonalDataSheetFile(string $path): bool
+    {
+        $zip = new \ZipArchive();
+
+        if ($zip->open($path) !== true) {
+            return false;
+        }
+
+        try {
+            return $this->isPersonalDataSheet($zip);
+        } finally {
+            $zip->close();
         }
     }
 
@@ -525,7 +549,7 @@ HTML;
      * Editing the one attribute inside the package leaves every other part
      * byte-identical.
      */
-    private function withA4PaperSize(string $sheetXml): string
+    private function withPaperSize(string $sheetXml, int $paper): string
     {
         if (! str_contains($sheetXml, '<pageSetup')) {
             return $sheetXml;
@@ -533,13 +557,13 @@ HTML;
 
         return (string) preg_replace_callback(
             '/<pageSetup\b([^>]*?)(\/?)>/',
-            static function (array $match): string {
+            static function (array $match) use ($paper): string {
                 $attributes = $match[1];
 
-                // 9 is A4 in the ECMA-376 paper-size table.
+                // A code from the ECMA-376 paper-size table: 9 is A4, 5 Legal.
                 $attributes = preg_match('/\bpaperSize="[^"]*"/', $attributes)
-                    ? preg_replace('/\bpaperSize="[^"]*"/', 'paperSize="9"', $attributes)
-                    : ' paperSize="9"' . $attributes;
+                    ? preg_replace('/\bpaperSize="[^"]*"/', 'paperSize="' . $paper . '"', $attributes)
+                    : ' paperSize="' . $paper . '"' . $attributes;
 
                 // The r:id points at a printerSettings blob holding a Windows
                 // DEVMODE, which carries its own paper size and wins over the
@@ -670,7 +694,10 @@ HTML;
             // as an HTML table. A table cannot hold Excel's grid still — the
             // moment a label is wider than its column the browser reflows it,
             // and an official form that reflows is no longer that form.
-            $html = (new SheetPainter())->paintWorkbook(
+            // The PDS keeps its own Legal paper here too; see prepareWorkbook().
+            $paper = $this->isPersonalDataSheetFile($xlsxPath) ? SheetPainter::LEGAL : SheetPainter::A4;
+
+            $html = (new SheetPainter(paper: $paper))->paintWorkbook(
                 $book,
                 $this->printableSheets($book),
                 $xlsxPath,
@@ -678,7 +705,7 @@ HTML;
 
             $book->disconnectWorksheets();
 
-            $this->renderPaintedHtml($html, $orientation, $cachePath);
+            $this->renderPaintedHtml($html, $orientation, $cachePath, $paper);
 
             if (! is_file($cachePath)) {
                 throw new \RuntimeException('The PDF writer produced no output.');
@@ -1184,9 +1211,13 @@ CSS;
      * adding margins again would inset every page twice and push the last
      * column off the sheet.
      */
-    private function renderPaintedHtml(string $html, string $orientation, string $cachePath): void
+    private function renderPaintedHtml(string $html, string $orientation, string $cachePath, array $paper = SheetPainter::A4): void
     {
         $dompdf = $this->dompdf($orientation, true);
+
+        // The page box matches the paper the painter sized each page for.
+        $landscape = $orientation === PageSetup::ORIENTATION_LANDSCAPE;
+        $dompdf->setPaper([0, 0, $paper[0], $paper[1]], $landscape ? 'landscape' : 'portrait');
 
         $dompdf->loadHtml($html);
         $dompdf->render();
