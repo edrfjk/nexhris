@@ -143,7 +143,7 @@ class TemplateFidelityTest extends TestCase
     // What must change
     // ------------------------------------------------------------------
 
-    public function test_every_sheet_is_switched_to_a4(): void
+    public function test_every_pds_sheet_is_set_to_its_own_legal_paper(): void
     {
         $prepared = $this->prepared($this->templateContaining(
             'pds-templates',
@@ -172,7 +172,9 @@ class TemplateFidelityTest extends TestCase
                 // pageSetup inside a <customSheetView>, and that was the one
                 // the renderer actually applied — CS Form 212 kept printing
                 // US Letter with A4 set right beside it.
-                $this->assertStringContainsString('paperSize="9"', $setup);
+                // CS Form 212 is set to Legal (code 5) in the template itself,
+                // and prints on it; other forms are normalised to A4 (code 9).
+                $this->assertStringContainsString('paperSize="5"', $setup);
 
                 // The r:id points at a printerSettings blob whose Windows
                 // DEVMODE carries its own paper size and wins over the
@@ -187,6 +189,22 @@ class TemplateFidelityTest extends TestCase
         // their own page setups, are removed for printing so every page shares
         // the same margins (see XlsxToPdfService::withUniformPdsPage).
         $this->assertGreaterThanOrEqual(4, $checked, 'no page setups were examined');
+    }
+
+    public function test_the_leave_form_stays_on_a4(): void
+    {
+        $zip = new ZipArchive();
+        $zip->open($this->prepared($this->leaveTemplatePath()));
+
+        preg_match_all('/<pageSetup[^>]*>/', (string) $zip->getFromName('xl/worksheets/sheet1.xml'), $found);
+        $zip->close();
+
+        // Legal is the PDS's own paper; every other form is A4 as before.
+        $this->assertNotEmpty($found[0]);
+
+        foreach ($found[0] as $setup) {
+            $this->assertStringContainsString('paperSize="9"', $setup);
+        }
     }
 
     public function test_shape_text_is_not_clipped_away(): void

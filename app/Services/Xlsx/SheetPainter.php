@@ -39,12 +39,11 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  */
 class SheetPainter
 {
-    /** A4 in points. */
-    private const PAGE_WIDTH = 595.28;
-    private const PAGE_HEIGHT = 841.89;
+    /** A4 portrait, in points. */
+    public const A4 = [595.28, 841.89];
 
-    private const LANDSCAPE_WIDTH = 841.89;
-    private const LANDSCAPE_HEIGHT = 595.28;
+    /** Legal (8.5 × 14 in, "long bond") portrait, in points — CS Form 212's own paper. */
+    public const LEGAL = [612.0, 1008.0];
 
     /**
      * Margins narrower than this are treated as printer bleed rather than a
@@ -66,9 +65,14 @@ class SheetPainter
      */
     private const CELL_PADDING = 2 * self::PX_TO_PT;
 
+    /**
+     * @param  array{0: float, 1: float}  $paper  portrait width and height in
+     *         points; A4 unless the form calls for another paper
+     */
     public function __construct(
         private readonly DrawingPainter $drawings = new DrawingPainter(),
         private readonly OverlayPainter $overlays = new OverlayPainter(),
+        private readonly array $paper = self::A4,
     ) {
     }
 
@@ -133,8 +137,9 @@ class SheetPainter
 
         $landscape = $sheet->getPageSetup()->getOrientation() === PageSetup::ORIENTATION_LANDSCAPE;
 
-        $pageWidth = $landscape ? self::LANDSCAPE_WIDTH : self::PAGE_WIDTH;
-        $pageHeight = $landscape ? self::LANDSCAPE_HEIGHT : self::PAGE_HEIGHT;
+        [$pageWidth, $pageHeight] = $landscape
+            ? [$this->paper[1], $this->paper[0]]
+            : [$this->paper[0], $this->paper[1]];
 
         $margins = $this->margins($sheet);
 
