@@ -195,10 +195,9 @@ class LeaveReviewController extends Controller
             'The uploaded form is no longer available.'
         );
 
-        return $converter->stream(
-            Storage::disk('local')->path($application->file_path),
-            $application->formPdfName(),
-            cacheKey: 'leave-form:' . $application->id,
+        return LeaveApplicationController::streamFormAsPdf(
+            $application,
+            $converter,
             // This endpoint is embedded in the review page. Returning an
             // .xlsx attachment here makes Chrome download it and leaves the
             // preview blank on hosts without LibreOffice. The original file

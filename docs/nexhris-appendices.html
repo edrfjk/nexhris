@@ -415,7 +415,7 @@ body{
         <text class="t8" x="236" y="571.75" text-anchor="end">FINAL LEAVE DECISION</text>
         <text class="t8" x="236" y="582.25" text-anchor="end">AND REMARKS</text>
         <text class="t8" x="236" y="592.75" text-anchor="end">OWN LEAVE APPLICATION</text>
-        <text class="t8" x="236" y="603.25" text-anchor="end">OWN PDS WORKBOOK</text>
+        <text class="t8" x="236" y="603.25" text-anchor="end">OWN PDS (FORM OR WORKBOOK)</text>
         <text class="t8" x="384" y="540.25">VERIFICATION CODE</text>
         <text class="t8" x="384" y="550.75">(BY EMAIL)</text>
         <text class="t8" x="384" y="561.25">LEAVE FOR FINAL APPROVAL</text>
@@ -431,12 +431,12 @@ body{
         <path class="ln" d="M233,394 Q180,478 126,384" marker-end="url(#uea)"/>
         <text class="t8" x="10" y="248">LOGIN CREDENTIALS</text>
         <text class="t8" x="10" y="258.5">FILLED LEAVE APPLICATION FORM</text>
-        <text class="t8" x="10" y="269">PERSONAL DATA SHEET WORKBOOK</text>
+        <text class="t8" x="10" y="269">PDS FORM ANSWERS OR WORKBOOK</text>
         <text class="t8" x="10" y="279.5">PROFILE UPDATES</text>
         <text class="t8" x="10" y="290">POLICY ACKNOWLEDGMENT</text>
         <text class="t8" x="10" y="458">LEAVE STATUS AND NOTIFICATIONS</text>
         <text class="t8" x="10" y="468.5">LEAVE LEDGER CARD</text>
-        <text class="t8" x="10" y="479">PDS REVIEW RESULT</text>
+        <text class="t8" x="10" y="479">PRINTED PDS AND REVIEW RESULT</text>
         <text class="t8" x="10" y="489.5">DIGITAL ID</text>
         <text class="t8" x="10" y="500">ANNOUNCEMENTS AND HR POLICIES</text>
         <rect class="n" x="494" y="346" width="118" height="48"/>
@@ -645,10 +645,10 @@ body{
         <text class="t7 b" x="53.5" y="293.45" text-anchor="middle">EMPLOYEE</text>
         <path class="ln" d="M100,284 L231,284" marker-end="url(#ufa)"/>
         <path class="ln" d="M232,296 L101,296" marker-end="url(#ufa)"/>
-        <rect x="116.5" y="280.6" width="99.1" height="8.0" fill="#fff"/>
-        <text class="t7" x="166" y="286.6" text-anchor="middle">FILLED PDS WORKBOOK</text>
-        <rect x="118.9" y="292.6" width="94.2" height="8.0" fill="#fff"/>
-        <text class="t7" x="166" y="298.6" text-anchor="middle">REVIEW RESULT, PDF</text>
+        <rect x="106.7" y="280.6" width="118.6" height="8.0" fill="#fff"/>
+        <text class="t7" x="166" y="286.6" text-anchor="middle">PDS ANSWERS OR WORKBOOK</text>
+        <rect x="116.5" y="292.6" width="99.1" height="8.0" fill="#fff"/>
+        <text class="t7" x="166" y="298.6" text-anchor="middle">PRINTED PDS, RESULT</text>
         <rect class="n" x="4" y="309" width="96" height="22"/>
         <path class="lnb" d="M7,331 V312 H100"/>
         <path class="ln" d="M91,331 L100,322"/>
@@ -673,10 +673,10 @@ body{
         <text class="t7" x="520" y="323">PDS SUBMISSIONS</text>
         <path class="ln" d="M348,314 L487,314" marker-end="url(#ufa)"/>
         <path class="ln" d="M488,326 L349,326" marker-end="url(#ufa)"/>
-        <rect x="370.9" y="310.6" width="94.2" height="8.0" fill="#fff"/>
-        <text class="t7" x="418" y="316.6" text-anchor="middle">WORKBOOK, DECISION</text>
-        <rect x="378.2" y="322.6" width="79.5" height="8.0" fill="#fff"/>
-        <text class="t7" x="418" y="328.6" text-anchor="middle">SUBMISSION, PDF</text>
+        <rect x="358.7" y="310.6" width="118.6" height="8.0" fill="#fff"/>
+        <text class="t7" x="418" y="316.6" text-anchor="middle">ANSWERS, FILE, DECISION</text>
+        <rect x="370.9" y="322.6" width="94.2" height="8.0" fill="#fff"/>
+        <text class="t7" x="418" y="328.6" text-anchor="middle">SAVED ANSWERS, PDF</text>
         <rect class="n2" x="232" y="350" width="116" height="112" rx="8"/>
         <path class="ln" d="M232,364 H348"/>
         <text class="t8 b" x="290" y="359.5" text-anchor="middle">5.0</text>
@@ -1012,7 +1012,7 @@ body{
         <text class="t7" x="275" y="85">remarks</text>
         <text class="t6 b" x="261" y="94.4">FK</text>
         <text class="t7" x="275" y="94.4">reviewed_by</text>
-        <rect class="n" x="386" y="16" width="100" height="101.6"/>
+        <rect class="n" x="386" y="16" width="100" height="120.4"/>
         <path class="ln" d="M386,30 H486"/>
         <text class="t7 b" x="436" y="26" text-anchor="middle">pds_submissions</text>
         <text class="t6 b" x="389" y="38">PK</text>
@@ -1028,6 +1028,8 @@ body{
         <text class="t6 b" x="389" y="103.8">FK</text>
         <text class="t7" x="403" y="103.8">reviewed_by</text>
         <text class="t7" x="403" y="113.2">return_remarks</text>
+        <text class="t7" x="403" y="122.6">form_data</text>
+        <text class="t7" x="403" y="132">form_updated_at</text>
         <rect class="n" x="514" y="16" width="100" height="73.4"/>
         <path class="ln" d="M514,30 H614"/>
         <text class="t7 b" x="564" y="26" text-anchor="middle">two_factor_challenges</text>
@@ -1224,7 +1226,7 @@ body{
         <path class="ln" d="M265,196 L265,176 L52,176 L52,89.4" marker-end="url(#ugcrow)" marker-start="url(#ugone)"/>
         <path class="ln" d="M285,196 L285,168 L180,168 L180,98.8" marker-end="url(#ugcrow)" marker-start="url(#ugone)"/>
         <path class="ln" d="M308,196 L308,98.8" marker-end="url(#ugcrow)" marker-start="url(#ugone)"/>
-        <path class="ln" d="M331,196 L331,168 L436,168 L436,117.6" marker-end="url(#ugcrow)" marker-start="url(#ugone)"/>
+        <path class="ln" d="M331,196 L331,168 L436,168 L436,136.4" marker-end="url(#ugcrow)" marker-start="url(#ugone)"/>
         <path class="ln" d="M351,196 L351,176 L564,176 L564,89.4" marker-end="url(#ugcrow)" marker-start="url(#ugone)"/>
         <path class="ln" d="M230,50 L258,50" marker-end="url(#ugcrow)" marker-start="url(#ugone)"/>
         <path class="ln" d="M386,66 L358,66" marker-end="url(#ugcrow)" marker-start="url(#ugone)"/>
@@ -1529,7 +1531,7 @@ body{
         <text class="t11" x="78" y="65">Sign-in credentials and emailed one-time code</text>
         <text class="t11" x="78" y="83">Employee record, college and department</text>
         <text class="t11" x="78" y="101">Blank CS Form 212 and blank leave form (.xlsx)</text>
-        <text class="t11" x="78" y="119">Filled PDS and leave workbooks uploaded</text>
+        <text class="t11" x="78" y="119">PDS answers typed on screen; filled workbooks uploaded</text>
         <text class="t11" x="78" y="137">Approve or return decision, with remarks</text>
         <text class="t11" x="78" y="155">Days to charge and which ledger card</text>
         <text class="t11" x="78" y="173">Policy and announcement text</text>
@@ -1544,7 +1546,7 @@ body{
           <rect x="62" y="380" width="5" height="5"/>
         </g>
         <text class="t11" x="78" y="277">Authenticate, mail a code, attach the role scope</text>
-        <text class="t11" x="78" y="295">Validate the uploaded workbook against the template</text>
+        <text class="t11" x="78" y="295">Print answers into CS Form 212; validate uploaded workbooks</text>
         <text class="t11" x="78" y="313">Derive the approval chain from who is applying</text>
         <text class="t11" x="78" y="331">Record each approval in sequence; restart on a return</text>
         <text class="t11" x="78" y="349">Post the days and replay the running balance</text>

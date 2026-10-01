@@ -9,22 +9,32 @@
     subtitle="View approved and pending employee leaves by month.">
 
     <x-slot:actions>
-        <a href="{{ route('admin.leave.calendar.export', ['month' => $month, 'filename' => \App\Support\DocumentName::leaveCalendar(\Carbon\Carbon::parse($month . '-01'))]) }}" target="_blank"
+        <a href="{{ route('admin.leave.calendar.export', ['month' => $month, 'college' => request('college'), 'filename' => \App\Support\DocumentName::leaveCalendar($start)]) }}" target="_blank"
            class="btn btn-md btn-secondary">
             <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
             Export Month
         </a>
-        <a href="{{ route('admin.leave.index') }}"
-           class="btn btn-md btn-secondary">
-            <x-heroicon-o-arrow-left class="w-4 h-4" />
-            Back to Leave Management
-        </a>
+        {{-- A Dean's sidebar has no ledger list, so their way back is the
+             review queue rather than a page they otherwise never see. --}}
+        @if (auth()->user()->isDean())
+            <a href="{{ route('admin.leave.review.index') }}"
+               class="btn btn-md btn-secondary">
+                <x-heroicon-o-arrow-left class="w-4 h-4" />
+                Back to Leave Reviews
+            </a>
+        @else
+            <a href="{{ route('admin.leave.index') }}"
+               class="btn btn-md btn-secondary">
+                <x-heroicon-o-arrow-left class="w-4 h-4" />
+                Back to Leave Management
+            </a>
+        @endif
     </x-slot:actions>
 
 </x-page-header>
 
 @php
-    $current = \Carbon\Carbon::parse($month);
+    $current = $start->copy();
     $isCurrentMonth = $current->isSameMonth(now());
 
     // NOTE: don't use ->flatten() here — LeaveApplication models implement Arrayable,
@@ -112,7 +122,7 @@
                        {{ $statusChipClass }}">
                         <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white
                             {{ $statusAvatarClass }}">
-                            {{ strtoupper(substr($app->user->name, 0, 1)) }}
+                            {{ mb_strtoupper(mb_substr($app->user->name, 0, 1)) }}
                         </span>
                         {{ $app->user->name }}
                         <span class="text-xs opacity-70">{{ $app->typeLabel() }}{{ $isPending ? ' · Pending' : '' }}</span>
@@ -159,7 +169,7 @@
        class="card ring-1 ring-gold-100 p-4 hover:shadow-soft transition">
         <div class="flex items-start justify-between mb-3">
             <div class="w-9 h-9 rounded-lg bg-gold-50 text-gold-600 flex items-center justify-center">
-                <x-heroicon-o-arrow-down-tray class="w-4.5 h-4.5" />
+                <x-heroicon-o-inbox-arrow-down class="w-4.5 h-4.5" />
             </div>
         </div>
         <p class="text-2xl font-bold text-sand-800 leading-none">{{ $pendingThisMonth }}</p>
@@ -332,7 +342,7 @@
                                    {{ $statusChipClass }}">
                                     <span class="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold
                                         {{ $statusAvatarClass }} text-white">
-                                        {{ strtoupper(substr($app->user->name, 0, 1)) }}
+                                        {{ mb_strtoupper(mb_substr($app->user->name, 0, 1)) }}
                                     </span>
                                     <span class="truncate">{{ Str::limit($app->user->name, 10) }} · {{ $app->typeLabel() }}</span>
                                 </div>

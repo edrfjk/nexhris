@@ -54,6 +54,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            // Compared with isFuture() at sign-in; as a raw string that call
+            // failed and a locked account got a 500 instead of the message.
+            'locked_until' => 'datetime',
             'first_day_of_service' => 'date',
             'date_hired' => 'date',
         ];

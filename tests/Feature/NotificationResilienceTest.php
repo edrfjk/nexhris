@@ -84,4 +84,21 @@ class NotificationResilienceTest extends TestCase
             'the bell should still show the notification even with no mail server',
         );
     }
+
+    public function test_a_mail_failure_does_not_cut_off_the_rest_of_a_batch(): void
+    {
+        $this->pointMailAtNothing();
+
+        // An announcement to the whole campus. Sent as one batch, the first
+        // mail failure ended the loop and nobody after it heard anything.
+        $staff = User::factory()->count(3)->create(['role' => 'employee', 'status' => 'active']);
+
+        Notifier::send($staff, new LeaveStageChanged(
+            $this->application(), 'Subject', 'Body', 'Open', route('leave.index'), 'info',
+        ));
+
+        foreach ($staff as $person) {
+            $this->assertSame(1, $person->notifications()->count());
+        }
+    }
 }

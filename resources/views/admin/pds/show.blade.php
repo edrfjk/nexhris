@@ -7,7 +7,7 @@
      see means leaving the page to read it and coming back to sign. --}}
 <x-page-header title="PDS Review" :subtitle="$employee->name">
     <x-slot:actions>
-        <a href="{{ route('admin.pds.index') }}" class="btn btn-md btn-secondary">
+        <a href="{{ route('admin.pds.index', array_filter(['year' => request('year')])) }}" class="btn btn-md btn-secondary">
             <x-heroicon-o-arrow-left class="w-4 h-4" />
             Back to queue
         </a>
@@ -16,6 +16,16 @@
 
 @php
     $status = $submission->status ?? 'not_started';
+
+    // Every link and form below acts on the year being viewed. Without it
+    // they fell back to the current year, so reviewing last year's sheet
+    // previewed — and approved — this year's.
+    $pdsYear = (int) ($submission?->applicable_year ?? request('year', now()->year));
+    $pdfUrl = route('admin.pds.download', [
+        $employee,
+        \App\Support\DocumentName::personalDataSheet($employee, $pdsYear),
+        'year' => $pdsYear,
+    ]);
 
     $tone = match ($status) {
         'approved' => 'green',
@@ -58,12 +68,12 @@
                     </div>
 
                     <div class="flex shrink-0 items-center gap-2">
-                        <a href="{{ route('admin.pds.download', [$employee, \App\Support\DocumentName::personalDataSheet($employee, $submission?->applicable_year)]) }}" target="_blank"
+                        <a href="{{ $pdfUrl }}" target="_blank"
                            class="btn btn-sm btn-primary">
                             <x-heroicon-o-arrow-top-right-on-square class="h-4 w-4" />
                             New tab
                         </a>
-                        <a href="{{ route('admin.pds.workbook', $employee) }}" download
+                        <a href="{{ route('admin.pds.workbook', [$employee, 'year' => $pdsYear]) }}" download
                            class="btn btn-sm btn-secondary">
                             Original
                         </a>
@@ -72,13 +82,13 @@
 
                 {{-- The workbook converted, so the whole sheet can be read
                      here rather than downloaded first. --}}
-                <iframe src="{{ route('admin.pds.download', [$employee, \App\Support\DocumentName::personalDataSheet($employee, $submission?->applicable_year)]) }}"
+                <iframe src="{{ $pdfUrl }}"
                         class="h-[620px] w-full rounded-lg border border-sand-200 bg-sand-50"
                         title="Submitted Personal Data Sheet"></iframe>
 
                 <p class="mt-3 text-[11px] text-sand-400">
                     If the sheet does not appear, your browser may not preview PDFs —
-                    <a href="{{ route('admin.pds.download', [$employee, \App\Support\DocumentName::personalDataSheet($employee, $submission?->applicable_year)]) }}" target="_blank"
+                    <a href="{{ $pdfUrl }}" target="_blank"
                        class="font-medium text-maroon-700 hover:text-maroon-900">open it in a new tab</a>.
                 </p>
             @else
@@ -188,6 +198,7 @@
                     <form method="POST" action="{{ route('admin.pds.approve', $employee) }}"
                           onsubmit="return confirm({{ Js::from('Approve this PDS?') }})">
                         @csrf
+                        <input type="hidden" name="year" value="{{ $pdsYear }}">
                         <button class="btn btn-md btn-success w-full">
                             <x-heroicon-o-check class="h-4 w-4" />
                             Approve PDS
@@ -202,6 +213,7 @@
                     <form method="POST" action="{{ route('admin.pds.return', $employee) }}"
                           x-show="returning" x-cloak class="space-y-3 border-t border-sand-100 pt-3">
                         @csrf
+                        <input type="hidden" name="year" value="{{ $pdsYear }}">
                         <label class="block">
                             <span class="label label-required">What needs correcting?</span>
                             <textarea name="return_remarks" rows="3" required maxlength="500"

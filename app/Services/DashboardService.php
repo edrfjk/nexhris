@@ -167,12 +167,15 @@ class DashboardService
     {
         $year = now()->year;
 
-        $policiesTotal = HrPolicy::where('is_published', true)->count();
-        $acknowledged = DB::table('hr_policy_views')
-            ->where('user_id', $viewer->id)
-            ->whereNotNull('acknowledged_at')
-            ->distinct()
-            ->count('hr_policy_id');
+        $policiesTotal = HrPolicy::inForce()->count();
+
+        // "To read" means not opened yet — the same count as the sidebar
+        // badge. It used to be every policy minus those acknowledged, and a
+        // policy that asks for no acknowledgment can never be acknowledged,
+        // so an ordinary memo stayed "to read" for good.
+        $policiesUnread = HrPolicy::inForce()
+            ->whereDoesntHave('views', fn ($q) => $q->where('user_id', $viewer->id))
+            ->count();
 
         return [
             'balance' => $viewer->leaveBalance,
@@ -199,7 +202,7 @@ class DashboardService
                 ->sum('days'),
             'announcements' => Announcement::visibleTo($viewer)->take(3)->get(),
             'policiesTotal' => $policiesTotal,
-            'policiesUnread' => max(0, $policiesTotal - $acknowledged),
+            'policiesUnread' => $policiesUnread,
         ];
     }
 
@@ -358,7 +361,7 @@ class DashboardService
      */
     private function policyTracker(int $totalStaff): ?array
     {
-        $policy = HrPolicy::where('is_published', true)
+        $policy = HrPolicy::inForce()
             ->where('requires_acknowledgment', true)
             ->latest()
             ->first();

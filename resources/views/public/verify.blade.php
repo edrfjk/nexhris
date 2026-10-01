@@ -41,7 +41,7 @@
                     @else
                         <div class="w-16 h-16 rounded-full bg-maroon-800 text-white flex items-center
                                     justify-center text-xl font-semibold">
-                            {{ strtoupper(substr($employee->name, 0, 1)) }}
+                            {{ mb_strtoupper(mb_substr($employee->name, 0, 1)) }}
                         </div>
                     @endif
 

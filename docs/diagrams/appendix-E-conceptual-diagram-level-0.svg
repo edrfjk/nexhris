@@ -59,7 +59,7 @@
         <text x="236" y="571.75" text-anchor="end" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">FINAL LEAVE DECISION</text>
         <text x="236" y="582.25" text-anchor="end" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">AND REMARKS</text>
         <text x="236" y="592.75" text-anchor="end" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">OWN LEAVE APPLICATION</text>
-        <text x="236" y="603.25" text-anchor="end" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">OWN PDS WORKBOOK</text>
+        <text x="236" y="603.25" text-anchor="end" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">OWN PDS (FORM OR WORKBOOK)</text>
         <text x="384" y="540.25" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">VERIFICATION CODE</text>
         <text x="384" y="550.75" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">(BY EMAIL)</text>
         <text x="384" y="561.25" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">LEAVE FOR FINAL APPROVAL</text>
@@ -75,12 +75,12 @@
         <path d="M233,394 Q180,478 126,384" marker-end="url(#uea)" fill="none" stroke="#000" stroke-width="1"/>
         <text x="10" y="248" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">LOGIN CREDENTIALS</text>
         <text x="10" y="258.5" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">FILLED LEAVE APPLICATION FORM</text>
-        <text x="10" y="269" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">PERSONAL DATA SHEET WORKBOOK</text>
+        <text x="10" y="269" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">PDS FORM ANSWERS OR WORKBOOK</text>
         <text x="10" y="279.5" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">PROFILE UPDATES</text>
         <text x="10" y="290" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">POLICY ACKNOWLEDGMENT</text>
         <text x="10" y="458" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">LEAVE STATUS AND NOTIFICATIONS</text>
         <text x="10" y="468.5" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">LEAVE LEDGER CARD</text>
-        <text x="10" y="479" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">PDS REVIEW RESULT</text>
+        <text x="10" y="479" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">PRINTED PDS AND REVIEW RESULT</text>
         <text x="10" y="489.5" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">DIGITAL ID</text>
         <text x="10" y="500" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8">ANNOUNCEMENTS AND HR POLICIES</text>
         <rect x="494" y="346" width="118" height="48" fill="#fff" stroke="#000" stroke-width="1.1"/>

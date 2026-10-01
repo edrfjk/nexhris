@@ -46,17 +46,22 @@ class AnnouncementController extends Controller
         $this->log->log('announcement.posted',
             "Posted announcement \"{$announcement->title}\".", $announcement);
 
-        // Everyone the notice is aimed at hears about it, in-app and by email.
         if ($announcement->is_published && $request->boolean('notify', true)) {
-            $recipients = User::where('status', 'active')
-                ->when($announcement->college_id,
-                    fn ($q) => $q->where('college_id', $announcement->college_id))
-                ->get();
-
-            Notifier::send($recipients, new AnnouncementPosted($announcement));
+            $this->notifyAudience($announcement);
         }
 
         return back()->with('success', "\"{$announcement->title}\" has been posted.");
+    }
+
+    /** Everyone the notice is aimed at hears about it, in-app and by email. */
+    private function notifyAudience(Announcement $announcement): void
+    {
+        $recipients = User::where('status', 'active')
+            ->when($announcement->college_id,
+                fn ($q) => $q->where('college_id', $announcement->college_id))
+            ->get();
+
+        Notifier::send($recipients, new AnnouncementPosted($announcement));
     }
 
     public function update(Request $request, Announcement $announcement)
@@ -80,6 +85,15 @@ class AnnouncementController extends Controller
 
         $this->log->log('announcement.updated',
             "Updated announcement \"{$announcement->title}\".", $announcement);
+
+        // A draft published now is news to its audience, exactly as if it had
+        // been posted today. Saved as a draft and published later, it used to
+        // appear in the feed with no bell and no email.
+        if (! $wasPublished && $willBePublished) {
+            $this->notifyAudience($announcement);
+
+            return back()->with('success', "\"{$announcement->title}\" has been published and staff were notified.");
+        }
 
         return back()->with('success', 'Announcement updated.');
     }

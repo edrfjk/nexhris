@@ -42,12 +42,13 @@ class PdsTemplateController extends Controller
             $request->notes,
         );
 
-        return redirect()->route('admin.pds.index')->with('success',
+        // Back to wherever HR published from (the Form Templates page), rather
+        // than bouncing them onto PDS Requests.
+        return back()->with('success',
             "Published \"{$template->label}\" as version {$template->version}. "
             . 'Employees now download this version.');
     }
 
-    /** Rolls back to an earlier version. */
     /**
      * The blank PDS, rendered so HR can read it in the browser.
      *
@@ -79,13 +80,14 @@ class PdsTemplateController extends Controller
         );
     }
 
+    /** Rolls back to an earlier version. */
     public function activate(Request $request, PdsTemplate $template)
     {
         abort_unless($request->user()->isAdmin(), 403);
 
         $this->publisher->activate($template);
 
-        return redirect()->route('admin.pds.index')->with('success',
+        return back()->with('success',
             "Version {$template->version} of \"{$template->label}\" is now the active PDS template.");
     }
 
@@ -100,19 +102,22 @@ class PdsTemplateController extends Controller
         if ($template->submissions()->exists()) {
             $template->update(['is_active' => false, 'superseded_at' => now()]);
 
-            return redirect()->route('admin.pds.index')->with('success',
+            return back()->with('success',
                 "Version {$template->version} has submissions filled on it, so it was retired rather than deleted.");
         }
 
-        abort_if($template->is_active, 422,
-            'Activate another version before deleting the active template.');
+        // A message on the page, not a bare 422 error screen.
+        if ($template->is_active) {
+            return back()->with('error',
+                'Activate another version before deleting the active template.');
+        }
 
         Storage::disk('public')->delete($template->file_path);
         $label = $template->label;
         $version = $template->version;
         $template->delete();
 
-        return redirect()->route('admin.pds.index')
+        return back()
             ->with('success', "Version {$version} of \"{$label}\" was deleted.");
     }
 }

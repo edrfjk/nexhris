@@ -103,7 +103,8 @@ class PdsReviewController extends Controller
 
         $this->pds->approve($submission, $request->user());
 
-        return redirect()->route('admin.pds.index')
+        // Back to the year's list HR was working through, not this year's.
+        return redirect()->route('admin.pds.index', ['year' => $submission->applicable_year])
             ->with('success', "{$employee->name}'s PDS has been approved.");
     }
 
@@ -124,7 +125,7 @@ class PdsReviewController extends Controller
 
         $this->pds->returnForRevision($submission, $request->user(), $data['return_remarks']);
 
-        return redirect()->route('admin.pds.index')
+        return redirect()->route('admin.pds.index', ['year' => $submission->applicable_year])
             ->with('success', "{$employee->name}'s PDS was returned for correction.");
     }
 

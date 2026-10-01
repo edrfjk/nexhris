@@ -124,6 +124,22 @@ class LeaveLedgerService
                 'service_balance' => $newServiceBalance,
             ]);
 
+            // The figures above treat this line as the newest on the card.
+            // A backdated one — leave approved after the next month's credit
+            // was already posted — sorts above lines whose running balances
+            // never saw it, so the printed card stops adding up. Replay the
+            // card in date order to put every running balance right. The
+            // end balance is unchanged, and it was checked above.
+            $hasLaterLines = LeaveLedgerEntry::where('user_id', $employee->id)
+                ->whereKeyNot($entry->id)
+                ->whereDate('period_from', '>', $periodFrom)
+                ->exists();
+
+            if ($hasLaterLines) {
+                $this->recalculate($employee);
+                $entry->refresh();
+            }
+
             $this->log->log(
                 'ledger.posted',
                 sprintf(

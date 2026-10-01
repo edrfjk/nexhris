@@ -16,13 +16,25 @@ use Illuminate\Support\Facades\Log;
 
 class LeaveApplicationController extends Controller
 {
+    /**
+     * What a filled leave form may be uploaded as. Word files used to be
+     * accepted too, but nothing in the system can show one to a reviewer:
+     * the preview came up empty and the download was mislabelled .xlsx.
+     */
+    private const FORM_FILE_RULES = ['required', 'file', 'mimes:xlsx,xls,pdf', 'max:10240'];
+
+    private const FORM_FILE_MESSAGE = 'Upload the filled-in form as the Excel workbook (.xlsx or .xls) or as a PDF.';
+
     public function index(Request $request)
     {
         $user = Auth::user();
 
         $applications = $user->leaveApplications()
             ->with('approvals.approver')
-            ->when($request->status, fn ($q, $status) => $q->where('status', $status))
+            // "returned" covers whichever stage sent the form back.
+            ->when($request->status, fn ($q, $status) => $status === 'returned'
+                ? $q->whereIn('status', ['dean_returned', 'hr_returned', 'cd_returned'])
+                : $q->where('status', $status))
             ->when($request->type, fn ($q, $type) => $q->where('leave_type', $type))
             ->latest()
             ->paginate(10)
@@ -90,10 +102,30 @@ class LeaveApplicationController extends Controller
             'date_from' => ['required', 'date'],
             'date_to' => ['required', 'date', 'after_or_equal:date_from'],
             'reason' => ['nullable', 'string', 'max:500'],
-            'leave_form' => ['required', 'file', 'mimes:pdf,xlsx,xls,doc,docx', 'max:10240'],
+            'leave_form' => self::FORM_FILE_RULES,
         ], [
             'leave_form.required' => 'Attach the filled-in leave form before submitting.',
+            'leave_form.mimes' => self::FORM_FILE_MESSAGE,
         ]);
+
+        // The same days filed twice — a double submit, or a new form instead
+        // of re-uploading a returned one — would put two forms through the
+        // chain and, once both are posted, charge the ledger twice.
+        $overlapping = $request->user()->leaveApplications()
+            ->whereNotIn('status', ['draft', 'dean_returned', 'hr_returned', 'cd_returned'])
+            ->whereDate('date_from', '<=', $data['date_to'])
+            ->whereDate('date_to', '>=', $data['date_from'])
+            ->first();
+
+        if ($overlapping) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'date_from' => sprintf(
+                    'You already filed leave covering %s to %s. Choose other dates, or wait for that form to be returned before filing it again.',
+                    $overlapping->date_from->format('M j, Y'),
+                    $overlapping->date_to->format('M j, Y'),
+                ),
+            ]);
+        }
 
         $file = $request->file('leave_form');
 
@@ -185,7 +217,9 @@ class LeaveApplicationController extends Controller
             'Only a returned form can be re-submitted.');
 
         $request->validate([
-            'leave_form' => ['required', 'file', 'mimes:pdf,xlsx,xls,doc,docx', 'max:10240'],
+            'leave_form' => self::FORM_FILE_RULES,
+        ], [
+            'leave_form.mimes' => self::FORM_FILE_MESSAGE,
         ]);
 
         $file = $request->file('leave_form');
@@ -251,9 +285,10 @@ class LeaveApplicationController extends Controller
             'You have not uploaded a form for this application.'
         );
 
+        // Named with the file's real type: a PDF saved as ".xlsx" will not open.
         return Storage::disk('local')->download(
             $application->file_path,
-            DocumentName::leaveForm($application->user, $application->reference(), 'xlsx'),
+            DocumentName::leaveForm($application->user, $application->reference(), $application->formExtension() ?: 'xlsx'),
         );
     }
 
@@ -274,10 +309,36 @@ class LeaveApplicationController extends Controller
             'You have not uploaded a form for this application.'
         );
 
+        return self::streamFormAsPdf($application, $converter);
+    }
+
+    /**
+     * The uploaded form as a PDF for reading in the browser. A PDF upload is
+     * already that, so it is sent as it is; only a workbook is converted.
+     * Sending a PDF through the workbook converter failed and handed the
+     * reader their own PDF back labelled as a spreadsheet.
+     */
+    public static function streamFormAsPdf(
+        LeaveApplication $application,
+        XlsxToPdfService $converter,
+        bool $allowIncompletePreview = false,
+    ) {
+        $path = Storage::disk('local')->path($application->file_path);
+
+        if ($application->formExtension() === 'pdf') {
+            return response()->file($path, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => DocumentName::disposition($application->formPdfName()),
+                'Cache-Control' => 'private, no-store, max-age=0',
+                'X-Content-Type-Options' => 'nosniff',
+            ]);
+        }
+
         return $converter->stream(
-            Storage::disk('local')->path($application->file_path),
+            $path,
             $application->formPdfName(),
             cacheKey: 'leave-form:' . $application->id,
+            allowIncompletePreview: $allowIncompletePreview,
         );
     }
 

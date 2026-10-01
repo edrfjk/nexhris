@@ -14,10 +14,7 @@ class PolicyController extends Controller
 {
     public function index(Request $request)
     {
-        $baseQuery = HrPolicy::where('is_published', true)
-            ->where(function ($q) {
-                $q->whereNull('effective_date')->orWhere('effective_date', '<=', now());
-            })
+        $baseQuery = HrPolicy::inForce()
             ->when($request->search, fn ($q, $search) => $q->where('title', 'like', "%{$search}%"))
             ->when($request->category, fn ($q, $category) => $q->where('category', $category));
 
@@ -34,15 +31,13 @@ class PolicyController extends Controller
 
         $policies = $baseQuery->orderByDesc('is_pinned')->latest('published_at')->paginate(9)->withQueryString();
 
-        $featured = HrPolicy::where('is_published', true)->where('is_pinned', true)
-            ->where(function ($q) {
-                $q->whereNull('effective_date')->orWhere('effective_date', '<=', now());
-            })
+        $featured = HrPolicy::inForce()->where('is_pinned', true)
             ->latest('published_at')->first();
 
-        $categories = HrPolicy::where('is_published', true)->whereNotNull('category')->distinct()->pluck('category');
+        $categories = HrPolicy::inForce()->whereNotNull('category')->distinct()->pluck('category');
 
-        $forYouCount = HrPolicy::where('is_published', true)
+        // The same set the "For you" tab lists, so the number matches it.
+        $forYouCount = HrPolicy::inForce()
             ->where('requires_acknowledgment', true)
             ->whereNotIn('id', $myViewedIds)
             ->count();
@@ -59,13 +54,15 @@ class PolicyController extends Controller
 
     public function show(HrPolicy $policy)
     {
-        abort_unless($policy->is_published, 404);
+        // A policy that has not taken effect is not published to staff yet.
+        // An expired one stays readable as history; it is only no longer listed.
+        abort_unless($policy->isReadableByStaff(), 404);
 
         $this->recordView($policy);
 
         $myView = HrPolicyView::where('hr_policy_id', $policy->id)->where('user_id', Auth::id())->first();
 
-        $related = HrPolicy::where('is_published', true)
+        $related = HrPolicy::inForce()
             ->where('id', '!=', $policy->id)
             ->when($policy->category, fn ($q) => $q->where('category', $policy->category))
             ->latest('published_at')
@@ -77,7 +74,12 @@ class PolicyController extends Controller
 
     public function acknowledge(HrPolicy $policy)
     {
-        abort_unless($policy->requires_acknowledgment, 404);
+        // Only a policy in force can be acknowledged: not a draft, not one
+        // still to come, and not one that has lapsed.
+        abort_unless(
+            $policy->requires_acknowledgment && HrPolicy::inForce()->whereKey($policy->id)->exists(),
+            404,
+        );
 
         $view = $this->recordView($policy);
 

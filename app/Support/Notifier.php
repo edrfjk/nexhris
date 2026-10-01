@@ -32,13 +32,26 @@ final class Notifier
      */
     public static function send(mixed $recipients, Notification $notification): void
     {
-        try {
-            Notifications::send($recipients, $notification);
-        } catch (\Throwable $e) {
-            Log::warning('Notification email could not be sent; the in-app notification still stands.', [
-                'notification' => $notification::class,
-                'error' => $e->getMessage(),
-            ]);
+        // One recipient at a time. Sent as a batch, a mail failure on the
+        // third of two hundred staff ended the loop there, and everyone after
+        // them got neither the email nor the bell. Once mail has failed, the
+        // rest get the bell only, rather than each waiting out an SMTP timeout.
+        $mailFailed = false;
+
+        foreach (is_iterable($recipients) ? $recipients : [$recipients] as $recipient) {
+            try {
+                $mailFailed
+                    ? Notifications::sendNow($recipient, $notification, ['database'])
+                    : Notifications::send($recipient, $notification);
+            } catch (\Throwable $e) {
+                $mailFailed = true;
+
+                Log::warning('Notification email could not be sent; the in-app notification still stands.', [
+                    'notification' => $notification::class,
+                    'recipient' => $recipient->id ?? null,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 }

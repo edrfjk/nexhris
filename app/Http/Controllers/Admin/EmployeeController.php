@@ -436,7 +436,30 @@ public function edit(User $employee)
 
         $employee->update(['status' => $data['status']]);
 
-        return back()->with('success', "{$employee->name}'s account is now " . $data['status'] . '.');
+        $response = back()->with('success', "{$employee->name}'s account is now " . $data['status'] . '.');
+
+        // An inactive Dean cannot sign in or be notified, so their college's
+        // leave forms would sit in a queue nobody can open. Say so now rather
+        // than letting HR find out from a complaint.
+        $college = $data['status'] === 'inactive'
+            ? \App\Models\College::where('dean_id', $employee->id)->first()
+            : null;
+
+        if ($college) {
+            $waiting = $this->workflowQueueSize($employee);
+
+            $response->with('warning', "{$employee->name} is still recorded as Dean of {$college->name}. "
+                . 'Leave forms from that college will wait with no one to review them until another Dean is assigned'
+                . ($waiting ? " — {$waiting} already waiting." : '.'));
+        }
+
+        return $response;
+    }
+
+    /** Leave forms currently sitting in this Dean's review queue. */
+    private function workflowQueueSize(User $dean): int
+    {
+        return app(\App\Services\LeaveWorkflowService::class)->queueFor($dean)->count();
     }
 
 public function show(Request $request, User $employee)

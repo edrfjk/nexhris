@@ -3,6 +3,17 @@
 
 @section('content')
 
+@php
+    // Deans and the Campus Director file leave here too, and their forms skip
+    // their own stage — a Campus Director's goes to HR alone. The wording
+    // follows the chain this person's form actually takes.
+    $chainLabels = array_map(
+        fn ($stage) => \App\Services\LeaveChain::LABELS[$stage],
+        app(\App\Services\LeaveChain::class)->stagesFor(auth()->user()),
+    );
+    $firstReviewer = $chainLabels[0] ?? 'reviewer';
+@endphp
+
 <x-page-header
     title="My Leave"
     subtitle="Download the form, fill it in, upload it — then track it through the approval chain">
@@ -52,7 +63,7 @@
                 {{ $readyToPrint }} form{{ $readyToPrint === 1 ? ' is' : 's are' }} fully approved
             </p>
             <p class="text-xs text-forest-700 mt-0.5">
-                The Dean, HR and the Campus Director have all signed off online.
+                Every reviewer has signed off online.
                 Print the approval sheet below and collect the wet signatures.
             </p>
         </div>
@@ -84,7 +95,7 @@
 
             <a href="{{ route('leave.template.download') }}"
                class="btn btn-lg btn-primary w-full">
-                <x-heroicon-o-arrow-up-tray class="w-4 h-4" />
+                <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
                 Download leave form
             </a>
 
@@ -102,7 +113,7 @@
                 <div class="w-7 h-7 rounded-full bg-maroon-800 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
                 <div>
                     <h3 class="font-semibold text-sm text-sand-800">Upload the filled-in form</h3>
-                    <p class="text-xs text-sand-500 mt-0.5">It goes straight to your Dean.</p>
+                    <p class="text-xs text-sand-500 mt-0.5">It goes straight to the {{ $firstReviewer }}.</p>
                 </div>
             </div>
 
@@ -141,9 +152,9 @@
 
                 <label class="block">
                     <span class="label">Accomplished form <span class="text-red-500">*</span></span>
-                    <input type="file" name="leave_form" required accept=".pdf,.xlsx,.xls,.doc,.docx"
+                    <input type="file" name="leave_form" required accept=".xlsx,.xls,.pdf"
                            class="file-input mt-1 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-maroon-50 file:text-maroon-800 hover:file:bg-maroon-100 file:cursor-pointer">
-                    <span class="hint">PDF, Excel or Word · up to 10 MB</span>
+                    <span class="hint">Excel workbook or PDF · up to 10 MB</span>
                 </label>
 
                 <button class="btn btn-lg btn-primary w-full">
@@ -161,9 +172,12 @@
                 </div>
             </div>
             <p class="text-xs text-sand-500 leading-relaxed">
-                Your form is checked online by the <strong>Dean</strong>, then the
-                <strong>HR Administrator</strong>, then the <strong>Campus Director</strong>.
-                Only when all three approve does the print button unlock — so you never print a hard
+                Your form is checked online by the
+                @foreach ($chainLabels as $label)
+                    <strong>{{ $label }}</strong>@if (! $loop->last), then the @else.@endif
+                @endforeach
+                Only when {{ count($chainLabels) === 1 ? 'they approve' : 'all ' . count($chainLabels) . ' approve' }}
+                does the print button unlock — so you never print a hard
                 copy and chase signatures for a form that was going to be sent back.
             </p>
         </x-card>
@@ -212,6 +226,7 @@
                             <option value="hr_approved" @selected(request('status') === 'hr_approved')>Awaiting Campus Director</option>
                             <option value="cd_approved" @selected(request('status') === 'cd_approved')>Ready to print</option>
                             <option value="completed" @selected(request('status') === 'completed')>Completed</option>
+                            <option value="returned" @selected(request('status') === 'returned')>Returned to me</option>
                         </select>
                     </form>
                 </div>
@@ -297,12 +312,12 @@
                                     @csrf
                                     <label class="block">
                                         <span class="label">Corrected form</span>
-                                        <input type="file" name="leave_form" required accept=".pdf,.xlsx,.xls,.doc,.docx"
+                                        <input type="file" name="leave_form" required accept=".xlsx,.xls,.pdf"
                                                class="file-input mt-1 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-maroon-50 file:text-maroon-800 hover:file:bg-maroon-100 file:cursor-pointer">
                                     </label>
                                     <div class="flex gap-2">
                                         <button class="btn btn-sm btn-primary">
-                                            Re-submit to Dean
+                                            Re-submit to the {{ $firstReviewer }}
                                         </button>
                                         <button type="button" @click="fixing = false"
                                                 class="btn btn-sm btn-secondary">

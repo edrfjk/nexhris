@@ -17,7 +17,7 @@
                 @if ($employee->profile_photo_path)
                     <img src="{{ asset('storage/' . $employee->profile_photo_path) }}" class="w-full h-full object-cover">
                 @else
-                    <span class="text-3xl font-bold text-sand-400">{{ strtoupper(substr($employee->name, 0, 1)) }}</span>
+                    <span class="text-3xl font-bold text-sand-400">{{ mb_strtoupper(mb_substr($employee->name, 0, 1)) }}</span>
                 @endif
             </div>
 

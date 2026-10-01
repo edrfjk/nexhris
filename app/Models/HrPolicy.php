@@ -33,6 +33,29 @@ class HrPolicy extends Model
         return $this->hasMany(HrPolicyView::class);
     }
 
+    /**
+     * Published, already effective and not yet expired — the policies that
+     * actually bind staff today.
+     *
+     * The sidebar badge applied these dates, while the policy list, the "For
+     * you" count and the dashboard each applied some or none of them, so the
+     * numbers disagreed and an expired policy still asked to be acknowledged.
+     * Everything that lists or counts policies for staff goes through here.
+     */
+    public function scopeInForce($query)
+    {
+        return $query->where('is_published', true)
+            ->where(fn ($q) => $q->whereNull('effective_date')->orWhereDate('effective_date', '<=', today()))
+            ->where(fn ($q) => $q->whereNull('expiry_date')->orWhereDate('expiry_date', '>=', today()));
+    }
+
+    /** Whether staff may open it: published and already in effect. */
+    public function isReadableByStaff(): bool
+    {
+        return $this->is_published
+            && (! $this->effective_date || $this->effective_date->lte(today()));
+    }
+
     public function categoryMeta(): array
     {
         return config("policy_categories.{$this->category}") ?? config('policy_categories.default');

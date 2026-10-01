@@ -66,11 +66,7 @@
             </p>
         </div>
 
-        <div class="flex items-center justify-between pt-1">
-            <label class="flex cursor-pointer items-center gap-2 text-[13px] text-sand-600">
-                
-            </label>
-
+        <div class="flex items-center justify-end pt-1">
             <a href="{{ route('password.request') }}"
                class="text-[13px] font-medium text-maroon-700 transition-colors hover:text-maroon-900">
                 Forgot password?
