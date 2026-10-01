@@ -169,10 +169,10 @@
         <text x="53.5" y="293.45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">EMPLOYEE</text>
         <path d="M100,284 L231,284" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
         <path d="M232,296 L101,296" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
-        <rect x="116.5" y="280.6" width="99.1" height="8.0" fill="#fff"/>
-        <text x="166" y="286.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">FILLED PDS WORKBOOK</text>
-        <rect x="118.9" y="292.6" width="94.2" height="8.0" fill="#fff"/>
-        <text x="166" y="298.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">REVIEW RESULT, PDF</text>
+        <rect x="106.7" y="280.6" width="118.6" height="8.0" fill="#fff"/>
+        <text x="166" y="286.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">PDS ANSWERS OR WORKBOOK</text>
+        <rect x="116.5" y="292.6" width="99.1" height="8.0" fill="#fff"/>
+        <text x="166" y="298.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">PRINTED PDS, RESULT</text>
         <rect x="4" y="309" width="96" height="22" fill="#fff" stroke="#000" stroke-width="1.1"/>
         <path d="M7,331 V312 H100" fill="none" stroke="#000" stroke-width="1.3"/>
         <path d="M91,331 L100,322" fill="none" stroke="#000" stroke-width="1"/>
@@ -197,10 +197,10 @@
         <text x="520" y="323" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">PDS SUBMISSIONS</text>
         <path d="M348,314 L487,314" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
         <path d="M488,326 L349,326" marker-end="url(#ufa)" fill="none" stroke="#000" stroke-width="1"/>
-        <rect x="370.9" y="310.6" width="94.2" height="8.0" fill="#fff"/>
-        <text x="418" y="316.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">WORKBOOK, DECISION</text>
-        <rect x="378.2" y="322.6" width="79.5" height="8.0" fill="#fff"/>
-        <text x="418" y="328.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">SUBMISSION, PDF</text>
+        <rect x="358.7" y="310.6" width="118.6" height="8.0" fill="#fff"/>
+        <text x="418" y="316.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">ANSWERS, FILE, DECISION</text>
+        <rect x="370.9" y="322.6" width="94.2" height="8.0" fill="#fff"/>
+        <text x="418" y="328.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">SAVED ANSWERS, PDF</text>
         <rect x="232" y="350" width="116" height="112" rx="8" fill="#fff" stroke="#000" stroke-width="1.4"/>
         <path d="M232,364 H348" fill="none" stroke="#000" stroke-width="1"/>
         <text x="290" y="359.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="8" font-weight="bold">5.0</text>

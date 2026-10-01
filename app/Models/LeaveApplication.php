@@ -67,7 +67,6 @@ class LeaveApplication extends Model
         return in_array($this->formExtension(), ['xlsx', 'xls'], true);
     }
 
-    /** What the converted copy should be called when it is downloaded. */
     /** The padded id printed on the form and used to name its PDF. */
     public function reference(): string
     {
@@ -154,7 +153,10 @@ class LeaveApplication extends Model
     /** Whole days this form has been waiting on its current reviewer. */
     public function daysWaiting(): ?int
     {
-        return $this->waitingSince()?->diffInDays(now());
+        // Carbon 3 returns a fraction; whole days are what the badge shows.
+        $since = $this->waitingSince();
+
+        return $since ? (int) floor($since->diffInDays(now())) : null;
     }
 
     // ------------------------------------------------------------------

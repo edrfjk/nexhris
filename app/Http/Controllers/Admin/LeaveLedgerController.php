@@ -341,7 +341,8 @@ class LeaveLedgerController extends Controller
 
         $posted = $employees->count() - count($skipped) - count($alreadyPosted);
 
-        $message = 'Leave credits posted to ' . $posted . ' employee(s).';
+        $message = ($ledger === LeaveLedgerEntry::SERVICE ? 'Service credits' : 'Leave credits')
+            . ' posted to ' . $posted . ' employee(s).';
 
         if ($alreadyPosted) {
             $message .= ' Already had this period: ' . implode(', ', $alreadyPosted) . '.';
@@ -379,9 +380,7 @@ class LeaveLedgerController extends Controller
     public function calendar(Request $request)
     {
         $viewer = $request->user();
-        $month = $request->input('month', now()->format('Y-m'));
-        $start = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
-        $end = $start->copy()->endOfMonth();
+        [$month, $start, $end] = $this->requestedMonth($request);
 
         // Everything still moving through the chain is shown too, so HR can
         // spot clashes before approving. Returned forms never happened.
@@ -454,11 +453,31 @@ class LeaveLedgerController extends Controller
         return $days;
     }
 
+    /**
+     * The month the calendar is showing, from ?month=YYYY-MM.
+     *
+     * The value comes straight from the address bar, and parsing anything
+     * else ("abc", "2026-13") threw and answered with a 500. An unreadable
+     * month simply shows the current one.
+     *
+     * @return array{0: string, 1: \Carbon\Carbon, 2: \Carbon\Carbon}
+     */
+    private function requestedMonth(Request $request): array
+    {
+        $month = (string) $request->input('month', '');
+
+        $start = preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)
+            ? \Carbon\Carbon::createFromFormat('!Y-m', $month)
+            : now()->startOfMonth();
+
+        $start = $start->startOfMonth();
+
+        return [$start->format('Y-m'), $start, $start->copy()->endOfMonth()];
+    }
+
     public function exportMonthPdf(Request $request)
     {
-        $month = $request->input('month', now()->format('Y-m'));
-        $start = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
-        $end = $start->copy()->endOfMonth();
+        [$month, $start, $end] = $this->requestedMonth($request);
 
         // The printed board only shows fully approved leave — listing forms
         // still under review as if they were confirmed would mislead.
@@ -522,11 +541,17 @@ class LeaveLedgerController extends Controller
                 $employee->employee_number,
                 $employee->name,
                 $employee->department,
-                number_format($employee->leaveBalance->vl_balance ?? 0, 2),
-                number_format($employee->leaveBalance->sl_balance ?? 0, 2),
-                number_format($employee->leaveBalance->service_balance ?? 0, 2),
+                // Numbers, not formatted strings, so HR can total the column.
+                round((float) ($employee->leaveBalance->vl_balance ?? 0), 2),
+                round((float) ($employee->leaveBalance->sl_balance ?? 0), 2),
+                round((float) ($employee->leaveBalance->service_balance ?? 0), 3),
             ], null, "A{$row}");
             $row++;
+        }
+
+        if ($row > 2) {
+            $sheet->getStyle('D2:E' . ($row - 1))->getNumberFormat()->setFormatCode('0.00');
+            $sheet->getStyle('F2:F' . ($row - 1))->getNumberFormat()->setFormatCode('0.000');
         }
 
         $filename = DocumentName::leaveBalances(extension: 'xlsx');

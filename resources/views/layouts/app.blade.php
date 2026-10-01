@@ -40,10 +40,7 @@
             ->whereIn('id', $unreadAnnouncementIds)
             ->count();
 
-        $policyUnread = \App\Models\HrPolicy::query()
-            ->where('is_published', true)
-            ->where(fn ($query) => $query->whereNull('effective_date')->orWhere('effective_date', '<=', now()))
-            ->where(fn ($query) => $query->whereNull('expiry_date')->orWhere('expiry_date', '>=', now()->startOfDay()))
+        $policyUnread = \App\Models\HrPolicy::inForce()
             ->whereDoesntHave('views', fn ($query) => $query->where('user_id', $user->id))
             ->count();
     }
@@ -186,7 +183,7 @@
                      else — the approval chain already skips whichever stage
                      is their own — so their own records belong here too. --}}
                 <x-nav.section label="My Records">
-                    <x-nav.item :href="route('leave.index')" :active="request()->routeIs('leave.index')" icon="calendar-days">
+                    <x-nav.item :href="route('leave.index')" :active="request()->routeIs('leave.index')" icon="document-plus">
                         My Leave
                     </x-nav.item>
                     <x-nav.item :href="route('leave.ledger.mine')" :active="request()->routeIs('leave.ledger.*')" icon="book-open">
@@ -226,7 +223,7 @@
                 {{-- An employee's own records are the whole point of their
                      account, so they sit directly under the dashboard. --}}
                 <x-nav.section label="My Records">
-                    <x-nav.item :href="route('leave.index')" :active="request()->routeIs('leave.index')" icon="calendar-days">
+                    <x-nav.item :href="route('leave.index')" :active="request()->routeIs('leave.index')" icon="document-plus">
                         My Leave
                     </x-nav.item>
                     <x-nav.item :href="route('leave.ledger.mine')" :active="request()->routeIs('leave.ledger.*')" icon="book-open">
@@ -308,7 +305,7 @@
                     @else
                         <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0
                                     bg-maroon-800 text-white text-sm font-semibold shadow-soft">
-                            {{ strtoupper(substr($user->name ?? '?', 0, 1)) }}
+                            {{ mb_strtoupper(mb_substr($user->name ?? '?', 0, 1)) }}
                         </div>
                     @endif
                 </div>
@@ -323,15 +320,18 @@
                 </div>
             @endif
 
+            {{-- Only the success note fades. A warning or an error is
+                 something to act on, and some list several names — they
+                 stay until the next page. --}}
             @if (session('warning'))
-                <div data-flash class="alert alert-warning mb-4">
+                <div class="alert alert-warning mb-4">
                     <x-heroicon-o-exclamation-triangle />
                     <span>{{ session('warning') }}</span>
                 </div>
             @endif
 
             @if (session('error'))
-                <div data-flash class="alert alert-error mb-4">
+                <div class="alert alert-error mb-4">
                     <x-heroicon-o-exclamation-triangle />
                     <span>{{ session('error') }}</span>
                 </div>

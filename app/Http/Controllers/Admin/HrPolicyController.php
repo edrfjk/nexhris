@@ -167,7 +167,9 @@ class HrPolicyController extends Controller
             'category' => ['nullable', 'string', 'max:100'],
             'type' => ['required', 'in:text,file,link'],
             'body' => ['required_if:type,text', 'nullable', 'string'],
-            'link_url' => ['required_if:type,link', 'nullable', 'url', 'max:2048'],
+            // Web addresses only: the link is printed as an href on every
+            // employee's policy page.
+            'link_url' => ['required_if:type,link', 'nullable', 'url:http,https', 'max:2048'],
             'file' => [
                 $policy && $policy->type === 'file' ? 'nullable' : 'required_if:type,file',
                 'nullable', 'file', 'mimes:pdf,doc,docx,ppt,pptx', 'max:10240',

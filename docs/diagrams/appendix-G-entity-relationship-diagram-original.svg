@@ -55,7 +55,7 @@
         <text x="275" y="85" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">remarks</text>
         <text x="261" y="94.4" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="6" font-weight="bold">FK</text>
         <text x="275" y="94.4" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">reviewed_by</text>
-        <rect x="386" y="16" width="100" height="101.6" fill="#fff" stroke="#000" stroke-width="1.1"/>
+        <rect x="386" y="16" width="100" height="120.4" fill="#fff" stroke="#000" stroke-width="1.1"/>
         <path d="M386,30 H486" fill="none" stroke="#000" stroke-width="1"/>
         <text x="436" y="26" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">pds_submissions</text>
         <text x="389" y="38" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="6" font-weight="bold">PK</text>
@@ -71,6 +71,8 @@
         <text x="389" y="103.8" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="6" font-weight="bold">FK</text>
         <text x="403" y="103.8" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">reviewed_by</text>
         <text x="403" y="113.2" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">return_remarks</text>
+        <text x="403" y="122.6" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">form_data</text>
+        <text x="403" y="132" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7">form_updated_at</text>
         <rect x="514" y="16" width="100" height="73.4" fill="#fff" stroke="#000" stroke-width="1.1"/>
         <path d="M514,30 H614" fill="none" stroke="#000" stroke-width="1"/>
         <text x="564" y="26" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" fill="#000" font-size="7" font-weight="bold">two_factor_challenges</text>
@@ -267,7 +269,7 @@
         <path d="M265,196 L265,176 L52,176 L52,89.4" marker-end="url(#ugcrow)" marker-start="url(#ugone)" fill="none" stroke="#000" stroke-width="1"/>
         <path d="M285,196 L285,168 L180,168 L180,98.8" marker-end="url(#ugcrow)" marker-start="url(#ugone)" fill="none" stroke="#000" stroke-width="1"/>
         <path d="M308,196 L308,98.8" marker-end="url(#ugcrow)" marker-start="url(#ugone)" fill="none" stroke="#000" stroke-width="1"/>
-        <path d="M331,196 L331,168 L436,168 L436,117.6" marker-end="url(#ugcrow)" marker-start="url(#ugone)" fill="none" stroke="#000" stroke-width="1"/>
+        <path d="M331,196 L331,168 L436,168 L436,136.4" marker-end="url(#ugcrow)" marker-start="url(#ugone)" fill="none" stroke="#000" stroke-width="1"/>
         <path d="M351,196 L351,176 L564,176 L564,89.4" marker-end="url(#ugcrow)" marker-start="url(#ugone)" fill="none" stroke="#000" stroke-width="1"/>
         <path d="M230,50 L258,50" marker-end="url(#ugcrow)" marker-start="url(#ugone)" fill="none" stroke="#000" stroke-width="1"/>
         <path d="M386,66 L358,66" marker-end="url(#ugcrow)" marker-start="url(#ugone)" fill="none" stroke="#000" stroke-width="1"/>

@@ -6,7 +6,11 @@
 @php
     $me = auth()->user();
     $greeting = now()->hour < 12 ? 'Good morning' : (now()->hour < 18 ? 'Good afternoon' : 'Good evening');
-    $firstName = explode(' ', trim(str_replace(',', ' ', $me->name)))[0];
+    // The given name, not the first word: "DELA CRUZ, Juan" is greeted as
+    // Juan, not "Dela". nameParts() is what the ledger card uses too.
+    $firstName = $me->first_name
+        ?: \Illuminate\Support\Str::title(mb_strtolower(\Illuminate\Support\Str::before($me->nameParts()['first'], ' ')))
+        ?: $me->name;
 
     $balance = $data['balance'];
     $pds = $data['pds'];

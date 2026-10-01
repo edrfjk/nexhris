@@ -163,7 +163,7 @@
                                     @if ($employee->profile_photo_path)
                                         <img src="{{ asset('storage/' . $employee->profile_photo_path) }}" class="w-full h-full object-cover">
                                     @else
-                                        <span class="text-sm font-semibold text-maroon-800">{{ strtoupper(substr($employee->name, 0, 1)) }}</span>
+                                        <span class="text-sm font-semibold text-maroon-800">{{ mb_strtoupper(mb_substr($employee->name, 0, 1)) }}</span>
                                     @endif
                                 </div>
                                 <div>
@@ -187,9 +187,12 @@
                         </td>
                         <td>{{ $sub && $sub->submitted_at ? $sub->submitted_at->format('M d, Y g:i A') : '—' }}</td>
                         <td class="text-right">
-                            <a href="{{ route('admin.pds.show', $employee) }}"
+                            {{-- Carries the year being listed, or the review page
+                                 opens this year's sheet instead of the one in the row. --}}
+                            <a href="{{ route('admin.pds.show', [$employee, 'year' => $year]) }}"
                                class="icon-btn"
-                               title="Review PDS">
+                               title="Review PDS"
+                               aria-label="Review {{ $employee->name }}'s PDS">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>

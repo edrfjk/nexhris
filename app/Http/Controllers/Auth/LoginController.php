@@ -62,7 +62,8 @@ class LoginController extends Controller
         // Layer 2: per-account lockout, tracked in the database, survives
         // even if the attacker switches IP addresses.
         if ($user && $user->locked_until && $user->locked_until->isFuture()) {
-            $minutesLeft = now()->diffInMinutes($user->locked_until) + 1;
+            // Carbon 3 returns a fraction here; the message wants whole minutes.
+            $minutesLeft = max(1, (int) ceil(now()->diffInMinutes($user->locked_until)));
 
             $this->log->loginFailed($credentials['email'], 'account locked');
 
@@ -75,6 +76,13 @@ class LoginController extends Controller
             RateLimiter::hit($throttleKey, self::LOCKOUT_MINUTES * 60);
 
             if ($user) {
+                // A lock that has run out starts a fresh count. Otherwise the
+                // counter is still at the limit and the very next typo locks
+                // the account for another full period.
+                if ($user->locked_until && $user->locked_until->isPast()) {
+                    $user->update(['failed_login_attempts' => 0, 'locked_until' => null]);
+                }
+
                 $user->increment('failed_login_attempts');
 
                 if ($user->failed_login_attempts >= self::MAX_ATTEMPTS) {

@@ -26,7 +26,7 @@
                             <img src="{{ asset('storage/' . $employee->profile_photo_path) }}" class="w-full h-full object-cover">
                         @else
                             <div class="w-full h-full flex items-center justify-center text-2xl font-bold text-sand-400">
-                                {{ strtoupper(substr($employee->name, 0, 1)) }}
+                                {{ mb_strtoupper(mb_substr($employee->name, 0, 1)) }}
                             </div>
                         @endif
                     </div>

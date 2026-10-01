@@ -108,12 +108,32 @@
                 @csrf @method('PUT')
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {{-- Separate parts, because the ledger card prints them in
+                         separate boxes. Pre-filled from the stored parts, or
+                         from the display name for accounts that predate them. --}}
+                    @php $nameParts = $user->nameParts(); @endphp
+                    <div>
+                        <label class="label label-required">First name</label>
+                        <input type="text" name="first_name" required maxlength="100"
+                               value="{{ old('first_name', $user->first_name ?: \Illuminate\Support\Str::title(mb_strtolower($nameParts['first']))) }}"
+                               class="input @error('first_name') input-error @enderror">
+                        @error('first_name') <span class="hint text-red-600">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="label">Middle name</label>
+                        <input type="text" name="middle_name" maxlength="100"
+                               value="{{ old('middle_name', $user->middle_name) }}"
+                               class="input @error('middle_name') input-error @enderror">
+                        @error('middle_name') <span class="hint text-red-600">{{ $message }}</span> @enderror
+                    </div>
+
                     <div class="sm:col-span-2">
-                        <label class="label label-required">Full name</label>
-                        <input type="text" name="name" required
-                               value="{{ old('name', $user->name) }}"
-                               class="input @error('name') input-error @enderror">
-                        @error('name') <span class="hint text-red-600">{{ $message }}</span> @enderror
+                        <label class="label label-required">Last name</label>
+                        <input type="text" name="last_name" required maxlength="100"
+                               value="{{ old('last_name', $user->last_name ?: \Illuminate\Support\Str::title(mb_strtolower($nameParts['family']))) }}"
+                               class="input @error('last_name') input-error @enderror">
+                        @error('last_name') <span class="hint text-red-600">{{ $message }}</span> @enderror
                     </div>
 
                     <div>

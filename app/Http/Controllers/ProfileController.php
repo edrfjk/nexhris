@@ -29,13 +29,38 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        // The ledger card and the PDS read the separate name parts, not the
+        // display name, so the form edits the parts and the display name is
+        // rebuilt from them. A bare `name` is still accepted for older callers.
+        $structured = $request->hasAny(['first_name', 'last_name']);
+
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [$structured ? 'nullable' : 'required', 'string', 'max:255'],
+            'first_name' => [$structured ? 'required' : 'nullable', 'string', 'max:100'],
+            'middle_name' => ['nullable', 'string', 'max:100'],
+            'last_name' => [$structured ? 'required' : 'nullable', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'contact_number' => ['nullable', 'string', 'max:20'],
         ], [
             'email.unique' => 'That email address is already used by another account.',
         ]);
+
+        if ($structured) {
+            $data['first_name'] = trim($data['first_name']);
+            $data['middle_name'] = trim((string) ($data['middle_name'] ?? '')) ?: null;
+            $data['last_name'] = trim($data['last_name']);
+            $data['name'] = collect([$data['first_name'], $data['middle_name'], $data['last_name']])
+                ->filter()->implode(' ');
+        } else {
+            unset($data['first_name'], $data['middle_name'], $data['last_name']);
+
+            // A new display name with the old parts left behind would print
+            // the old name on the ledger card. Drop the parts so the card
+            // reads the name that was just entered.
+            if ($data['name'] !== $user->name) {
+                $data += ['first_name' => null, 'middle_name' => null, 'last_name' => null];
+            }
+        }
 
         $user->update($data);
 

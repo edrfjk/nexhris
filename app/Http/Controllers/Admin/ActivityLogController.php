@@ -15,6 +15,13 @@ class ActivityLogController extends Controller
 {
     public function index(Request $request)
     {
+        // The filter chips print these dates, and parsing "abc" there was a
+        // 500. A bad date is sent back with a message instead.
+        $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+        ]);
+
         $logs = ActivityLog::with('user')
             ->when($request->action, fn ($q, $action) => $q->where('action', $action))
             ->when($request->user_id, fn ($q, $id) => $q->where('user_id', $id))
