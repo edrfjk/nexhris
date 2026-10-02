@@ -65,6 +65,16 @@ class OverlayPainter
             return null;
         }
 
+        $rels = $this->relationships($zip, $sheetPath);
+
+        // Where the object's picture is an ordinary image — as on the
+        // corrected leave form, whose instructions page ships as one — that
+        // picture is exactly what Excel shows, so draw it rather than lay the
+        // document out again.
+        if ($picture = $this->embeddedPicture($zip, $sheetPath, $rels, $width, $height, $scale)) {
+            return $picture;
+        }
+
         return (new EmbeddedDocPainter())->paint(
             $zip,
             $sheetPath,
@@ -72,6 +82,45 @@ class OverlayPainter
             $width,
             $height,
             $scale,
+        );
+    }
+
+    /** The OLE object's picture, when it is a PNG or JPEG, fitted to the page. */
+    private function embeddedPicture(\ZipArchive $zip, string $sheetPath, array $rels, float $width, float $height, float $scale): ?string
+    {
+        $hasObject = false;
+        $picture = null;
+
+        foreach ($rels as $rel) {
+            $hasObject = $hasObject || str_ends_with($rel['type'], '/package') || str_ends_with($rel['type'], '/oleObject');
+
+            if (str_ends_with($rel['type'], '/image') && preg_match('/\.(png|jpe?g)$/i', $rel['target'], $ext)) {
+                $picture = [$this->resolve($sheetPath, $rel['target']), strtolower($ext[1]) === 'png' ? 'png' : 'jpeg'];
+            }
+        }
+
+        if (! $hasObject || ! $picture || ($bytes = $zip->getFromName($picture[0])) === false) {
+            return null;
+        }
+
+        $size = @getimagesizefromstring($bytes);
+
+        if (! $size || $size[0] <= 0 || $size[1] <= 0) {
+            return null;
+        }
+
+        // The page box is in sheet units; draw at the picture's own shape.
+        $boxWidth = $width * $scale;
+        $boxHeight = $height * $scale;
+        $fit = min($boxWidth / $size[0], $boxHeight / $size[1]);
+
+        return sprintf(
+            '<img src="data:image/%s;base64,%s" style="position:absolute;left:%.2fpt;top:0;width:%.2fpt;height:%.2fpt;">',
+            $picture[1],
+            base64_encode($bytes),
+            ($boxWidth - $size[0] * $fit) / 2,
+            $size[0] * $fit,
+            $size[1] * $fit,
         );
     }
 

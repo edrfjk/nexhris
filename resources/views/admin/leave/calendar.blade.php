@@ -270,7 +270,11 @@
                     <span class="w-1.5 h-1.5 rounded-full" :class="typeFilter === 'SL' ? 'bg-white' : 'bg-forest-500'"></span>
                     Sick Leave
                 </button>
-                @foreach (array_diff_key(\App\Models\LeaveApplication::TYPES, array_flip(['VL', 'SL'])) as $code => $label)
+                {{-- The form has eighteen types; offer only those on this month. --}}
+                @foreach (array_intersect_key(
+                        array_diff_key(\App\Models\LeaveApplication::TYPES, array_flip(['VL', 'SL'])),
+                        array_flip($allAppsThisMonth->pluck('leave_type')->unique()->all()),
+                    ) as $code => $label)
                     <button type="button" @click="typeFilter = (typeFilter === '{{ $code }}' ? 'all' : '{{ $code }}')"
                             :class="typeFilter === '{{ $code }}' ? 'bg-sand-800 text-white' : 'bg-sand-50 text-sand-600 hover:bg-sand-100'"
                             class="text-xs font-medium rounded-full px-3 py-1 transition">

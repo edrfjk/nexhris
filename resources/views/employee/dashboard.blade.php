@@ -100,8 +100,9 @@
                             </blockquote>
                         @endif
                     </div>
-                    <a href="{{ route('leave.index') }}" class="btn btn-sm btn-primary shrink-0 self-start">
-                        Correct and re-upload
+                    <a href="{{ $form->isOnline() ? route('leave.edit', $form) : route('leave.index') }}"
+                       class="btn btn-sm btn-primary shrink-0 self-start">
+                        {{ $form->isOnline() ? 'Correct and resubmit' : 'Correct and re-upload' }}
                     </a>
                 </li>
             @endforeach
@@ -165,14 +166,14 @@
                 <a href="{{ route('leave.print', $active) }}" target="_blank"
                    class="btn btn-sm btn-success mt-5">
                     <x-heroicon-o-printer />
-                    Print approval sheet
+                    {{ $active->isOnline() ? 'Print leave form' : 'Print approval sheet' }}
                 </a>
             @endif
         @else
             <x-empty-state title="No leave in progress"
-                           message="Download the official form, fill it in, and upload it for review.">
+                           message="Fill in the leave form on screen and send it for review.">
                 <x-slot:action>
-                    <a href="{{ route('leave.index') }}" class="btn btn-md btn-primary">File a leave application</a>
+                    <a href="{{ route('leave.apply') }}" class="btn btn-md btn-primary">File a leave application</a>
                 </x-slot:action>
             </x-empty-state>
         @endif

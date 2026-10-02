@@ -382,7 +382,7 @@ class TemplateVersioningTest extends TestCase
 
         $converter = app(XlsxToPdfService::class);
 
-        $source = resource_path('templates/leave-form-template.xlsx');
+        $source = resource_path('templates/CS-Form-6-2020.xlsx');
 
         $first = $converter->convert($source);
         $started = microtime(true);

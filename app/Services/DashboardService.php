@@ -220,10 +220,17 @@ class DashboardService
             ->get()
             ->keyBy('leave_type');
 
+        // Vacation and sick leave always appear; of the form's other sixteen
+        // types, only those actually filed, so the chart stays readable.
+        $codes = array_values(array_filter(
+            array_keys(\App\Models\LeaveApplication::TYPES),
+            fn ($code) => in_array($code, ['VL', 'SL'], true) || isset($counts[$code]),
+        ));
+
         return [
-            'labels' => array_values(\App\Models\LeaveApplication::TYPES),
-            'counts' => array_map(fn ($code) => (int) ($counts[$code]->total ?? 0), array_keys(\App\Models\LeaveApplication::TYPES)),
-            'days' => array_map(fn ($code) => round((float) ($counts[$code]->days ?? 0), 2), array_keys(\App\Models\LeaveApplication::TYPES)),
+            'labels' => array_map(fn ($code) => \App\Models\LeaveApplication::TYPES[$code], $codes),
+            'counts' => array_map(fn ($code) => (int) ($counts[$code]->total ?? 0), $codes),
+            'days' => array_map(fn ($code) => round((float) ($counts[$code]->days ?? 0), 2), $codes),
         ];
     }
 

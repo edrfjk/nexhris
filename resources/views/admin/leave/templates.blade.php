@@ -5,7 +5,7 @@
 
 <x-page-header
     title="Templates"
-    subtitle="The official PDS and leave forms. Employees download these, and the on-screen PDS is printed into the active PDS version. Publishing never overwrites — each upload becomes a new version, and submissions keep the version they were filled on." />
+    subtitle="The official PDS and leave forms. Employees download these, and the on-screen PDS and leave forms are printed into the active versions. Publishing never overwrites — each upload becomes a new version, and submissions keep the version they were filled on." />
 
 <div x-data="{ tab: '{{ request('tab', 'pds') }}' }">
 
@@ -175,6 +175,11 @@
                     <input type="file" name="template" required accept=".xlsx,.xls" class="file-input">
                     <span class="hint">
                         Must be .xlsx — the filled-in copy is converted to PDF with LibreOffice.
+                        On-screen leave forms are printed into the active version, so keep the
+                        CS Form No. 6 (Revised 2020) layout; the HRMO and Campus Director names
+                        printed on it are the ones in this workbook. The known printing faults of
+                        the campus form (items 1–5 rules, the instructions page) are corrected
+                        automatically on every copy employees receive.
                     </span>
                 </div>
 

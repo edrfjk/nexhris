@@ -113,7 +113,7 @@ class LeaveWorkflowService
                 $prefix . '_remarks' => $remarks,
                 'reviewed_by' => $reviewer->id,
                 'reviewed_at' => now(),
-            ]);
+            ] + $this->certificationFor($application, $stage, $nextStatus));
 
             LeaveApproval::create([
                 'leave_application_id' => $application->id,
@@ -145,6 +145,30 @@ class LeaveWorkflowService
         $next = $this->chain->currentStage($application);
 
         return 'Approved and forwarded to the ' . LeaveChain::LABELS[$next] . '.';
+    }
+
+    /**
+     * 7.A of the form: HR certifies the applicant's credits when HR approves.
+     * The figures are frozen then, so the printed form keeps what HR saw
+     * even after the leave is posted and the ledger moves on. Where HR is not
+     * in this applicant's chain, the final approval freezes them instead.
+     */
+    private function certificationFor(LeaveApplication $application, string $stage, string $nextStatus): array
+    {
+        $final = $nextStatus === LeaveChain::APPROVED;
+
+        if ($stage !== 'hr' && ! ($final && ! $application->credit_certification)) {
+            return [];
+        }
+
+        $balance = $application->user?->leaveBalance;
+
+        return ['credit_certification' => [
+            'as_of' => now()->toDateString(),
+            'vl' => (float) ($balance->vl_balance ?? 0),
+            'sl' => (float) ($balance->sl_balance ?? 0),
+            'service' => (float) ($balance->service_balance ?? 0),
+        ]];
     }
 
     public function returnForRevision(User $reviewer, LeaveApplication $application, string $remarks): string
@@ -189,8 +213,8 @@ class LeaveWorkflowService
             $application,
             'Your leave form was returned',
             LeaveChain::LABELS[$stage] . " returned your leave form: \"{$remarks}\"",
-            'Correct and re-upload',
-            route('leave.index'),
+            $application->isOnline() ? 'Correct and resubmit' : 'Correct and re-upload',
+            $application->isOnline() ? route('leave.edit', $application) : route('leave.index'),
             'error',
         );
 
@@ -235,6 +259,7 @@ class LeaveWorkflowService
             'remarks' => null,
             'reviewed_by' => null,
             'reviewed_at' => null,
+            'credit_certification' => null,
             'dean_status' => 'pending', 'dean_id' => null, 'dean_reviewed_at' => null, 'dean_remarks' => null,
             'hr_status' => 'pending', 'hr_id' => null, 'hr_reviewed_at' => null, 'hr_remarks' => null,
             'director_status' => 'pending', 'director_id' => null, 'director_reviewed_at' => null, 'director_remarks' => null,
@@ -242,7 +267,9 @@ class LeaveWorkflowService
 
         $this->log->log(
             'leave.resubmitted',
-            "{$application->user->name} re-uploaded a corrected leave form.",
+            $application->isOnline()
+                ? "{$application->user->name} corrected and resubmitted a leave form."
+                : "{$application->user->name} re-uploaded a corrected leave form.",
             $application,
             actor: $application->user,
         );
@@ -297,8 +324,10 @@ class LeaveWorkflowService
         $this->notifyEmployee(
             $application,
             'Your leave form is fully approved',
-            'Every reviewer has signed off. You can now print the approval sheet and collect the wet signatures.',
-            'Print the approval sheet',
+            $application->isOnline()
+                ? 'Every reviewer has approved it. You can now print your completed leave form.'
+                : 'Every reviewer has signed off. You can now print the approval sheet and collect the wet signatures.',
+            $application->isOnline() ? 'Print the leave form' : 'Print the approval sheet',
             route('leave.index'),
             'success',
         );

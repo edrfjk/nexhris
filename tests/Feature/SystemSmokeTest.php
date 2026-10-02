@@ -67,14 +67,14 @@ class SystemSmokeTest extends TestCase
             'original_filename' => 'CS-Form-212-2026.xlsx', 'checksum' => 'a', 'is_active' => true, 'uploaded_by' => $admin->id,
         ]);
 
-        Storage::disk('public')->put('leave-form-templates/leave.xlsx', file_get_contents(resource_path('templates/leave-form-template.xlsx')));
+        Storage::disk('public')->put('leave-form-templates/leave.xlsx', file_get_contents(resource_path('templates/CS-Form-6-2020.xlsx')));
         $leaveTemplate = LeaveFormTemplate::create([
             'label' => 'CS Form 6', 'version' => 1, 'file_path' => 'leave-form-templates/leave.xlsx',
             'original_filename' => 'leave-form-template.xlsx', 'checksum' => 'b', 'is_active' => true, 'uploaded_by' => $admin->id,
         ]);
 
         // A leave form waiting on the Dean.
-        Storage::disk('local')->put('leave-applications/form.xlsx', file_get_contents(resource_path('templates/leave-form-template.xlsx')));
+        Storage::disk('local')->put('leave-applications/form.xlsx', file_get_contents(resource_path('templates/CS-Form-6-2020.xlsx')));
         $application = LeaveApplication::create([
             'user_id' => $employee->id, 'leave_form_template_id' => $leaveTemplate->id,
             'leave_type' => 'VL', 'date_from' => now()->addWeek(), 'date_to' => now()->addWeek()->addDay(),

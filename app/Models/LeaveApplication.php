@@ -3,35 +3,88 @@
 namespace App\Models;
 
 use App\Support\DocumentName;
+use App\Support\Leave\LeaveTypes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 class LeaveApplication extends Model
 {
+    /**
+     * Every type of leave a form can be filed for, in the order CS Form No. 6
+     * lists them. The rules for each live in App\Support\Leave\LeaveTypes;
+     * this list is kept equal to its labels (a test holds them together).
+     */
     public const TYPES = [
         'VL' => 'Vacation Leave',
+        'FL' => 'Mandatory/Forced Leave',
         'SL' => 'Sick Leave',
+        'ML' => 'Maternity Leave',
+        'PL' => 'Paternity Leave',
+        'SPL' => 'Special Privilege Leave',
+        'SOLO' => 'Solo Parent Leave',
+        'STUDY' => 'Study Leave',
+        'VAWC' => '10-Day VAWC Leave',
+        'RL' => 'Rehabilitation Privilege',
+        'SLBW' => 'Special Leave Benefits for Women',
+        'SEL' => 'Special Emergency (Calamity) Leave',
+        'ADOPT' => 'Adoption Leave',
+        'MONETIZE' => 'Monetization of Leave Credits',
+        'TERMINAL' => 'Terminal Leave',
         'SERVICE' => 'Service Credits',
-        'SPL' => 'Special Privilege Leave (SPL)',
         'WELLNESS' => 'Wellness Leave',
+        'OTHERS' => 'Others',
     ];
+
+    /** Filed as a workbook, or filled in on screen. */
+    public const UPLOAD = 'upload';
+
+    public const ONLINE = 'online';
 
     public function typeLabel(): string
     {
+        if ($this->leave_type === 'OTHERS' && filled($this->form_data['others_specify'] ?? null)) {
+            return 'Others: ' . $this->form_data['others_specify'];
+        }
+
         return self::TYPES[$this->leave_type] ?? $this->leave_type;
     }
 
+    /** Whether the leave draws on VL, SL or service credits. */
     public function hasCreditCategory(): bool
     {
-        return in_array($this->leave_type, ['VL', 'SL', 'SERVICE'], true);
+        return LeaveTypes::charge($this->leave_type) !== null;
     }
 
     /** Service Credits normally belongs on page 2, the service ledger. */
     public function preferredLedger(): string
     {
-        return $this->leave_type === 'SERVICE'
+        return LeaveTypes::charge($this->leave_type) === 'service'
             ? LeaveLedgerEntry::SERVICE
             : LeaveLedgerEntry::LEAVE;
+    }
+
+    /** Filled in on screen, so the system prints the form. */
+    public function isOnline(): bool
+    {
+        return $this->filing_method === self::ONLINE;
+    }
+
+    /** Whether there is a form to show: a printed one, or an uploaded file. */
+    public function hasForm(): bool
+    {
+        return $this->isOnline() || filled($this->file_path);
+    }
+
+    /** Monetization and terminal leave state days, not dates. */
+    public function isDaysOnly(): bool
+    {
+        return (bool) (LeaveTypes::has($this->leave_type) && LeaveTypes::get($this->leave_type)['days_only']);
+    }
+
+    /** Supporting documents attached to an on-screen filing. */
+    public function attachments(): array
+    {
+        return array_values($this->form_data['attachments'] ?? []);
     }
 
     protected $fillable = [
@@ -40,6 +93,7 @@ class LeaveApplication extends Model
         'file_path', 'file_original_name', 'uploaded_at', 'ledger_posted',
         'leave_ledger_entry_id',
         'leave_form_template_id',
+        'filing_method', 'form_data', 'credit_certification',
         'dean_id', 'dean_status', 'dean_reviewed_at', 'dean_remarks',
         'hr_id', 'hr_status', 'hr_reviewed_at', 'hr_remarks',
         'director_id', 'director_status', 'director_reviewed_at', 'director_remarks',
@@ -54,6 +108,8 @@ class LeaveApplication extends Model
         'hr_reviewed_at' => 'datetime',
         'director_reviewed_at' => 'datetime',
         'ledger_posted' => 'boolean',
+        'form_data' => 'array',
+        'credit_certification' => 'array',
         'days' => 'decimal:2',
     ];
 
@@ -100,10 +156,11 @@ class LeaveApplication extends Model
             return 0.0;
         }
 
-        return (float) match ($this->leave_type) {
-            'SL' => $balance->sl_balance,
-            'SERVICE' => $balance->service_balance,
-            default => $balance->vl_balance,
+        return (float) match (LeaveTypes::charge($this->leave_type)) {
+            'sl' => $balance->sl_balance,
+            'service' => $balance->service_balance,
+            'vl' => $balance->vl_balance,
+            default => 0,
         };
     }
 

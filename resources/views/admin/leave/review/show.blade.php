@@ -51,12 +51,12 @@
                     </dd>
                 </div>
                 <div>
-                    <dt class="text-xs text-sand-400">Working days</dt>
+                    <dt class="text-xs text-sand-400">{{ $application->isDaysOnly() ? 'Days' : 'Working days' }}</dt>
                     <dd class="mt-0.5 font-medium text-sand-800">
                         {{ number_format((float) $application->days, 2) }}
                     </dd>
                 </div>
-                <div>
+                <div @class(['hidden' => $application->isDaysOnly()])>
                     <dt class="text-xs text-sand-400">Inclusive dates</dt>
                     <dd class="mt-0.5 font-medium text-sand-800">
                         {{ $application->date_from?->format('F j, Y') }}
@@ -71,14 +71,129 @@
                         {{ $application->uploaded_at?->format('F j, Y g:i A') ?: '—' }}
                     </dd>
                 </div>
+                @if ($application->isOnline())
+                    @php
+                        $form = $application->form_data ?? [];
+                        $d = $form['details'] ?? [];
+                        $detail = collect([
+                            isset($d['location']) ? \App\Support\Leave\LeaveTypes::LOCATIONS[$d['location']] . (filled($d['location_specify'] ?? null) ? ': ' . $d['location_specify'] : '') : null,
+                            isset($d['sickness']) ? \App\Support\Leave\LeaveTypes::SICKNESS[$d['sickness']] . (filled($d['illness'] ?? null) ? ': ' . $d['illness'] : '') : null,
+                            $d['women_illness'] ?? null,
+                            isset($d['study']) ? \App\Support\Leave\LeaveTypes::STUDY[$d['study']] : null,
+                            isset($d['calamity_date']) ? 'Calamity on ' . \Carbon\Carbon::parse($d['calamity_date'])->format('F j, Y') : null,
+                        ])->filter()->implode(' · ');
+                    @endphp
+                    <div>
+                        <dt class="text-xs text-sand-400">Details of leave (6.B)</dt>
+                        <dd class="mt-0.5 font-medium text-sand-800">{{ $detail ?: '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-sand-400">Commutation (6.D)</dt>
+                        <dd class="mt-0.5 font-medium text-sand-800">
+                            {{ \App\Support\Leave\LeaveTypes::COMMUTATION[$form['commutation'] ?? ''] ?? '—' }}
+                        </dd>
+                    </div>
+                @endif
                 <div class="sm:col-span-2">
-                    <dt class="text-xs text-sand-400">Reason given</dt>
+                    <dt class="text-xs text-sand-400">{{ $application->isOnline() ? 'Note from the employee' : 'Reason given' }}</dt>
                     <dd class="mt-0.5 text-sand-700">{{ $application->reason ?: '—' }}</dd>
                 </div>
             </dl>
         </x-card>
 
-        {{-- The uploaded form itself --}}
+        {{-- The form itself --}}
+        @if ($application->isOnline())
+            @php $pdfUrl = route('admin.leave.review.form.pdf', [$application, $application->formPdfName()]); @endphp
+
+            @if ($policy && ($policy['errors'] || $policy['warnings'] || $policy['documents']))
+                <x-card title="Against the form's instructions">
+                    <div class="space-y-3 text-sm">
+                        @if ($policy['errors'])
+                            <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                                <p class="text-xs font-semibold text-red-800 mb-1">Does not meet page 2</p>
+                                <ul class="list-disc pl-4 space-y-1 text-xs text-red-700">
+                                    @foreach ($policy['errors'] as $message)
+                                        <li>{{ $message }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                        @if ($policy['warnings'])
+                            <div class="rounded-lg border border-gold-200 bg-gold-50 px-4 py-3">
+                                <p class="text-xs font-semibold text-gold-900 mb-1">Note</p>
+                                <ul class="list-disc pl-4 space-y-1 text-xs text-gold-900">
+                                    @foreach ($policy['warnings'] as $message)
+                                        <li>{{ $message }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                        @if ($policy['documents'])
+                            <div class="rounded-lg border border-sand-200 bg-sand-50 px-4 py-3">
+                                <p class="text-xs font-semibold text-sand-700 mb-1">Required with this leave</p>
+                                <ul class="list-disc pl-4 space-y-1 text-xs text-sand-600">
+                                    @foreach ($policy['documents'] as $document)
+                                        <li>{{ $document }}</li>
+                                    @endforeach
+                                </ul>
+                                <p class="text-[11px] text-sand-500 mt-2">
+                                    @if ($attached = count($application->attachments()))
+                                        {{ $attached }} document{{ $attached === 1 ? ' is' : 's are' }} attached below.
+                                    @else
+                                        Nothing is attached — the employee may hand these to HR with the printed form.
+                                    @endif
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+                </x-card>
+            @endif
+
+            <x-card title="Leave form · CS Form No. 6">
+                <div class="flex items-center justify-between gap-4 mb-4 p-3 rounded-lg bg-sand-50 border border-sand-200">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 rounded-lg bg-maroon-50 text-maroon-800 flex items-center justify-center flex-shrink-0">
+                            <x-heroicon-o-document-text class="w-4 h-4" />
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-sand-800 truncate">Filled in on screen</p>
+                            <p class="text-xs text-sand-400">Printed by the system · every decision so far is on it</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <a href="{{ $pdfUrl }}" target="_blank" class="btn btn-sm btn-primary">
+                            <x-heroicon-o-document-text class="w-4 h-4" />
+                            View as PDF
+                        </a>
+                        <a href="{{ route('admin.leave.review.form', $application) }}" class="btn btn-sm btn-secondary">
+                            Excel
+                        </a>
+                    </div>
+                </div>
+
+                <iframe src="{{ $pdfUrl }}"
+                        class="w-full h-[640px] rounded-lg border border-sand-200 bg-sand-50"
+                        title="Leave form"></iframe>
+
+                @if ($application->attachments())
+                    <div class="mt-4">
+                        <p class="section-label mb-2">Supporting documents</p>
+                        <ul class="divide-y divide-sand-100 rounded-lg border border-sand-200">
+                            @foreach ($application->attachments() as $i => $file)
+                                <li class="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                                    <span class="flex items-center gap-2 min-w-0">
+                                        <x-heroicon-o-paper-clip class="w-4 h-4 text-sand-400 shrink-0" />
+                                        <span class="truncate text-sand-700">{{ $file['name'] }}</span>
+                                    </span>
+                                    <a href="{{ route('admin.leave.review.attachment', [$application, $i]) }}" target="_blank"
+                                       class="text-xs font-medium text-maroon-700 hover:text-maroon-900 shrink-0">Open</a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+            </x-card>
+        @else
         <x-card title="Uploaded leave form">
             @if ($application->file_path)
                 @php $ext = $application->formExtension(); @endphp
@@ -128,6 +243,8 @@
                 <x-empty-state message="No file was attached to this application." />
             @endif
         </x-card>
+
+        @endif
 
         {{-- Full audit trail --}}
         @if ($application->approvals->isNotEmpty())
@@ -210,9 +327,9 @@
             {{-- Whoever signs this should not have to open the ledger and
                  subtract by hand to see whether the credits cover it. --}}
             @php
-                $typeLabel = match ($application->leave_type) {
-                    'SL' => 'sick leave',
-                    'SERVICE' => 'service',
+                $typeLabel = match (\App\Support\Leave\LeaveTypes::charge($application->leave_type)) {
+                    'sl' => 'sick leave',
+                    'service' => 'service',
                     default => 'vacation leave',
                 };
                 $shortfall = $application->creditShortfall();
@@ -259,6 +376,24 @@
                     <p class="text-xs text-sand-400 mt-0.5">
                         As {{ auth()->user()->roleLabel() }}
                     </p>
+                    @if ($application->isOnline())
+                        @php
+                            $stageNow = $application->currentStage();
+                            $printsAs = match ($stageNow) {
+                                'dean' => 'Printed under 7.B: "For approval", or "For disapproval due to" with your remarks.',
+                                'hr' => 'Approving certifies the credits under 7.A as they stand today.',
+                                'campus_director' => 'Printed under 7.C, or 7.D with your remarks if you return it.',
+                                default => null,
+                            };
+                            if ($stageNow && $stageNow !== 'campus_director'
+                                && app(\App\Services\LeaveChain::class)->finalStage($employee) === $stageNow) {
+                                $printsAs .= ' Yours is the final approval, so 7.C is filled in too.';
+                            }
+                        @endphp
+                        @if ($printsAs)
+                            <p class="text-[11px] text-sand-500 mt-2 leading-relaxed">{{ $printsAs }}</p>
+                        @endif
+                    @endif
                 </div>
 
                 <div class="p-5 space-y-3">
@@ -312,7 +447,7 @@
                             $firstStage = app(\App\Services\LeaveChain::class)->stagesFor($employee)[0] ?? null;
                         @endphp
                         <p class="text-[11px] text-sand-500">
-                            {{ $employee->name }} re-uploads a corrected form, and the chain restarts
+                            {{ $employee->name }} {{ $application->isOnline() ? 'corrects the form and resubmits it' : 're-uploads a corrected form' }}, and the chain restarts
                             @if ($firstStage)
                                 from the {{ \App\Services\LeaveChain::LABELS[$firstStage] }}.
                             @else
@@ -435,7 +570,7 @@
                                     <label class="block">
                                         <span class="label">With pay</span>
                                         <input type="number" step="0.01" min="0" name="vl_used"
-                                               value="{{ old('vl_used', $application->leave_type === 'VL' ? number_format((float) $application->days, 2, '.', '') : '0') }}"
+                                               value="{{ old('vl_used', \App\Support\Leave\LeaveTypes::charge($application->leave_type) === 'vl' ? number_format((float) $application->days, 2, '.', '') : '0') }}"
                                                class="input mt-1">
                                     </label>
                                     <label class="block">
@@ -454,7 +589,7 @@
                                     <label class="block">
                                         <span class="label">With pay</span>
                                         <input type="number" step="0.01" min="0" name="sl_used"
-                                               value="{{ old('sl_used', $application->leave_type === 'SL' ? number_format((float) $application->days, 2, '.', '') : '0') }}"
+                                               value="{{ old('sl_used', \App\Support\Leave\LeaveTypes::charge($application->leave_type) === 'sl' ? number_format((float) $application->days, 2, '.', '') : '0') }}"
                                                class="input mt-1">
                                     </label>
                                     <label class="block">
@@ -468,7 +603,7 @@
                             <label class="block pt-2 border-t border-sand-100">
                                 <span class="label">Service credits used</span>
                                 <input type="number" step="0.01" min="0" name="service_used"
-                                       value="{{ old('service_used', $application->leave_type === 'SERVICE' ? number_format((float) $application->days, 2, '.', '') : '0') }}"
+                                       value="{{ old('service_used', \App\Support\Leave\LeaveTypes::charge($application->leave_type) === 'service' ? number_format((float) $application->days, 2, '.', '') : '0') }}"
                                        class="input mt-1">
                             </label>
 
@@ -488,12 +623,12 @@
             </div>
         @endif
 
-        {{-- ---------- Print the approval sheet ---------- --}}
+        {{-- ---------- Print ---------- --}}
         @if ($application->isFullyApproved())
             <a href="{{ route('admin.leave.review.print', $application) }}" target="_blank"
                class="btn btn-md btn-secondary">
                 <x-heroicon-o-printer class="w-4 h-4" />
-                Print approval sheet
+                {{ $application->isOnline() ? 'Print leave form' : 'Print approval sheet' }}
             </a>
         @endif
     </div>
