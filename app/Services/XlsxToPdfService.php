@@ -59,7 +59,7 @@ class XlsxToPdfService
     private const MARGIN_FLOOR_MM = 5.0;
 
     /** Bump whenever the painted output changes; it invalidates the cache. */
-    public const RENDERER_VERSION = '2026-09-28-pds-legal';
+    public const RENDERER_VERSION = '2026-10-02-leave-form';
 
     /** ECMA-376 paper-size codes. */
     private const PAPER_A4 = 9;

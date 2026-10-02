@@ -412,7 +412,10 @@ class LeaveLedgerController extends Controller
     private function calendarQuery(\App\Models\User $viewer, Request $request)
     {
         $query = LeaveApplication::with(['user.college', 'user.departmentRecord'])
-            ->whereNotIn('status', ['draft', 'dean_returned', 'hr_returned', 'cd_returned']);
+            ->whereNotIn('status', ['draft', 'dean_returned', 'hr_returned', 'cd_returned'])
+            // Monetization and terminal leave are filed for days, not dates:
+            // nobody is away, so they have no place on the calendar.
+            ->whereNotIn('leave_type', ['MONETIZE', 'TERMINAL']);
 
         if ($viewer->isDean()) {
             // A Dean with no college sees nothing, rather than everything.

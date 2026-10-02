@@ -33,8 +33,9 @@
     </div>
 
     <p class="mt-3 text-xs text-sand-500 leading-relaxed">
-        Employees upload their filled-in leave form here first. Reviewing it online means nobody prints
-        and chases signatures for a form that was going to be sent back.
+        Employees file their leave form here first — filled in on screen, or uploaded. Reviewing it online
+        means nobody prints and chases signatures for a form that was going to be sent back. On a form filled
+        in on screen, your decision is printed on the form as soon as you make it.
         @if ($stage === 'dean')
             You see only employees registered under your program.
         @elseif ($stage === 'hr')
@@ -141,9 +142,12 @@
                                 </p>
                             </td>
                             <td>
-                                <x-badge :color="$application->leave_type === 'VL' ? 'blue' : 'purple'">
+                                <x-badge :color="$application->leave_type === 'VL' ? 'blue' : 'violet'">
                                     {{ $application->typeLabel() }}
                                 </x-badge>
+                                <p class="mt-1 text-[11px] text-sand-400">
+                                    {{ $application->isOnline() ? 'Filled in on screen' : 'Uploaded form' }}
+                                </p>
                             </td>
                             <td class="whitespace-nowrap">
                                 {{ $application->date_from?->format('M j, Y') }}

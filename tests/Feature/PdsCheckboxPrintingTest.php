@@ -133,7 +133,7 @@ class PdsCheckboxPrintingTest extends TestCase
     public function test_other_forms_keep_their_own_page_setup(): void
     {
         $copy = $this->work . DIRECTORY_SEPARATOR . 'leave.xlsx';
-        copy(resource_path('templates/leave-form-template.xlsx'), $copy);
+        copy(resource_path('templates/CS-Form-6-2020.xlsx'), $copy);
 
         $zip = new \ZipArchive();
         $zip->open($copy);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\LeaveFormTemplate;
 use App\Models\LedgerTemplate;
+use App\Services\LeaveForm\LeaveFormDocuments;
 use App\Services\TemplatePublisher;
 use App\Services\XlsxToPdfService;
 use App\Support\DocumentName;
@@ -110,7 +111,7 @@ class LeaveFormTemplateController extends Controller
      * Converting it is the same job the employee's filled form goes through,
      * so it comes out on A4 looking like the paper form.
      */
-    public function preview(Request $request, LeaveFormTemplate $template, XlsxToPdfService $converter)
+    public function preview(Request $request, LeaveFormTemplate $template, XlsxToPdfService $converter, LeaveFormDocuments $documents)
     {
         abort_unless($request->user()->isAdmin(), 403);
         abort_unless($template->exists(), 404, 'The uploaded file for this version is missing.');
@@ -125,8 +126,10 @@ class LeaveFormTemplateController extends Controller
             );
         }
 
+        // As employees receive it and as the system prints into it: with the
+        // campus form's printing faults corrected (see CsForm6Repairs).
         return $converter->stream(
-            $template->absolutePath(),
+            $documents->correctedTemplate($template),
             DocumentName::template('Leave Form Template', $template->version),
             // The checksum pins the cache to this exact upload, so a
             // re-published version never serves the previous one's preview.

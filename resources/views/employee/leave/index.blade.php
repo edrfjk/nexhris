@@ -16,8 +16,12 @@
 
 <x-page-header
     title="My Leave"
-    subtitle="Download the form, fill it in, upload it — then track it through the approval chain">
+    subtitle="Fill in CS Form No. 6 on screen — then track it through the approval chain">
     <x-slot:actions>
+        <a href="{{ route('leave.apply') }}" class="btn btn-md btn-primary">
+            <x-heroicon-o-pencil-square />
+            File leave
+        </a>
         {{-- One card covers both records now: the leave ledger and, on its
              own page, the service credits. It opens as a page rather than a
              file, so no new tab and no "(PDF)" in the label. --}}
@@ -49,7 +53,7 @@
                 {{ $needsAttention }} form{{ $needsAttention === 1 ? ' was' : 's were' }} returned to you
             </p>
             <p class="text-xs text-red-700 mt-0.5">
-                Read the reviewer's remarks below, correct the form, and upload it again.
+                Read the reviewer's remarks below, correct the form, and send it again.
             </p>
         </div>
     </div>
@@ -63,8 +67,7 @@
                 {{ $readyToPrint }} form{{ $readyToPrint === 1 ? ' is' : 's are' }} fully approved
             </p>
             <p class="text-xs text-forest-700 mt-0.5">
-                Every reviewer has signed off online.
-                Print the approval sheet below and collect the wet signatures.
+                Every reviewer has approved online. Print the completed form below.
             </p>
         </div>
     </div>
@@ -77,96 +80,115 @@
          ============================================================ --}}
     <div class="space-y-6">
 
-        {{-- Step 1: get the form --}}
-        <x-card>
-            <div class="flex items-start gap-3 mb-4">
-                <div class="w-7 h-7 rounded-full bg-maroon-800 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
+        {{-- Filing on screen: the way to file --}}
+        <div class="card overflow-hidden">
+            <div class="px-5 py-4 border-b border-sand-100 flex items-start gap-3">
+                <div class="w-9 h-9 rounded-lg bg-maroon-800 text-white flex items-center justify-center flex-shrink-0">
+                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                </div>
                 <div>
-                    <h3 class="font-semibold text-sm text-sand-800">Download the official form</h3>
-                    <p class="text-xs text-sand-500 mt-0.5">
+                    <h3 class="font-semibold text-sm text-sand-800">File leave on screen</h3>
+                    <p class="text-xs text-sand-500 mt-0.5">CS Form No. 6 (Revised 2020)</p>
+                </div>
+            </div>
+            <div class="p-5 space-y-3">
+                <p class="text-xs text-sand-500 leading-relaxed">
+                    Answer the form here. Your name, office and position are filled in for you,
+                    your answers are checked against the form's instructions as you type, and the
+                    system prints the official form — with each reviewer's decision added as it is made.
+                </p>
+                <a href="{{ route('leave.apply') }}" class="btn btn-lg btn-primary w-full">
+                    File leave
+                </a>
+                <p class="text-[11px] text-sand-400">It goes straight to the {{ $firstReviewer }}.</p>
+            </div>
+        </div>
+
+        {{-- Uploading a filled workbook: still accepted --}}
+        <div class="card overflow-hidden" x-data="{ open: @js($errors->has('leave_form')) }">
+            <button type="button" @click="open = !open"
+                    class="w-full px-5 py-4 flex items-center justify-between gap-3 text-left">
+                <span>
+                    <span class="block font-semibold text-sm text-sand-700">Upload a filled form instead</span>
+                    <span class="block text-xs text-sand-400 mt-0.5">For a form already filled in Excel</span>
+                </span>
+                <x-heroicon-o-chevron-down class="w-4 h-4 text-sand-400 transition" ::class="open && 'rotate-180'" />
+            </button>
+
+            <div x-show="open" x-cloak class="border-t border-sand-100">
+                <div class="p-5 border-b border-sand-100">
+                    <p class="text-xs text-sand-500 mb-3">
                         @if ($template)
                             {{ $template->label }} · {{ strtoupper($template->extension()) }} · {{ $template->sizeLabel() }}
                         @else
                             HR has not published a form yet — the standard form is provided.
                         @endif
                     </p>
+                    <a href="{{ route('leave.template.download') }}" class="btn btn-md btn-secondary w-full">
+                        <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
+                        Download the blank form
+                    </a>
+                    {{-- The leave form's type-of-leave boxes are form controls, which the
+                         same editors drop as on the Personal Data Sheet. --}}
+                    <p class="mt-3 text-[12px] leading-relaxed text-sand-500">
+                        Fill it in with Microsoft Excel on a computer or LibreOffice Calc.
+                        Google Sheets, Excel in a browser, WPS and phone apps remove the tick boxes.
+                    </p>
                 </div>
-            </div>
 
-            <a href="{{ route('leave.template.download') }}"
-               class="btn btn-lg btn-primary w-full">
-                <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
-                Download leave form
-            </a>
+                <form method="POST" action="{{ route('leave.store') }}" enctype="multipart/form-data" class="p-5 space-y-4">
+                    @csrf
 
-            {{-- The leave form's type-of-leave boxes are form controls, which the
-                 same editors drop as on the Personal Data Sheet. --}}
-            <p class="mt-3 text-[12px] leading-relaxed text-sand-500">
-                Fill it in with Microsoft Excel on a computer or LibreOffice Calc.
-                Google Sheets, Excel in a browser, WPS and phone apps remove the tick boxes.
-            </p>
-        </x-card>
-
-        {{-- Step 2: submit --}}
-        <div class="card overflow-hidden">
-            <div class="px-5 py-4 border-b border-sand-100 flex items-start gap-3">
-                <div class="w-7 h-7 rounded-full bg-maroon-800 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
-                <div>
-                    <h3 class="font-semibold text-sm text-sand-800">Upload the filled-in form</h3>
-                    <p class="text-xs text-sand-500 mt-0.5">It goes straight to the {{ $firstReviewer }}.</p>
-                </div>
-            </div>
-
-            <form method="POST" action="{{ route('leave.store') }}" enctype="multipart/form-data" class="p-5 space-y-4">
-                @csrf
-
-                <label class="block">
-                    <span class="label">Type of leave</span>
-                    <select name="leave_type" required
-                            class="select mt-1">
-                        @foreach (\App\Models\LeaveApplication::TYPES as $code => $label)
-                            <option value="{{ $code }}" @selected(old('leave_type') === $code)>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </label>
-
-                <div class="grid grid-cols-2 gap-3">
                     <label class="block">
-                        <span class="label">From</span>
-                        <input type="date" name="date_from" required value="{{ old('date_from') }}"
-                               class="input mt-1">
+                        <span class="label">Type of leave</span>
+                        <select name="leave_type" required
+                                class="select mt-1">
+                            @foreach (\App\Models\LeaveApplication::TYPES as $code => $label)
+                                <option value="{{ $code }}" @selected(old('leave_type') === $code)>{{ $label }}</option>
+                            @endforeach
+                        </select>
                     </label>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="block">
+                            <span class="label">From</span>
+                            <input type="date" name="date_from" required value="{{ old('date_from') }}"
+                                   class="input mt-1">
+                        </label>
+                        <label class="block">
+                            <span class="label">To</span>
+                            <input type="date" name="date_to" required value="{{ old('date_to') }}"
+                                   class="input mt-1">
+                        </label>
+                    </div>
+
                     <label class="block">
-                        <span class="label">To</span>
-                        <input type="date" name="date_to" required value="{{ old('date_to') }}"
-                               class="input mt-1">
+                        <span class="label">Reason <span class="text-sand-400">(optional)</span></span>
+                        <textarea name="reason" rows="2" maxlength="500"
+                                  class="textarea mt-1"
+                                  placeholder="Brief reason for the leave">{{ old('reason') }}</textarea>
                     </label>
-                </div>
 
-                <label class="block">
-                    <span class="label">Reason <span class="text-sand-400">(optional)</span></span>
-                    <textarea name="reason" rows="2" maxlength="500"
-                              class="textarea mt-1"
-                              placeholder="Brief reason for the leave">{{ old('reason') }}</textarea>
-                </label>
+                    <label class="block">
+                        <span class="label">Accomplished form <span class="text-red-500">*</span></span>
+                        <input type="file" name="leave_form" required accept=".xlsx,.xls,.pdf"
+                               class="file-input mt-1 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-maroon-50 file:text-maroon-800 hover:file:bg-maroon-100 file:cursor-pointer">
+                        <span class="hint">Excel workbook or PDF · up to 10 MB</span>
+                    </label>
 
-                <label class="block">
-                    <span class="label">Accomplished form <span class="text-red-500">*</span></span>
-                    <input type="file" name="leave_form" required accept=".xlsx,.xls,.pdf"
-                           class="file-input mt-1 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-maroon-50 file:text-maroon-800 hover:file:bg-maroon-100 file:cursor-pointer">
-                    <span class="hint">Excel workbook or PDF · up to 10 MB</span>
-                </label>
-
-                <button class="btn btn-lg btn-primary w-full">
-                    Submit for review
-                </button>
-            </form>
+                    <button class="btn btn-md btn-secondary w-full">
+                        Upload for review
+                    </button>
+                </form>
+            </div>
         </div>
 
-        {{-- Step 3 explainer --}}
+        {{-- How it is approved --}}
         <x-card>
             <div class="flex items-start gap-3 mb-3">
-                <div class="w-7 h-7 rounded-full bg-maroon-800 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+                <div class="w-7 h-7 rounded-full bg-sand-100 text-sand-600 flex items-center justify-center flex-shrink-0">
+                    <x-heroicon-o-printer class="w-3.5 h-3.5" />
+                </div>
                 <div>
                     <h3 class="font-semibold text-sm text-sand-800">Print only once approved</h3>
                 </div>
@@ -178,7 +200,7 @@
                 @endforeach
                 Only when {{ count($chainLabels) === 1 ? 'they approve' : 'all ' . count($chainLabels) . ' approve' }}
                 does the print button unlock — so you never print a hard
-                copy and chase signatures for a form that was going to be sent back.
+                copy for a form that was going to be sent back.
             </p>
         </x-card>
 
@@ -233,7 +255,7 @@
             </div>
 
             @if ($applications->isEmpty())
-                <x-empty-state message="You have not filed any leave yet. Download the form to get started." />
+                <x-empty-state message="You have not filed any leave yet. Choose File leave to get started." />
             @else
                 <ul class="divide-y divide-sand-100">
                     @foreach ($applications as $application)
@@ -275,7 +297,24 @@
                             @endif
 
                             <div class="flex items-center gap-2 flex-wrap">
-                                @if ($application->file_path)
+                                @if ($application->isOnline())
+                                    {{-- Printed as it stands, every decision so far on it. --}}
+                                    <a href="{{ route('leave.form.pdf', [$application, $application->formPdfName()]) }}" target="_blank"
+                                       class="btn btn-sm btn-primary">
+                                        <x-heroicon-o-document-text class="w-3.5 h-3.5" />
+                                        View form
+                                    </a>
+                                    <a href="{{ route('leave.form.download', $application) }}"
+                                       class="btn btn-sm btn-secondary">
+                                        Excel
+                                    </a>
+                                    @if ($count = count($application->attachments()))
+                                        <span class="text-[11px] text-sand-400 inline-flex items-center gap-1">
+                                            <x-heroicon-o-paper-clip class="w-3 h-3" />
+                                            {{ $count }} document{{ $count === 1 ? '' : 's' }}
+                                        </span>
+                                    @endif
+                                @elseif ($application->file_path)
                                     {{-- The same converted copy the Dean, HR and
                                          the Campus Director read, so you can see
                                          exactly what they are signing. --}}
@@ -294,7 +333,12 @@
                                     <a href="{{ route('leave.print', $application) }}" target="_blank"
                                        class="btn btn-sm btn-success">
                                         <x-heroicon-o-printer class="w-3.5 h-3.5" />
-                                        Print approval sheet
+                                        {{ $application->isOnline() ? 'Print leave form' : 'Print approval sheet' }}
+                                    </a>
+                                @elseif ($application->isReturned() && $application->isOnline())
+                                    <a href="{{ route('leave.edit', $application) }}" class="btn btn-sm btn-primary">
+                                        <x-heroicon-o-pencil-square class="w-3.5 h-3.5" />
+                                        Correct and resubmit
                                     </a>
                                 @elseif ($application->isReturned())
                                     <button @click="fixing = !fixing"
@@ -304,8 +348,8 @@
                                 @endif
                             </div>
 
-                            {{-- Re-upload --}}
-                            @if ($application->isReturned())
+                            {{-- Re-upload, for a form that was uploaded --}}
+                            @if ($application->isReturned() && ! $application->isOnline())
                                 <form method="POST" action="{{ route('leave.resubmit', $application) }}"
                                       enctype="multipart/form-data" x-show="fixing" x-cloak
                                       class="mt-3 p-4 rounded-lg bg-sand-50 border border-sand-200 space-y-3">

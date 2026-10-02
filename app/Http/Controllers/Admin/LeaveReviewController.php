@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Employee\LeaveApplicationController;
 use App\Models\LeaveApplication;
+use App\Services\LeaveForm\LeaveFormDocuments;
+use App\Services\LeaveForm\LeaveFormTemplateMismatch;
+use App\Services\LeaveForm\LeavePolicy;
 use App\Services\LeaveLedgerService;
 use App\Services\LeaveWorkflowService;
 use App\Services\XlsxToPdfService;
@@ -88,7 +91,39 @@ class LeaveReviewController extends Controller
         return view('admin.leave.review.show', [
             'application' => $application,
             'canReview' => $this->workflow->canReview($reviewer, $application),
+            'policy' => $application->isOnline() ? $this->policyFindings($application) : null,
         ]);
+    }
+
+    /**
+     * What page 2 of the form says about this filing, so the reviewer sees
+     * the same reminders the employee was shown: documents due, a vacation
+     * filed late, credits that will not cover it.
+     */
+    private function policyFindings(LeaveApplication $application): array
+    {
+        $data = $application->form_data ?? [];
+
+        $findings = app(LeavePolicy::class)->check([
+            'leave_type' => $application->leave_type,
+            'others_specify' => $data['others_specify'] ?? null,
+            'date_from' => $application->isDaysOnly() ? null : $application->date_from?->toDateString(),
+            'date_to' => $application->isDaysOnly() ? null : $application->date_to?->toDateString(),
+            'days' => (float) $application->days,
+            'details' => $data['details'] ?? [],
+            'commutation' => $data['commutation'] ?? null,
+            'has_attachments' => $application->attachments() !== [],
+        ], $application->user, $application->id, $application->uploaded_at ?? $application->created_at);
+
+        // Two of the employee's reminders are already on this page in a
+        // reviewer's terms: the credits panel, and the list of attachments.
+        $findings['warnings'] = array_values(array_filter(
+            $findings['warnings'],
+            fn ($w) => ! str_starts_with($w, 'This leave needs supporting documents')
+                && ! str_starts_with($w, 'You have'),
+        ));
+
+        return $findings;
     }
 
     public function approve(Request $request, LeaveApplication $application)
@@ -151,14 +186,20 @@ class LeaveReviewController extends Controller
             ->with('success', $message);
     }
 
-    /** Streams the employee's uploaded form inline for review. */
-    public function viewForm(LeaveApplication $application)
+    /**
+     * Streams the employee's uploaded form inline for review — or, for a form
+     * filled in on screen, hands over the printed workbook.
+     */
+    public function viewForm(LeaveApplication $application, LeaveFormDocuments $documents)
     {
-        $reviewer = auth()->user();
-        abort_unless($reviewer->isReviewer(), 403);
+        $this->authorizeReading($application);
 
-        if ($reviewer->isDean()) {
-            abort_unless($this->workflow->deanCoversEmployee($reviewer, $application->user), 403);
+        if ($application->isOnline()) {
+            try {
+                return $documents->workbookResponse($application);
+            } catch (LeaveFormTemplateMismatch $e) {
+                abort(422, $e->getMessage());
+            }
         }
 
         abort_unless(
@@ -180,13 +221,13 @@ class LeaveReviewController extends Controller
      * browser previews an .xlsx, so without this every reviewer in the chain
      * had to download the file and open it in Excel before they could sign.
      */
-    public function viewFormAsPdf(LeaveApplication $application, XlsxToPdfService $converter)
+    public function viewFormAsPdf(LeaveApplication $application, XlsxToPdfService $converter, LeaveFormDocuments $documents)
     {
-        $reviewer = auth()->user();
-        abort_unless($reviewer->isReviewer(), 403);
+        $this->authorizeReading($application);
 
-        if ($reviewer->isDean()) {
-            abort_unless($this->workflow->deanCoversEmployee($reviewer, $application->user), 403);
+        // Printed as it stands: every decision so far is on it.
+        if ($application->isOnline()) {
+            return LeaveApplicationController::printedForm($application, $documents, embedded: true);
         }
 
         abort_unless(
@@ -291,19 +332,38 @@ class LeaveReviewController extends Controller
             'Leave posted to ' . $application->user->name . "'s ledger card.");
     }
 
-    /** Reviewers print the same approval sheet the employee gets. */
-    public function printApproved(LeaveApplication $application)
+    /** Reviewers print the same document the employee gets. */
+    public function printApproved(LeaveApplication $application, LeaveFormDocuments $documents)
+    {
+        $this->authorizeReading($application);
+        abort_unless($application->isFullyApproved(), 403,
+            'This form is not fully approved yet.');
+
+        if ($application->isOnline()) {
+            return LeaveApplicationController::printedForm($application, $documents);
+        }
+
+        return LeaveApplicationController::renderApprovalSheet($application);
+    }
+
+    /** A supporting document attached to an on-screen filing. */
+    public function attachment(LeaveApplication $application, int $index)
+    {
+        $this->authorizeReading($application);
+
+        return LeaveApplicationController::streamAttachment($application, $index);
+    }
+
+    /** Reviewers read forms; a Dean only those of their own college. */
+    private function authorizeReading(LeaveApplication $application): void
     {
         $reviewer = auth()->user();
 
         abort_unless($reviewer->isReviewer(), 403);
+
         if ($reviewer->isDean()) {
             abort_unless($this->workflow->deanCoversEmployee($reviewer, $application->user), 403,
                 'This employee is not registered under your program.');
         }
-        abort_unless($application->isFullyApproved(), 403,
-            'This form is not fully approved yet.');
-
-        return LeaveApplicationController::renderApprovalSheet($application);
     }
 }

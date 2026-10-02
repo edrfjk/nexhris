@@ -21,6 +21,10 @@ class TemplateFiller
 {
     private const MAIN_NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 
+    private const DRAWING_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
+
+    private const SHEET_DRAWING_NS = 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing';
+
     private ZipArchive $zip;
 
     /** @var array<string, string> sheet name => part path */
@@ -39,6 +43,12 @@ class TemplateFiller
 
     /** @var array<string, int> font key => index of the font added for it */
     private array $fontIds = [];
+
+    /** @var array<string, DOMDocument> drawing part path => parsed drawing, written on save() */
+    private array $drawings = [];
+
+    /** @var array<string, true> package parts to drop on save() */
+    private array $removedParts = [];
 
     public function __construct(string $templatePath, private string $outputPath)
     {
@@ -624,6 +634,384 @@ class TemplateFiller
         }
     }
 
+    /** The workbook's sheet names, in tab order. */
+    public function sheetNames(): array
+    {
+        return array_keys($this->sheetPaths);
+    }
+
+    /**
+     * Sets some of a cell's borders, keeping the others, its font, fill and
+     * alignment as the template had them.
+     *
+     * @param  array<string, ?string>  $sides  left|right|top|bottom => 'thin', 'double', … or null for none
+     */
+    public function setBorders(string $sheet, string $coordinate, array $sides): void
+    {
+        $cell = $this->cell($this->sheet($sheet), strtoupper($coordinate));
+        $base = $cell->getAttribute('s') === '' ? 0 : (int) $cell->getAttribute('s');
+
+        $styles = $this->stylesDocument();
+        $xpath = new DOMXPath($styles);
+        $xpath->registerNamespace('m', self::MAIN_NS);
+
+        $cellXfs = $xpath->query('//m:cellXfs')->item(0);
+        $xf = $xpath->query('m:xf', $cellXfs)->item($base);
+        $borders = $xpath->query('//m:borders')->item(0);
+        $current = $xf instanceof DOMElement
+            ? $xpath->query('m:border', $borders)->item((int) $xf->getAttribute('borderId'))
+            : null;
+
+        // CT_Border's children have a fixed order.
+        $order = ['left', 'right', 'top', 'bottom', 'diagonal'];
+        $border = $styles->createElementNS(self::MAIN_NS, 'border');
+
+        foreach ($order as $side) {
+            $existing = $current instanceof DOMElement ? $xpath->query("m:{$side}", $current)->item(0) : null;
+
+            if ($side === 'diagonal' || ! array_key_exists($side, $sides)) {
+                $border->appendChild($existing instanceof DOMElement
+                    ? $existing->cloneNode(true)
+                    : $styles->createElementNS(self::MAIN_NS, $side));
+
+                continue;
+            }
+
+            $element = $styles->createElementNS(self::MAIN_NS, $side);
+
+            if ($sides[$side] !== null) {
+                $element->setAttribute('style', $sides[$side]);
+                $color = $existing instanceof DOMElement ? $xpath->query('m:color', $existing)->item(0) : null;
+                $element->appendChild($color instanceof DOMElement
+                    ? $color->cloneNode(true)
+                    : (function () use ($styles) {
+                        $c = $styles->createElementNS(self::MAIN_NS, 'color');
+                        $c->setAttribute('indexed', '64');
+
+                        return $c;
+                    })());
+            }
+
+            $border->appendChild($element);
+        }
+
+        $key = 'border|' . $base . '|' . $styles->saveXML($border);
+
+        if (! isset($this->styleClones[$key])) {
+            $borders->appendChild($border);
+            $borderCount = $xpath->query('m:border', $borders)->length;
+            $borders->setAttribute('count', (string) $borderCount);
+
+            $clone = $xf instanceof DOMElement ? $xf->cloneNode(true) : $styles->createElementNS(self::MAIN_NS, 'xf');
+            $clone->setAttribute('borderId', (string) ($borderCount - 1));
+            $clone->setAttribute('applyBorder', '1');
+            $cellXfs->appendChild($clone);
+
+            $count = $xpath->query('m:xf', $cellXfs)->length;
+            $cellXfs->setAttribute('count', (string) $count);
+            $this->styleClones[$key] = (string) ($count - 1);
+        }
+
+        $cell->setAttribute('s', $this->styleClones[$key]);
+    }
+
+    /** The style of one side of a cell's border, or null for none. */
+    public function borderStyle(string $sheet, string $coordinate, string $side): ?string
+    {
+        $cell = $this->cell($this->sheet($sheet), strtoupper($coordinate));
+        $base = $cell->getAttribute('s') === '' ? 0 : (int) $cell->getAttribute('s');
+
+        $xpath = new DOMXPath($this->stylesDocument());
+        $xpath->registerNamespace('m', self::MAIN_NS);
+
+        $xf = $xpath->query('//m:cellXfs/m:xf')->item($base);
+
+        if (! $xf instanceof DOMElement) {
+            return null;
+        }
+
+        $border = $xpath->query('//m:borders/m:border')->item((int) $xf->getAttribute('borderId'));
+        $element = $border instanceof DOMElement ? $xpath->query("m:{$side}", $border)->item(0) : null;
+
+        return $element instanceof DOMElement && $element->getAttribute('style') !== ''
+            ? $element->getAttribute('style')
+            : null;
+    }
+
+    /** A sheet's XML with every edit made so far. */
+    public function sheetXml(string $sheet): string
+    {
+        return $this->sheet($sheet)->saveXML();
+    }
+
+    // ------------------------------------------------------------------
+    // Drawing text boxes
+    // ------------------------------------------------------------------
+
+    /** A shape's fill: an RGB colour or scheme name, or null when see-through. */
+    public function shapeFill(string $sheet, string $name): ?string
+    {
+        $shape = $this->shape($sheet, $name);
+
+        if (! $shape) {
+            return null;
+        }
+
+        $xpath = $this->drawingXPath($shape->ownerDocument);
+        $fill = $xpath->query('xdr:spPr/a:solidFill/*', $shape)->item(0);
+
+        if ($fill instanceof DOMElement) {
+            return $fill->getAttribute('val') ?: $fill->localName;
+        }
+
+        // No fill of its own: the shape's style decides, which for these
+        // boxes is a fill reference of 0 — none.
+        return null;
+    }
+
+    /** Whether the sheet's drawing has a shape by this name (e.g. "TextBox 6"). */
+    public function hasShape(string $sheet, string $name): bool
+    {
+        return $this->shape($sheet, $name) !== null;
+    }
+
+    /**
+     * Writes text into a drawing text box, replacing whatever it held.
+     *
+     * Several campus forms put their answer spaces in invisible text boxes
+     * rather than cells; this fills one the way a person typing into it in
+     * Excel would, keeping the box's own alignment.
+     *
+     * @param  array{font?: string, size?: float, bold?: bool, underline?: bool, align?: string, anchor?: string}  $format
+     */
+    public function setShapeText(string $sheet, string $name, ?string $text, array $format = []): void
+    {
+        $shape = $this->shape($sheet, $name) ?? throw new \RuntimeException("No shape named {$name} on sheet {$sheet}.");
+        $doc = $shape->ownerDocument;
+        $xpath = $this->drawingXPath($doc);
+
+        $body = $xpath->query('xdr:txBody', $shape)->item(0);
+
+        if (! $body instanceof DOMElement) {
+            throw new \RuntimeException("Shape {$name} on sheet {$sheet} holds no text.");
+        }
+
+        $paragraphs = $xpath->query('a:p', $body);
+        $first = $paragraphs->item(0);
+        $properties = $first instanceof DOMElement ? $xpath->query('a:pPr', $first)->item(0) : null;
+
+        foreach (iterator_to_array($paragraphs) as $p) {
+            $body->removeChild($p);
+        }
+
+        // Where the text sits in its box: 't', 'ctr' or 'b'. On a ruled line,
+        // 'b' with no bottom inset puts it on the line, as handwriting would.
+        $bodyPr = $xpath->query('a:bodyPr', $body)->item(0);
+
+        if ($bodyPr instanceof DOMElement && isset($format['anchor'])) {
+            $bodyPr->setAttribute('anchor', $format['anchor']);
+
+            if ($format['anchor'] === 'b') {
+                $bodyPr->setAttribute('bIns', '0');
+            }
+        }
+
+        $format += ['font' => 'Arial', 'size' => 10.0, 'bold' => true, 'underline' => false];
+        $size = (string) (int) round((float) $format['size'] * 100);
+
+        foreach (explode("\n", (string) $text) as $line) {
+            $p = $doc->createElementNS(self::DRAWING_NS, 'a:p');
+
+            $pPr = $properties instanceof DOMElement
+                ? $properties->cloneNode(true)
+                : $doc->createElementNS(self::DRAWING_NS, 'a:pPr');
+
+            if (isset($format['align'])) {
+                $pPr->setAttribute('algn', $format['align']);
+            }
+
+            $p->appendChild($pPr);
+
+            $runProperties = function (string $tag) use ($doc, $format, $size): DOMElement {
+                $rPr = $doc->createElementNS(self::DRAWING_NS, $tag);
+                $rPr->setAttribute('lang', 'en-US');
+                $rPr->setAttribute('sz', $size);
+                $rPr->setAttribute('b', $format['bold'] ? '1' : '0');
+
+                if ($format['underline']) {
+                    $rPr->setAttribute('u', 'sng');
+                }
+
+                $fill = $doc->createElementNS(self::DRAWING_NS, 'a:solidFill');
+                $color = $doc->createElementNS(self::DRAWING_NS, 'a:srgbClr');
+                $color->setAttribute('val', '000000');
+                $fill->appendChild($color);
+                $rPr->appendChild($fill);
+
+                $latin = $doc->createElementNS(self::DRAWING_NS, 'a:latin');
+                $latin->setAttribute('typeface', $format['font']);
+                $rPr->appendChild($latin);
+
+                $cs = $doc->createElementNS(self::DRAWING_NS, 'a:cs');
+                $cs->setAttribute('typeface', $format['font']);
+                $rPr->appendChild($cs);
+
+                return $rPr;
+            };
+
+            if ($line !== '') {
+                $run = $doc->createElementNS(self::DRAWING_NS, 'a:r');
+                $run->appendChild($runProperties('a:rPr'));
+                $t = $doc->createElementNS(self::DRAWING_NS, 'a:t');
+                $t->appendChild($doc->createTextNode($this->xmlSafe($line)));
+                $run->appendChild($t);
+                $p->appendChild($run);
+            }
+
+            $p->appendChild($runProperties('a:endParaRPr'));
+            $body->appendChild($p);
+        }
+    }
+
+    /**
+     * Moves a shape's bottom edge to $offset EMU into the row it ends in,
+     * keeping its top where it is.
+     */
+    public function setShapeBottom(string $sheet, string $name, int $offset): void
+    {
+        $shape = $this->shape($sheet, $name) ?? throw new \RuntimeException("No shape named {$name} on sheet {$sheet}.");
+        $xpath = $this->drawingXPath($shape->ownerDocument);
+        $anchor = $shape->parentNode;
+
+        $rowOff = $xpath->query('xdr:to/xdr:rowOff', $anchor)->item(0);
+        $ext = $xpath->query('xdr:spPr/a:xfrm/a:ext', $shape)->item(0);
+
+        if (! $rowOff instanceof DOMElement) {
+            return;
+        }
+
+        $delta = $offset - (int) $rowOff->textContent;
+        $rowOff->textContent = (string) $offset;
+
+        if ($ext instanceof DOMElement) {
+            $ext->setAttribute('cy', (string) max(0, (int) $ext->getAttribute('cy') + $delta));
+        }
+    }
+
+    /** Makes a shape see-through (null) or fills it with an RGB colour. */
+    public function setShapeFill(string $sheet, string $name, ?string $rgb): void
+    {
+        $shape = $this->shape($sheet, $name) ?? throw new \RuntimeException("No shape named {$name} on sheet {$sheet}.");
+        $doc = $shape->ownerDocument;
+        $xpath = $this->drawingXPath($doc);
+        $spPr = $xpath->query('xdr:spPr', $shape)->item(0);
+
+        if (! $spPr instanceof DOMElement) {
+            return;
+        }
+
+        foreach (iterator_to_array($spPr->childNodes) as $child) {
+            if ($child instanceof DOMElement && in_array($child->localName, ['noFill', 'solidFill', 'gradFill', 'pattFill', 'blipFill'], true)) {
+                $spPr->removeChild($child);
+            }
+        }
+
+        if ($rgb === null) {
+            $fill = $doc->createElementNS(self::DRAWING_NS, 'a:noFill');
+        } else {
+            $fill = $doc->createElementNS(self::DRAWING_NS, 'a:solidFill');
+            $color = $doc->createElementNS(self::DRAWING_NS, 'a:srgbClr');
+            $color->setAttribute('val', strtoupper($rgb));
+            $fill->appendChild($color);
+        }
+
+        // A fill comes straight after the geometry.
+        $geometry = $xpath->query('a:prstGeom|a:custGeom', $spPr)->item(0);
+        $spPr->insertBefore($fill, $geometry instanceof DOMElement ? $geometry->nextSibling : null);
+    }
+
+    /**
+     * The room inside a text box for its text, in points: its size less the
+     * box's own insets (DrawingML's default is 0.1in a side, 0.05in top and
+     * bottom).
+     *
+     * @return array{width: float, height: float}
+     */
+    public function shapeTextArea(string $sheet, string $name): array
+    {
+        $shape = $this->shape($sheet, $name) ?? throw new \RuntimeException("No shape named {$name} on sheet {$sheet}.");
+        $xpath = $this->drawingXPath($shape->ownerDocument);
+
+        $ext = $xpath->query('xdr:spPr/a:xfrm/a:ext', $shape)->item(0);
+        $body = $xpath->query('xdr:txBody/a:bodyPr', $shape)->item(0);
+
+        $inset = fn (string $attribute, int $default) => $body instanceof DOMElement && $body->getAttribute($attribute) !== ''
+            ? (int) $body->getAttribute($attribute) : $default;
+
+        $width = $ext instanceof DOMElement ? (int) $ext->getAttribute('cx') : 0;
+        $height = $ext instanceof DOMElement ? (int) $ext->getAttribute('cy') : 0;
+
+        return [
+            'width' => max(0, $width - $inset('lIns', 91440) - $inset('rIns', 91440)) / 12700,
+            'height' => max(0, $height - $inset('tIns', 45720) - $inset('bIns', 45720)) / 12700,
+        ];
+    }
+
+    // ------------------------------------------------------------------
+    // Package parts
+    // ------------------------------------------------------------------
+
+    /** The package path of a sheet's part, e.g. xl/worksheets/sheet2.xml. */
+    public function sheetPart(string $sheet): string
+    {
+        return $this->sheetPaths[$sheet] ?? throw new \RuntimeException("No sheet named {$sheet}.");
+    }
+
+    /** @return array<string, array{type: string, path: string}> relationship id => target */
+    public function partRelationships(string $partPath): array
+    {
+        $relsPath = dirname($partPath) . '/_rels/' . basename($partPath) . '.rels';
+        $xml = $this->part($relsPath);
+
+        if ($xml === '') {
+            return [];
+        }
+
+        preg_match_all('/<Relationship\b[^>]*>/', $xml, $tags);
+        $out = [];
+
+        foreach ($tags[0] as $tag) {
+            preg_match('/\bId="([^"]*)"/', $tag, $id);
+            preg_match('/\bType="([^"]*)"/', $tag, $type);
+            preg_match('/\bTarget="([^"]*)"/', $tag, $target);
+            $out[$id[1]] = [
+                'type' => $type[1] ?? '',
+                'path' => $this->resolve(dirname($partPath), $target[1] ?? ''),
+            ];
+        }
+
+        return $out;
+    }
+
+    /** The raw bytes of a package part, as they stand with edits so far. */
+    public function readPart(string $path): string
+    {
+        return $this->part($path);
+    }
+
+    public function writePart(string $path, string $contents): void
+    {
+        // A sheet written whole replaces any parsed copy of it.
+        unset($this->removedParts[$path], $this->sheets[$path]);
+        $this->parts[$path] = $contents;
+    }
+
+    public function removePart(string $path): void
+    {
+        unset($this->parts[$path]);
+        $this->removedParts[$path] = true;
+    }
+
     /** Writes every change back into the package and closes it. */
     public function save(): string
     {
@@ -645,6 +1033,16 @@ class TemplateFiller
         // then edited as a document, and the document is the current one.
         foreach ($this->sheets as $path => $doc) {
             $this->zip->addFromString($path, $doc->saveXML());
+        }
+
+        foreach ($this->drawings as $path => $doc) {
+            $this->zip->addFromString($path, $doc->saveXML());
+        }
+
+        foreach (array_keys($this->removedParts) as $path) {
+            if ($this->zip->locateName($path) !== false) {
+                $this->zip->deleteName($path);
+            }
         }
 
         if ($this->styles) {
@@ -741,6 +1139,39 @@ class TemplateFiller
         }
 
         return $this->sheets[$path];
+    }
+
+    /** The named shape on a sheet's drawing, or null. */
+    private function shape(string $sheet, string $name): ?DOMElement
+    {
+        $drawingPath = $this->relatedPart($this->sheetPart($sheet), 'drawing');
+
+        if (! $drawingPath) {
+            return null;
+        }
+
+        if (! isset($this->drawings[$drawingPath])) {
+            $doc = new DOMDocument();
+            $doc->preserveWhiteSpace = true;
+            $doc->loadXML($this->part($drawingPath));
+            $this->drawings[$drawingPath] = $doc;
+        }
+
+        $xpath = $this->drawingXPath($this->drawings[$drawingPath]);
+        $quoted = '"' . str_replace('"', '', $name) . '"';
+
+        $found = $xpath->query("//xdr:sp[xdr:nvSpPr/xdr:cNvPr/@name={$quoted}]")->item(0);
+
+        return $found instanceof DOMElement ? $found : null;
+    }
+
+    private function drawingXPath(DOMDocument $doc): DOMXPath
+    {
+        $xpath = new DOMXPath($doc);
+        $xpath->registerNamespace('xdr', self::SHEET_DRAWING_NS);
+        $xpath->registerNamespace('a', self::DRAWING_NS);
+
+        return $xpath;
     }
 
     private function stylesDocument(): DOMDocument

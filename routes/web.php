@@ -347,6 +347,11 @@ Route::middleware('auth')->group(function () {
             Route::get('/{application}/print', [LeaveReviewController::class, 'printApproved'])
                 ->name('print');
 
+            // A supporting document attached to an on-screen filing.
+            Route::get('/{application}/attachments/{index}', [LeaveReviewController::class, 'attachment'])
+                ->whereNumber('index')
+                ->name('attachment');
+
             Route::post('/{application}/approve', [LeaveReviewController::class, 'approve'])
                 ->name('approve');
 
@@ -565,6 +570,46 @@ Route::middleware('auth')->group(function () {
             '/',
             [LeaveApplicationController::class, 'store']
         )->name('store');
+
+        // CS Form No. 6 filled in on screen, checked against page 2 as it is
+        // typed, previewed in the official format, and filed.
+        Route::get(
+            '/apply',
+            [LeaveApplicationController::class, 'create']
+        )->name('apply');
+
+        Route::post(
+            '/apply',
+            [LeaveApplicationController::class, 'storeOnline']
+        )->name('apply.store');
+
+        Route::post(
+            '/apply/check',
+            [LeaveApplicationController::class, 'check']
+        )->name('apply.check');
+
+        Route::post(
+            '/apply/preview',
+            [LeaveApplicationController::class, 'preview']
+        )->name('apply.preview');
+
+        // A returned on-screen form, corrected and resubmitted.
+        Route::get(
+            '/{application}/edit',
+            [LeaveApplicationController::class, 'edit']
+        )->name('edit');
+
+        // POST rather than PUT: the same form also posts to the preview,
+        // which a spoofed method would turn away.
+        Route::post(
+            '/{application}/correct',
+            [LeaveApplicationController::class, 'update']
+        )->name('update');
+
+        Route::get(
+            '/{application}/attachments/{index}',
+            [LeaveApplicationController::class, 'attachment']
+        )->whereNumber('index')->name('attachment');
 
         // Blank form published by HR, for the employee to fill in.
         Route::get(
