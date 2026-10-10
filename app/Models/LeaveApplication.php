@@ -91,7 +91,7 @@ class LeaveApplication extends Model
         'user_id', 'leave_type', 'date_from', 'date_to', 'days', 'reason',
         'status', 'reviewed_by', 'reviewed_at', 'remarks',
         'file_path', 'file_original_name', 'uploaded_at', 'ledger_posted',
-        'leave_ledger_entry_id',
+        'leave_ledger_entry_id', 'posting_checked_at',
         'leave_form_template_id',
         'filing_method', 'form_data', 'credit_certification',
         'dean_id', 'dean_status', 'dean_reviewed_at', 'dean_remarks',
@@ -108,6 +108,7 @@ class LeaveApplication extends Model
         'hr_reviewed_at' => 'datetime',
         'director_reviewed_at' => 'datetime',
         'ledger_posted' => 'boolean',
+        'posting_checked_at' => 'datetime',
         'form_data' => 'array',
         'credit_certification' => 'array',
         'days' => 'decimal:2',
@@ -253,6 +254,12 @@ class LeaveApplication extends Model
     public function ledgerEntry()
     {
         return $this->belongsTo(LeaveLedgerEntry::class, 'leave_ledger_entry_id');
+    }
+
+    /** Postings that departed from the approved figures (LEDGER-03). */
+    public function postingAdjustments()
+    {
+        return $this->hasMany(LeavePostingAdjustment::class)->orderBy('id');
     }
 
     /** The blank template version this form was filled on. */

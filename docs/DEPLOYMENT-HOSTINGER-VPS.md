@@ -432,17 +432,32 @@ departments, so the organisational structure is ready.
 
 ### 5.7 Create the first HR Administrator
 
+There is no default password. Put a strong one (at least 8 characters, with
+letters and numbers) in `.env` first:
+
 ```bash
+ADMIN_INITIAL_EMAIL=admin@ispsc.edu.ph
+ADMIN_INITIAL_PASSWORD=<choose one>
+```
+
+then seed and clear the cached config:
+
+```bash
+php artisan config:clear
 php artisan db:seed --force
 ```
 
-This creates one account:
+This creates one HR Administrator with that email and password. If the
+password is missing or too weak, the seeder stops without creating anything.
+If an administrator already exists, it is left exactly as it is, so running
+the seeder again never resets a password.
 
-- **Email**: `admin@ispsc.edu.ph`
-- **Password**: `ChangeMe123!`
+**Change the password the first time you sign in, then delete
+`ADMIN_INITIAL_PASSWORD` from `.env`.**
 
-**Change that password the first time you sign in.** It is written in the
-source code, which means it is public.
+> Servers seeded before this change were given the old built-in password,
+> which was published in the source code. If that account's password was
+> never changed, change it now.
 
 ### 5.8 Link the public storage folder
 
@@ -660,8 +675,8 @@ deployment problems. Understand the rule:
 > **Every time you edit `.env` from now on, you must run `php artisan
 > config:clear` — or `config:cache` again — or nothing changes.**
 
-Reload the site and sign in with `admin@ispsc.edu.ph` / `ChangeMe123!`, then
-change the password immediately from **My Profile**.
+Reload the site and sign in with the HR Administrator account you created in
+5.7, then change the password immediately from **My Profile**.
 
 ---
 

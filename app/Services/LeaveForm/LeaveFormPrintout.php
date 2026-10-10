@@ -207,8 +207,11 @@ final class LeaveFormPrintout
 
         $days = (float) $application->days;
 
-        // Once HR has posted it, the ledger says exactly what was charged.
-        if ($entry = $application->ledgerEntry) {
+        // 7.C is the approving officer's decision, so it prints the approved
+        // figures; what HR later posted differently is kept separately, as a
+        // posting adjustment (LEDGER-03). A form posted before that tracking
+        // existed keeps printing as it always has, from its ledger line.
+        if (! $application->posting_checked_at && ($entry = $application->ledgerEntry)) {
             $withPay = (float) $entry->vl_used + (float) $entry->sl_used + (float) $entry->service_used;
             $withoutPay = (float) $entry->vl_used_wop + (float) $entry->sl_used_wop;
 

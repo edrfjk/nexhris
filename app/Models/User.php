@@ -47,6 +47,24 @@ class User extends Authenticatable
         static::creating(function (self $user) {
             $user->verification_token ??= \Illuminate\Support\Str::random(40);
         });
+
+        // Leave forms, approvals, ledger cards and the PDS are official
+        // records, and their foreign keys cascade from the user. Deleting the
+        // account would erase them with it, so it is refused: a person who
+        // has left is deactivated instead. Nothing in the application deletes
+        // users; this stops it being done from Tinker or a future screen.
+        static::deleting(function (self $user) {
+            $holdsRecords = $user->leaveApplications()->exists()
+                || $user->leaveLedgerEntries()->exists()
+                || $user->pdsSubmissions()->exists()
+                || \App\Models\LeaveApproval::where('user_id', $user->id)->exists();
+
+            if ($holdsRecords) {
+                throw new \RuntimeException(
+                    "{$user->name} has official leave, ledger or PDS records and cannot be deleted. Deactivate the account instead."
+                );
+            }
+        });
     }
 
     protected function casts(): array
@@ -170,6 +188,13 @@ public function holdsDeanOffice(): bool
 
     if (! $this->exists || ! $this->college_id) {
         return false;
+    }
+
+    // Lists that eager-load the college (the review queue does) answer from
+    // it; the approval chain asks this several times per form, which was one
+    // query each time. Without the relation loaded, ask the database as before.
+    if ($this->relationLoaded('college')) {
+        return (int) $this->college?->dean_id === (int) $this->getKey();
     }
 
     return College::whereKey($this->college_id)

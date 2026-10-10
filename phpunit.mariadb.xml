@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    MariaDB/MySQL integration suite: real row locks, two processes at once,
+    and the pending foreign-key migration on the engine production uses.
+
+    Runs ONLY against the throwaway database `nexhris_integration_test`,
+    which it creates and wipes itself; MariaDbTestCase refuses any other
+    database name. Credentials come from .env. Not part of `php artisan test`.
+
+        vendor/bin/phpunit -c phpunit.mariadb.xml
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="BCRYPT_ROUNDS" value="4" force="true"/>
+        <env name="CACHE_STORE" value="array" force="true"/>
+        <env name="DB_CONNECTION" value="mysql" force="true"/>
+        <env name="DB_DATABASE" value="nexhris_integration_test" force="true"/>
+        <env name="DB_URL" value="" force="true"/>
+        <env name="MAIL_MAILER" value="array" force="true"/>
+        <env name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <env name="SESSION_DRIVER" value="array" force="true"/>
+        <env name="TWO_FACTOR_ENABLED" value="true" force="true"/>
+    </php>
+</phpunit>

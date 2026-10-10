@@ -1,5 +1,11 @@
 import './bootstrap';
-import './charts';
+import './forms';
+
+// Chart.js is most of the bundle and only the dashboards draw charts, so it
+// is fetched as its own file on the pages that have one.
+if (document.querySelector('canvas[data-chart]')) {
+    import('./charts');
+}
 
 import Alpine from 'alpinejs';
 

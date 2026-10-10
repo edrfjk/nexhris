@@ -124,8 +124,8 @@ class TemplateVersioningTest extends TestCase
 
         $this->actingAs($employee)->post(route('leave.store'), [
             'leave_type' => 'VL',
-            'date_from' => now()->addWeek()->format('Y-m-d'),
-            'date_to' => now()->addWeek()->addDay()->format('Y-m-d'),
+            'date_from' => now()->next('Monday')->addWeek()->format('Y-m-d'),
+            'date_to' => now()->next('Monday')->addWeek()->addDay()->format('Y-m-d'),
             'leave_form' => UploadedFile::fake()->create('filled.xlsx', 40),
         ])->assertRedirect();
 
@@ -156,8 +156,8 @@ class TemplateVersioningTest extends TestCase
 
         $this->actingAs($employee)->post(route('leave.store'), [
             'leave_type' => 'VL',
-            'date_from' => now()->addWeek()->format('Y-m-d'),
-            'date_to' => now()->addWeek()->format('Y-m-d'),
+            'date_from' => now()->next('Monday')->addWeek()->format('Y-m-d'),
+            'date_to' => now()->next('Monday')->addWeek()->format('Y-m-d'),
             'leave_form' => UploadedFile::fake()->create('filled.xlsx', 40),
         ]);
 

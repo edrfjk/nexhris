@@ -60,8 +60,8 @@ class LeaveWorkflowTest extends TestCase
 
         $this->actingAs($employee)->post(route('leave.store'), [
             'leave_type' => 'VL',
-            'date_from' => now()->addWeek()->format('Y-m-d'),
-            'date_to' => now()->addWeek()->addDay()->format('Y-m-d'),
+            'date_from' => now()->next('Monday')->addWeek()->format('Y-m-d'),
+            'date_to' => now()->next('Monday')->addWeek()->addDay()->format('Y-m-d'),
             'reason' => 'Family matter',
             'leave_form' => UploadedFile::fake()->create('leave-form.pdf', 200, 'application/pdf'),
         ])->assertRedirect();
@@ -82,7 +82,12 @@ class LeaveWorkflowTest extends TestCase
                     'date_from' => '2026-10-05',
                     'date_to' => '2026-10-06',
                     'leave_form' => UploadedFile::fake()->create('leave.pdf', 20, 'application/pdf'),
-                ])->assertRedirect()->assertSessionHasNoErrors()->assertSessionMissing('warning');
+                ])->assertRedirect()->assertSessionHasNoErrors();
+
+                // Uploads now get the on-screen form's advisory warnings too
+                // (these fixed dates draw the late-filing reminder), but never
+                // a credit shortfall: the employee has enough.
+                $this->assertStringNotContainsString('without pay', (string) session('warning'));
 
                 $application = $employee->leaveApplications()->firstOrFail();
                 $this->assertSame($type, $application->leave_type);
@@ -104,6 +109,9 @@ class LeaveWorkflowTest extends TestCase
                     'vl_used' => $ledger === 'leave' ? 2 : 0,
                     'service_used' => $ledger === 'service' ? 2 : 0,
                     'remarks' => $application->typeLabel(),
+                    // A charge other than the approved one is an adjustment (LEDGER-03).
+                    'adjustment_reason' => 'Charged as instructed by HR',
+                    'confirm_adjustment' => 1,
                 ])->assertRedirect()->assertSessionHasNoErrors()->assertSessionMissing('error');
 
                 $application->refresh();
@@ -298,8 +306,8 @@ class LeaveWorkflowTest extends TestCase
         }
 
         $this->actingAs($hr)->post(route('admin.leave.review.post-to-ledger', $application), [
-            'period_from' => now()->addWeek()->format('Y-m-d'),
-            'period_to' => now()->addWeek()->addDay()->format('Y-m-d'),
+            'period_from' => now()->next('Monday')->addWeek()->format('Y-m-d'),
+            'period_to' => now()->next('Monday')->addWeek()->addDay()->format('Y-m-d'),
             'days' => 2,
             'vl_used' => 2,
             'vl_used_wop' => 0,
@@ -307,6 +315,10 @@ class LeaveWorkflowTest extends TestCase
             'sl_used_wop' => 0,
             'service_used' => 0,
             'remarks' => 'VL — Family matter',
+            // Depending on the weekday this runs, these two days can differ from
+            // the approved count; a reason is ignored when nothing differs.
+            'adjustment_reason' => 'Leave extended by one day',
+            'confirm_adjustment' => 1,
             // HR chooses which of the two cards this leave is written on.
             'ledger' => \App\Models\LeaveLedgerEntry::LEAVE,
         ])->assertRedirect();
@@ -334,12 +346,14 @@ class LeaveWorkflowTest extends TestCase
         }
 
         $this->actingAs($hr)->post(route('admin.leave.review.post-to-ledger', $application), [
-            'period_from' => now()->addWeek()->format('Y-m-d'),
-            'period_to' => now()->addWeek()->addDay()->format('Y-m-d'),
+            'period_from' => now()->next('Monday')->addWeek()->format('Y-m-d'),
+            'period_to' => now()->next('Monday')->addWeek()->addDay()->format('Y-m-d'),
             'days' => 3,
             'vl_used' => 0,
             'vl_used_wop' => 3,
             'remarks' => 'VL without pay — no credits remaining',
+            'adjustment_reason' => 'No credits remaining; charged without pay',
+            'confirm_adjustment' => 1,
             'ledger' => \App\Models\LeaveLedgerEntry::LEAVE,
         ])->assertRedirect();
 

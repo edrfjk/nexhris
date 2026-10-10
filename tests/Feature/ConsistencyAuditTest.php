@@ -66,8 +66,8 @@ class ConsistencyAuditTest extends TestCase
         LeaveApplication::create([
             'user_id' => $this->unassigned->id,
             'leave_type' => 'VL',
-            'date_from' => now()->addWeek(),
-            'date_to' => now()->addWeek(),
+            'date_from' => now()->next('Monday')->addWeek(),
+            'date_to' => now()->next('Monday')->addWeek(),
             'days' => 1,
             'status' => 'submitted',
         ]);

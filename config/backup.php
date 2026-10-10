@@ -31,6 +31,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Where archives are written
+    |--------------------------------------------------------------------------
+    |
+    | Unchanged default. Configurable so the test suite can point backups —
+    | and their pruning — at a throwaway folder instead of the real archives.
+    |
+    */
+
+    'directory' => env('BACKUP_DIRECTORY', storage_path('app/backups')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Off-site copy
     |--------------------------------------------------------------------------
     |

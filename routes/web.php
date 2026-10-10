@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\LeaveFormTemplateController;
 use App\Http\Controllers\Admin\PdsReviewController;
 use App\Http\Controllers\Admin\PdsTemplateController;
 use App\Http\Controllers\Admin\HrPolicyController;
+use App\Http\Controllers\Admin\HolidayController;
 
 
 // ============================================================
@@ -361,6 +362,20 @@ Route::middleware('auth')->group(function () {
             Route::post('/{application}/post-to-ledger', [LeaveReviewController::class, 'postToLedger'])
                 ->name('post-to-ledger');
 
+        });
+
+
+        // ----------------------------------------------------
+        // HOLIDAY CALENDAR
+        // ----------------------------------------------------
+        // HR keeps it from official proclamations. It decides which days
+        // are not charged on vacation and sick leave, so it is HR's alone.
+
+        Route::middleware('role:admin')->group(function () {
+            Route::get('/holidays', [HolidayController::class, 'index'])->name('holidays.index');
+            Route::post('/holidays', [HolidayController::class, 'store'])->name('holidays.store');
+            Route::put('/holidays/{holiday}', [HolidayController::class, 'update'])->name('holidays.update');
+            Route::delete('/holidays/{holiday}', [HolidayController::class, 'destroy'])->name('holidays.destroy');
         });
 
 

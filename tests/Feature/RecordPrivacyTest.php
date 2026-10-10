@@ -65,8 +65,8 @@ class RecordPrivacyTest extends TestCase
         $this->actingAs($this->employee)
             ->post(route('leave.store'), [
                 'leave_type' => 'VL',
-                'date_from' => now()->addWeek()->format('Y-m-d'),
-                'date_to' => now()->addWeek()->format('Y-m-d'),
+                'date_from' => now()->next('Monday')->addWeek()->format('Y-m-d'),
+                'date_to' => now()->next('Monday')->addWeek()->format('Y-m-d'),
                 'days' => 1,
                 'reason' => 'Family matter',
                 'leave_form' => UploadedFile::fake()->create(
@@ -227,8 +227,8 @@ class RecordPrivacyTest extends TestCase
         $application = LeaveApplication::create([
             'user_id' => $this->employee->id,
             'leave_type' => 'VL',
-            'date_from' => now()->addWeek(),
-            'date_to' => now()->addWeek(),
+            'date_from' => now()->next('Monday')->addWeek(),
+            'date_to' => now()->next('Monday')->addWeek(),
             'days' => 1,
             'status' => 'submitted',
             'uploaded_at' => now(),

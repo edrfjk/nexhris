@@ -156,20 +156,25 @@ class LeaveApplicationController extends Controller
         $request->validate($this->formRules(), $this->formMessages());
 
         $input = $this->formInput($request);
-        $result = $policy->check($input + ['has_attachments' => $request->hasFile('attachments')], $user);
 
-        if ($result['errors']) {
-            throw ValidationException::withMessages($result['errors']);
-        }
+        [$application, $result] = $this->underFilingLock($user, function () use ($input, $request, $user, $policy, $workflow) {
+            $result = $policy->check($input + ['has_attachments' => $request->hasFile('attachments')], $user);
 
-        $application = LeaveApplication::create($this->recordFor($input, $result, $user) + [
-            'user_id' => $user->id,
-            'leave_form_template_id' => LeaveFormTemplate::active()?->id,
-            'filing_method' => LeaveApplication::ONLINE,
-            // The right first stage straight away, as an upload gets.
-            'status' => $workflow->chain()->initialStatus($user),
-            'uploaded_at' => now(),
-        ]);
+            if ($result['errors']) {
+                throw ValidationException::withMessages($result['errors']);
+            }
+
+            $application = LeaveApplication::create($this->recordFor($input, $result, $user) + [
+                'user_id' => $user->id,
+                'leave_form_template_id' => LeaveFormTemplate::active()?->id,
+                'filing_method' => LeaveApplication::ONLINE,
+                // The right first stage straight away, as an upload gets.
+                'status' => $workflow->chain()->initialStatus($user),
+                'uploaded_at' => now(),
+            ]);
+
+            return [$application, $result];
+        });
 
         $this->storeAttachments($request, $application);
 
@@ -218,28 +223,33 @@ class LeaveApplicationController extends Controller
             in_array($i, $removing, true) ? $dropping[] = $file : $keeping[] = $file;
         }
 
-        $result = $policy->check(
-            $input + ['has_attachments' => $keeping || $request->hasFile('attachments')],
-            $user,
-            $application->id,
-        );
+        $result = $this->underFilingLock($user, function () use ($input, $keeping, $request, $user, $application, $policy) {
+            $result = $policy->check(
+                $input + ['has_attachments' => $keeping || $request->hasFile('attachments')],
+                $user,
+                $application->id,
+            );
 
-        if ($result['errors']) {
-            throw ValidationException::withMessages($result['errors']);
-        }
+            if ($result['errors']) {
+                throw ValidationException::withMessages($result['errors']);
+            }
 
-        // Documents the employee took off the form go with it.
+            $record = $this->recordFor($input, $result, $user);
+            $record['form_data']['attachments'] = $keeping;
+
+            $application->update($record + [
+                'leave_form_template_id' => LeaveFormTemplate::active()?->id ?? $application->leave_form_template_id,
+                'uploaded_at' => now(),
+            ]);
+
+            return $result;
+        });
+
+        // Documents the employee took off the form go with it — only once the
+        // correction is saved.
         foreach ($dropping as $file) {
             Storage::disk('local')->delete($file['path']);
         }
-
-        $record = $this->recordFor($input, $result, $user);
-        $record['form_data']['attachments'] = $keeping;
-
-        $application->update($record + [
-            'leave_form_template_id' => LeaveFormTemplate::active()?->id ?? $application->leave_form_template_id,
-            'uploaded_at' => now(),
-        ]);
 
         $this->storeAttachments($request, $application);
         $workflow->resetForResubmission($application);
@@ -423,6 +433,23 @@ class LeaveApplicationController extends Controller
         ];
     }
 
+    /**
+     * Runs a filing's policy check and its write as one step, holding a lock
+     * on the applicant's own users row. Two submissions by the same person
+     * arriving together — a double click, two tabs — then take turns, and the
+     * second one's overlap and yearly-limit checks see the first one's form.
+     * Other employees are not held up. Must not wrap slow work such as file
+     * storage or notifications.
+     */
+    private function underFilingLock(\App\Models\User $applicant, callable $work): mixed
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($applicant, $work) {
+            \App\Models\User::whereKey($applicant->id)->lockForUpdate()->firstOrFail();
+
+            return $work();
+        });
+    }
+
     private function storeAttachments(Request $request, LeaveApplication $application): void
     {
         if (! $request->hasFile('attachments')) {
@@ -460,7 +487,7 @@ class LeaveApplicationController extends Controller
      * Uploads a filled-in leave form. This is the only way a form enters the
      * approval chain — it goes straight to the employee's Dean.
      */
-    public function store(Request $request, LeaveWorkflowService $workflow)
+    public function store(Request $request, LeaveWorkflowService $workflow, LeavePolicy $policy)
     {
         $data = $request->validate([
             'leave_type' => ['required', \Illuminate\Validation\Rule::in(array_keys(LeaveApplication::TYPES))],
@@ -473,68 +500,56 @@ class LeaveApplicationController extends Controller
             'leave_form.mimes' => self::FORM_FILE_MESSAGE,
         ]);
 
-        // The same days filed twice — a double submit, or a new form instead
-        // of re-uploading a returned one — would put two forms through the
-        // chain and, once both are posted, charge the ledger twice.
-        $overlapping = $request->user()->leaveApplications()
-            ->whereNotIn('status', ['draft', 'dean_returned', 'hr_returned', 'cd_returned'])
-            // Monetization and terminal leave hold days, not dates.
-            ->whereNotIn('leave_type', ['MONETIZE', 'TERMINAL'])
-            ->whereDate('date_from', '<=', $data['date_to'])
-            ->whereDate('date_to', '>=', $data['date_from'])
-            ->first();
+        // The same rules the on-screen form is held to, on the type and dates
+        // typed here: overlapping filings, weekend- or holiday-only ranges,
+        // the most a type allows, yearly limits and once-a-year types. The
+        // day count comes from the policy too, never from the uploaded file.
+        $file = $request->file('leave_form');
+        // Written to disk before the lock is taken, so the lock is never held
+        // over file I/O; removed again if the filing is refused.
+        $storedPath = $file->store('leave-applications', 'local');
 
-        if ($overlapping) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'date_from' => sprintf(
-                    'You already filed leave covering %s to %s. Choose other dates, or wait for that form to be returned before filing it again.',
-                    $overlapping->date_from->format('M j, Y'),
-                    $overlapping->date_to->format('M j, Y'),
-                ),
-            ]);
+        try {
+            [$application, $result] = $this->underFilingLock($request->user(), function () use ($data, $request, $policy, $workflow, $file, $storedPath) {
+                $result = $policy->check(
+                    ['leave_type' => $data['leave_type'], 'date_from' => $data['date_from'], 'date_to' => $data['date_to']],
+                    $request->user(),
+                    mode: LeavePolicy::UPLOAD,
+                );
+
+                if ($result['errors']) {
+                    throw ValidationException::withMessages($result['errors']);
+                }
+
+                $application = LeaveApplication::create([
+                    'user_id' => $request->user()->id,
+                    // Stamp the template version in force at submission, so the
+                    // form can still be read against the exact blank used.
+                    'leave_form_template_id' => LeaveFormTemplate::active()?->id,
+                    'leave_type' => $data['leave_type'],
+                    'date_from' => $data['date_from'],
+                    'date_to' => $data['date_to'],
+                    'reason' => $data['reason'] ?? null,
+                    'days' => $result['days'],
+                    // Save the correct first stage immediately. If later audit or
+                    // notification work fails, a Dean's form must not remain in
+                    // the Dean queue by mistake.
+                    'status' => $workflow->chain()->initialStatus($request->user()),
+                    'file_path' => $storedPath,
+                    'file_original_name' => $file->getClientOriginalName(),
+                    'uploaded_at' => now(),
+                    'filing_method' => LeaveApplication::UPLOAD,
+                ]);
+
+                return [$application, $result];
+            });
+        } catch (\Throwable $e) {
+            Storage::disk('local')->delete($storedPath);
+
+            throw $e;
         }
 
-        $file = $request->file('leave_form');
-
-        $days = \Carbon\Carbon::parse($data['date_from'])
-            ->diffInWeekdays(\Carbon\Carbon::parse($data['date_to'])->addDay());
-
-        // Warn when the ledger cannot cover the request. This is advisory, not
-        // a block: HR may still approve leave without pay, and the ledger is
-        // reconciled by hand after the Campus Director signs off.
-        $balance = Auth::user()->leaveBalance;
-        $charge = LeaveTypes::charge($data['leave_type']);
-        $available = (float) match ($charge) {
-            'vl' => $balance->vl_balance ?? 0,
-            'sl' => $balance->sl_balance ?? 0,
-            'service' => $balance->service_balance ?? 0,
-            default => 0,
-        };
-
-        $shortfall = $charge !== null && $days > $available
-            ? round($days - $available, 2) : 0;
-
-        // Stamp the template version in force at submission, so the form can
-        // still be read against the exact blank the employee downloaded.
-        $template = LeaveFormTemplate::active();
-
-        $application = LeaveApplication::create([
-            'user_id' => Auth::id(),
-            'leave_form_template_id' => $template?->id,
-            'leave_type' => $data['leave_type'],
-            'date_from' => $data['date_from'],
-            'date_to' => $data['date_to'],
-            'reason' => $data['reason'] ?? null,
-            'days' => $days,
-            // Save the correct first stage immediately. If later audit or
-            // notification work fails, a Dean's form must not remain in the
-            // Dean queue by mistake.
-            'status' => $workflow->chain()->initialStatus($request->user()),
-            'file_path' => $file->store('leave-applications', 'local'),
-            'file_original_name' => $file->getClientOriginalName(),
-            'uploaded_at' => now(),
-            'filing_method' => LeaveApplication::UPLOAD,
-        ]);
+        $days = $result['days'];
 
         // The file and leave record now exist. Routing, audit logging and
         // reviewer notifications are important, but an outage in one of
@@ -558,28 +573,19 @@ class LeaveApplicationController extends Controller
                 ->with('warning', 'The reviewer notification could not be completed right now. Do not submit the form again; HR can still find the saved form in the leave queue.');
         }
 
-        $message = "Leave form submitted ({$days} working day(s)). It is now with the {$nextLabel}.";
+        $message = 'Leave form submitted (' . LeavePolicy::number($days) . " working day(s)). It is now with the {$nextLabel}.";
 
-        if ($shortfall > 0) {
-            return back()
-                ->with('success', $message)
-                ->with('warning', sprintf(
-                    'Heads up: you requested %s day(s) but only have %s %s day(s) available — a shortfall of %s. '
-                    . 'HR will confirm whether the excess is charged without pay.',
-                    rtrim(rtrim(number_format($days, 2), '0'), '.'),
-                    rtrim(rtrim(number_format($available, 2), '0'), '.'),
-                    LeaveApplication::TYPES[$data['leave_type']],
-                    rtrim(rtrim(number_format($shortfall, 2), '0'), '.'),
-                ));
-        }
-
-        return back()->with('success', $message);
+        // The policy's warnings include a credit shortfall, in the same words
+        // the on-screen form uses.
+        return $result['warnings']
+            ? back()->with('success', $message)->with('warning', implode(' ', $result['warnings']))
+            : back()->with('success', $message);
     }
 
     /**
      * Replaces the file on a returned form and restarts the chain.
      */
-    public function resubmit(Request $request, LeaveApplication $application, LeaveWorkflowService $workflow)
+    public function resubmit(Request $request, LeaveApplication $application, LeaveWorkflowService $workflow, LeavePolicy $policy)
     {
         abort_unless($application->user_id === Auth::id(), 403);
         abort_unless($application->isReturned(), 422,
@@ -593,20 +599,51 @@ class LeaveApplicationController extends Controller
             'leave_form.mimes' => self::FORM_FILE_MESSAGE,
         ]);
 
+        // A returned form goes back through the same checks before it rejoins
+        // the chain: something filed since it was returned may now overlap
+        // it, and the holiday calendar may have changed its day count.
         $file = $request->file('leave_form');
+        $storedPath = $file->store('leave-applications', 'local');
+        $previousPath = $application->file_path;
 
-        if ($application->file_path && Storage::disk('local')->exists($application->file_path)) {
-            Storage::disk('local')->delete($application->file_path);
+        try {
+            $this->underFilingLock($request->user(), function () use ($application, $request, $policy, $file, $storedPath) {
+                $result = $policy->check(
+                    [
+                        'leave_type' => $application->leave_type,
+                        'date_from' => $application->date_from?->toDateString(),
+                        'date_to' => $application->date_to?->toDateString(),
+                    ],
+                    $request->user(),
+                    $application->id,
+                    mode: LeavePolicy::UPLOAD,
+                );
+
+                if ($result['errors']) {
+                    throw ValidationException::withMessages($result['errors']);
+                }
+
+                $application->update([
+                    'file_path' => $storedPath,
+                    'file_original_name' => $file->getClientOriginalName(),
+                    'uploaded_at' => now(),
+                    // Recounted: a returned form is not yet approved or posted.
+                    'days' => $result['days'],
+                    // A corrected form may have been filled on a newer blank.
+                    'leave_form_template_id' => LeaveFormTemplate::active()?->id
+                        ?? $application->leave_form_template_id,
+                ]);
+            });
+        } catch (\Throwable $e) {
+            Storage::disk('local')->delete($storedPath);
+
+            throw $e;
         }
 
-        $application->update([
-            'file_path' => $file->store('leave-applications', 'local'),
-            'file_original_name' => $file->getClientOriginalName(),
-            'uploaded_at' => now(),
-            // A corrected form may have been filled on a newer blank.
-            'leave_form_template_id' => LeaveFormTemplate::active()?->id
-                ?? $application->leave_form_template_id,
-        ]);
+        // The old copy goes only once the new one is on record.
+        if ($previousPath && Storage::disk('local')->exists($previousPath)) {
+            Storage::disk('local')->delete($previousPath);
+        }
 
         $workflow->resetForResubmission($application);
 

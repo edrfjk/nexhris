@@ -468,6 +468,54 @@
 </div>
 
 {{-- ------------------------------------------------------------------
+     Posting adjustments (LEDGER-03): where a posted line differs from the
+     approved form. The approved form itself is not changed.
+     ------------------------------------------------------------------ --}}
+@if ($adjustments->isNotEmpty())
+    <div class="card overflow-hidden mb-5">
+        <div class="px-5 py-3.5 border-b border-sand-100 flex items-center justify-between">
+            <h3 class="font-semibold text-sm text-sand-700">Posting adjustments</h3>
+            <x-badge color="amber">{{ $adjustments->count() }}</x-badge>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-[13px]">
+                <thead>
+                    <tr class="text-[11px] uppercase tracking-wide text-sand-500 border-b border-sand-200">
+                        <th class="text-left font-semibold px-5 py-2">Leave</th>
+                        <th class="text-left font-semibold px-4 py-2">Approved → posted</th>
+                        <th class="text-left font-semibold px-4 py-2">Reason</th>
+                        <th class="text-left font-semibold px-4 py-2 hidden md:table-cell">By</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-sand-200">
+                    @foreach ($adjustments as $adjustment)
+                        <tr>
+                            <td class="px-5 py-2.5 whitespace-nowrap">
+                                <a href="{{ route('admin.leave.review.show', $adjustment->application) }}" class="text-maroon-700 hover:text-maroon-900">
+                                    {{ $adjustment->application->typeLabel() }}
+                                </a>
+                            </td>
+                            <td class="px-4 py-2.5">
+                                @foreach ($adjustment->differences as $difference)
+                                    <span class="block">
+                                        {{ ucfirst(\App\Services\LeavePostingReconciler::label($difference['field'])) }}:
+                                        {{ $difference['approved'] ?? '—' }} → <strong>{{ $difference['posted'] ?? '—' }}</strong>
+                                    </span>
+                                @endforeach
+                            </td>
+                            <td class="px-4 py-2.5 text-sand-600">{{ $adjustment->reason }}</td>
+                            <td class="px-4 py-2.5 hidden md:table-cell text-sand-500 whitespace-nowrap">
+                                {{ $adjustment->adjuster?->name }}<br>{{ $adjustment->created_at?->format('M j, Y') }}
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+@endif
+
+{{-- ------------------------------------------------------------------
      This employee's leave applications
      ------------------------------------------------------------------ --}}
 <div class="card overflow-hidden">

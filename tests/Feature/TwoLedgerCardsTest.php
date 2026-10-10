@@ -167,8 +167,8 @@ class TwoLedgerCardsTest extends TestCase
         $application = \App\Models\LeaveApplication::create([
             'user_id' => $this->employee->id,
             'leave_type' => 'VL',
-            'date_from' => now()->addWeek(),
-            'date_to' => now()->addWeek(),
+            'date_from' => now()->next('Monday')->addWeek(),
+            'date_to' => now()->next('Monday')->addWeek(),
             'days' => 1,
             'status' => 'cd_approved',
             'uploaded_at' => now(),
@@ -178,8 +178,8 @@ class TwoLedgerCardsTest extends TestCase
         // differently, so the choice is required.
         $this->actingAs($this->hr)
             ->post(route('admin.leave.review.post-to-ledger', $application), [
-                'period_from' => now()->addWeek()->format('Y-m-d'),
-                'period_to' => now()->addWeek()->format('Y-m-d'),
+                'period_from' => now()->next('Monday')->addWeek()->format('Y-m-d'),
+                'period_to' => now()->next('Monday')->addWeek()->format('Y-m-d'),
                 'days' => 1,
                 'vl_used' => 1,
                 'remarks' => 'VL',
@@ -192,8 +192,8 @@ class TwoLedgerCardsTest extends TestCase
         $application = \App\Models\LeaveApplication::create([
             'user_id' => $this->employee->id,
             'leave_type' => 'VL',
-            'date_from' => now()->addWeek(),
-            'date_to' => now()->addWeek(),
+            'date_from' => now()->next('Monday')->addWeek(),
+            'date_to' => now()->next('Monday')->addWeek(),
             'days' => 1,
             'status' => 'cd_approved',
             'uploaded_at' => now(),
@@ -222,8 +222,8 @@ class TwoLedgerCardsTest extends TestCase
         $application = \App\Models\LeaveApplication::create([
             'user_id' => $this->employee->id,
             'leave_type' => 'VL',
-            'date_from' => now()->addWeek(),
-            'date_to' => now()->addWeek(),
+            'date_from' => now()->next('Monday')->addWeek(),
+            'date_to' => now()->next('Monday')->addWeek(),
             'days' => 1,
             'status' => 'cd_approved',
             'uploaded_at' => now(),
@@ -235,8 +235,8 @@ class TwoLedgerCardsTest extends TestCase
         // so posting without touching the choice has to succeed.
         $this->actingAs($this->hr)
             ->post(route('admin.leave.review.post-to-ledger', $application), [
-                'period_from' => now()->addWeek()->format('Y-m-d'),
-                'period_to' => now()->addWeek()->format('Y-m-d'),
+                'period_from' => now()->next('Monday')->addWeek()->format('Y-m-d'),
+                'period_to' => now()->next('Monday')->addWeek()->format('Y-m-d'),
                 'days' => 1,
                 'vl_used' => 1,
                 'remarks' => 'VL — family matter',
@@ -254,8 +254,8 @@ class TwoLedgerCardsTest extends TestCase
         $application = \App\Models\LeaveApplication::create([
             'user_id' => $this->employee->id,
             'leave_type' => 'VL',
-            'date_from' => now()->addWeek(),
-            'date_to' => now()->addWeek(),
+            'date_from' => now()->next('Monday')->addWeek(),
+            'date_to' => now()->next('Monday')->addWeek(),
             'days' => 1,
             'status' => 'cd_approved',
             'uploaded_at' => now(),
@@ -276,8 +276,8 @@ class TwoLedgerCardsTest extends TestCase
         $application = \App\Models\LeaveApplication::create([
             'user_id' => $this->employee->id,
             'leave_type' => 'SL',
-            'date_from' => now()->addWeek(),
-            'date_to' => now()->addWeek(),
+            'date_from' => now()->next('Monday')->addWeek(),
+            'date_to' => now()->next('Monday')->addWeek(),
             'days' => 1,
             'status' => 'cd_approved',
             'uploaded_at' => now(),
@@ -285,11 +285,14 @@ class TwoLedgerCardsTest extends TestCase
 
         $this->actingAs($this->hr)
             ->post(route('admin.leave.review.post-to-ledger', $application), [
-                'period_from' => now()->addWeek()->format('Y-m-d'),
-                'period_to' => now()->addWeek()->format('Y-m-d'),
+                'period_from' => now()->next('Monday')->addWeek()->format('Y-m-d'),
+                'period_to' => now()->next('Monday')->addWeek()->format('Y-m-d'),
                 'days' => 1,
                 'sl_used' => 1,
                 'remarks' => 'SL charged to service credits',
+                // Moving SL onto service credits is a different allocation.
+                'adjustment_reason' => 'Charged to service credits as requested',
+                'confirm_adjustment' => 1,
                 'ledger' => LeaveLedgerEntry::SERVICE,
             ])
             ->assertRedirect();

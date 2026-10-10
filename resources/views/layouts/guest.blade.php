@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <title>@yield('title', 'Sign in') | NexHRIS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -56,7 +57,7 @@
 
             <div class="flex items-baseline gap-4">
                 <h2 class="text-[42px] font-bold leading-none tracking-tight">NexHRIS</h2>
-                <span class="text-[13px] text-white/50">Human Resource Information System</span>
+                <span class="text-[13px] text-white/70">Human Resource Information System</span>
             </div>
 
             {{-- No database query on this page: the sign-in screen has to
@@ -95,7 +96,7 @@
 
         <div class="auth-divider mb-5 mt-8"></div>
 
-        <p class="text-xs text-white/40">
+        <p class="text-xs text-white/60">
             &copy; {{ date('Y') }} ISPSC Tagudin Campus · Human Resource Management Office
         </p>
     </div>

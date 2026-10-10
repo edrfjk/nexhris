@@ -209,7 +209,7 @@ class AdminScreensTest extends TestCase
 
         $old = LeaveApplication::create([
             'user_id' => $employee->id, 'leave_type' => 'VL',
-            'date_from' => now()->addWeek(), 'date_to' => now()->addWeek(),
+            'date_from' => now()->next('Monday')->addWeek(), 'date_to' => now()->next('Monday')->addWeek(),
             'days' => 1, 'status' => 'dean_approved',
             'uploaded_at' => now()->subDays(25),
             'dean_reviewed_at' => now()->subDays(20),
@@ -218,7 +218,7 @@ class AdminScreensTest extends TestCase
 
         $fresh = LeaveApplication::create([
             'user_id' => $employee->id, 'leave_type' => 'SL',
-            'date_from' => now()->addWeek(), 'date_to' => now()->addWeek(),
+            'date_from' => now()->next('Monday')->addWeek(), 'date_to' => now()->next('Monday')->addWeek(),
             'days' => 1, 'status' => 'dean_approved',
             'uploaded_at' => now(),
             'dean_reviewed_at' => now(),
@@ -242,7 +242,7 @@ class AdminScreensTest extends TestCase
 
         $application = LeaveApplication::create([
             'user_id' => $employee->id, 'leave_type' => 'VL',
-            'date_from' => now()->addWeek(), 'date_to' => now()->addWeek(),
+            'date_from' => now()->next('Monday')->addWeek(), 'date_to' => now()->next('Monday')->addWeek(),
             'days' => 1,
             'status' => 'dean_approved',
             'uploaded_at' => now()->subDays(30),
@@ -260,7 +260,7 @@ class AdminScreensTest extends TestCase
         // A Dean does not sign their own leave, so dean_reviewed_at stays null.
         $application = LeaveApplication::create([
             'user_id' => $employee->id, 'leave_type' => 'VL',
-            'date_from' => now()->addWeek(), 'date_to' => now()->addWeek(),
+            'date_from' => now()->next('Monday')->addWeek(), 'date_to' => now()->next('Monday')->addWeek(),
             'days' => 1,
             'status' => 'dean_approved',
             'uploaded_at' => now()->subDays(6),
@@ -283,7 +283,7 @@ class AdminScreensTest extends TestCase
         foreach ([$cas, $other] as $person) {
             LeaveApplication::create([
                 'user_id' => $person->id, 'leave_type' => 'VL',
-                'date_from' => now()->addWeek(), 'date_to' => now()->addWeek(),
+                'date_from' => now()->next('Monday')->addWeek(), 'date_to' => now()->next('Monday')->addWeek(),
                 'days' => 1, 'status' => 'dean_approved',
                 'uploaded_at' => now(), 'dean_reviewed_at' => now(),
             ]);

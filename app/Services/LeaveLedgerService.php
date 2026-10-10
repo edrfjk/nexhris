@@ -240,7 +240,34 @@ class LeaveLedgerService
                 'service_earned', 'service_used',
             ]);
 
+            // A line posted from an approved leave form carries that form's
+            // posting. Without undoing it, the form would still read "posted"
+            // with no deduction behind it, and could never be posted again.
+            // Locked before the employee row, the same order postToLedger
+            // takes them in.
+            $application = $entry->leave_application_id
+                ? \App\Models\LeaveApplication::query()->lockForUpdate()->find($entry->leave_application_id)
+                : null;
+
             $entry->delete();
+
+            if ($application && $application->ledger_posted) {
+                $application->update([
+                    'ledger_posted' => false,
+                    'leave_ledger_entry_id' => null,
+                    'posting_checked_at' => null,
+                    'status' => $application->status === 'completed'
+                        ? \App\Services\LeaveChain::APPROVED
+                        : $application->status,
+                ]);
+
+                $this->log->log(
+                    'leave.posting_reverted',
+                    "The ledger line for {$employee->name}'s approved leave was removed; the form is back awaiting posting.",
+                    $application,
+                    ['removed' => $record],
+                );
+            }
 
             $this->recalculate($employee, rejectNegative: true);
 

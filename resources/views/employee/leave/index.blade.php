@@ -105,7 +105,7 @@
         </div>
 
         {{-- Uploading a filled workbook: still accepted --}}
-        <div class="card overflow-hidden" x-data="{ open: @js($errors->has('leave_form')) }">
+        <div class="card overflow-hidden" x-data="{ open: @js($errors->hasAny(['leave_form', 'leave_type', 'date_from', 'date_to'])) }">
             <button type="button" @click="open = !open"
                     class="w-full px-5 py-4 flex items-center justify-between gap-3 text-left">
                 <span>
@@ -161,6 +161,11 @@
                                    class="input mt-1">
                         </label>
                     </div>
+                    <p class="hint -mt-2">
+                        NexHRIS counts the working days from these dates and checks them against the same rules as the
+                        on-screen form. Weekends, and holidays HR has marked not charged, are not counted for vacation
+                        and sick leave.
+                    </p>
 
                     <label class="block">
                         <span class="label">Reason <span class="text-sand-400">(optional)</span></span>
@@ -235,12 +240,12 @@
 
                 <div class="flex items-center gap-2 text-xs">
                     @if ($inReview > 0)
-                        <span class="px-2 py-0.5 rounded-full bg-gold-50 text-gold-700 ring-1 ring-gold-100 font-medium">
+                        <span class="px-2 py-0.5 rounded-full bg-gold-50 text-gold-800 ring-1 ring-gold-100 font-medium">
                             {{ $inReview }} in review
                         </span>
                     @endif
                     <form method="GET">
-                        <select name="status" onchange="this.form.submit()"
+                        <select name="status" aria-label="Filter by status" onchange="this.form.submit()"
                                 class="select">
                             <option value="">All statuses</option>
                             <option value="submitted" @selected(request('status') === 'submitted')>Awaiting Dean</option>

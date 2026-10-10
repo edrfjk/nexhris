@@ -80,6 +80,12 @@ class LeaveLedgerController extends Controller
                 ->get(['ledger', 'period_from', 'period_to']),
             'balance' => $employee->leaveBalance,
             'applications' => $employee->leaveApplications()->latest()->paginate(10, ['*'], 'apps_page'),
+            // LEDGER-03: postings that departed from the approved form.
+            'adjustments' => \App\Models\LeavePostingAdjustment::query()
+                ->whereHas('application', fn ($q) => $q->where('user_id', $employee->id))
+                ->with(['application', 'adjuster'])
+                ->latest('id')
+                ->get(),
         ]);
     }
 

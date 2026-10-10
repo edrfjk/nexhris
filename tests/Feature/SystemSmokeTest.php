@@ -77,7 +77,7 @@ class SystemSmokeTest extends TestCase
         Storage::disk('local')->put('leave-applications/form.xlsx', file_get_contents(resource_path('templates/CS-Form-6-2020.xlsx')));
         $application = LeaveApplication::create([
             'user_id' => $employee->id, 'leave_form_template_id' => $leaveTemplate->id,
-            'leave_type' => 'VL', 'date_from' => now()->addWeek(), 'date_to' => now()->addWeek()->addDay(),
+            'leave_type' => 'VL', 'date_from' => now()->next('Monday')->addWeek(), 'date_to' => now()->next('Monday')->addWeek()->addDay(),
             'days' => 2, 'reason' => 'Family matter', 'status' => 'submitted',
             'file_path' => 'leave-applications/form.xlsx', 'file_original_name' => 'form.xlsx', 'uploaded_at' => now(),
         ]);

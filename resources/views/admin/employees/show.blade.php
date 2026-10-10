@@ -44,7 +44,7 @@
 
                     <form action="{{ route('admin.employees.status.update', $employee) }}" method="POST">
                         @csrf @method('PATCH')
-                        <select name="status" onchange="this.form.submit()"
+                        <select name="status" aria-label="Account status" onchange="this.form.submit()"
                                 class="text-sm font-medium rounded-lg px-3 py-2 border cursor-pointer focus:ring-2 focus:ring-maroon-700 transition
                                 {{ $employee->status === 'active' ? 'bg-forest-50 border-forest-200 text-forest-700' : 'bg-sand-50 border-sand-200 text-sand-600' }}">
                             <option value="active" @selected($employee->status === 'active')>● Active</option>

@@ -27,7 +27,7 @@
 {{-- ---------------- Global search ---------------- --}}
 <form method="GET" action="{{ route('admin.employees.index') }}" class="toolbar mb-5">
     <x-heroicon-o-magnifying-glass class="w-4 h-4 text-sand-400" />
-    <input type="text" name="search" placeholder="Find an employee by name or number…"
+    <input type="text" name="search" aria-label="Find an employee by name or number" placeholder="Find an employee by name or number…"
            class="input input-sm flex-1 min-w-[220px] border-0 shadow-none focus:ring-0">
     <button class="btn btn-sm btn-primary">Search</button>
 </form>
@@ -109,7 +109,7 @@
                 <div @class([
                     'w-9 h-9 rounded border flex items-center justify-center shrink-0',
                     'bg-red-50 text-red-700 border-red-200' => $stage['count'] > 3,
-                    'bg-gold-50 text-gold-700 border-gold-200' => $stage['count'] > 0 && $stage['count'] <= 3,
+                    'bg-gold-50 text-gold-800 border-gold-200' => $stage['count'] > 0 && $stage['count'] <= 3,
                     'bg-forest-50 text-forest-700 border-forest-200' => $stage['count'] === 0,
                 ])>
                     <x-heroicon-o-inbox-arrow-down class="w-[18px] h-[18px]" />
@@ -150,7 +150,8 @@
     @else
         <div class="table-wrap">
             {{-- A data table is wider than a phone. Without this the whole page scrolls sideways instead of the table. --}}
-            <div class="overflow-x-auto">
+            {{-- Focusable so a keyboard user can scroll it sideways too. --}}
+            <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Breakdown by college">
                 <table class="table">
                     <thead>
                         <tr>

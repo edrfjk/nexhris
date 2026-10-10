@@ -111,7 +111,7 @@
 <div class="card overflow-hidden">
     <div class="px-5 py-3.5 border-b border-sand-100 flex items-center justify-between">
         <h3 class="font-semibold text-sm text-sand-700">Waiting on you</h3>
-        <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-gold-50 text-gold-700 ring-1 ring-gold-100">
+        <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-gold-50 text-gold-800 ring-1 ring-gold-100">
             {{ $applications->total() }} form{{ $applications->total() === 1 ? '' : 's' }}
         </span>
     </div>
@@ -169,7 +169,7 @@
                                     <span @class([
                                         'inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ring-1',
                                         'bg-red-50 text-red-700 ring-red-100' => $waiting >= 14,
-                                        'bg-gold-50 text-gold-700 ring-gold-100' => $waiting >= 5 && $waiting < 14,
+                                        'bg-gold-50 text-gold-800 ring-gold-100' => $waiting >= 5 && $waiting < 14,
                                         'bg-sand-50 text-sand-600 ring-sand-100' => $waiting < 5,
                                     ])>
                                         @if ($waiting >= 14)

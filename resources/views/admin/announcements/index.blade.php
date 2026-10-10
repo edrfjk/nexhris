@@ -83,6 +83,7 @@
 <dialog id="new-announcement" class="card w-[min(34rem,92vw)] p-0 backdrop:bg-sand-900/40">
     <form method="POST" action="{{ route('admin.announcements.store') }}">
         @csrf
+        <input type="hidden" name="_dialog" value="new-announcement">
         <div class="card-header">
             <h3 class="card-title"><x-heroicon-o-megaphone />New Announcement</h3>
         </div>
@@ -151,6 +152,7 @@
     <dialog id="edit-announcement-{{ $announcement->id }}" class="card w-[min(34rem,92vw)] p-0 backdrop:bg-sand-900/40">
         <form method="POST" action="{{ route('admin.announcements.update', $announcement) }}">
             @csrf @method('PUT')
+            <input type="hidden" name="_dialog" value="edit-announcement-{{ $announcement->id }}">
             <div class="card-header">
                 <h3 class="card-title"><x-heroicon-o-pencil-square />Edit announcement</h3>
             </div>

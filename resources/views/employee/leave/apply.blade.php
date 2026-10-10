@@ -109,11 +109,14 @@
                         <dt class="section-label">4. Position</dt>
                         <dd class="mt-1 font-medium text-sand-800">{{ $applicant['position'] ?: '—' }}</dd>
                     </div>
+                    {{-- A <dl> may only hold dt/dd pairs, so the editable item 5 is one too. --}}
                     <div class="sm:col-span-2 sm:max-w-xs">
-                        <label for="salary" class="section-label block">5. Salary <span class="normal-case font-normal">(optional)</span></label>
-                        <input id="salary" name="salary" type="text" maxlength="40" class="input mt-1"
-                               value="{{ $old('salary') }}" placeholder="e.g. 32,870.00">
-                        @error('salary') <span class="error-text">{{ $message }}</span> @enderror
+                        <dt><label for="salary" class="section-label block">5. Salary <span class="normal-case font-normal">(optional)</span></label></dt>
+                        <dd>
+                            <input id="salary" name="salary" type="text" maxlength="40" class="input mt-1"
+                                   value="{{ $old('salary') }}" placeholder="e.g. 32,870.00">
+                            @error('salary') <span class="error-text">{{ $message }}</span> @enderror
+                        </dd>
                     </div>
                 </dl>
 
@@ -295,6 +298,10 @@
                         <span class="error-text" x-show="err('date_from')" x-text="err('date_from')"></span>
                         <span class="error-text" x-show="err('date_to')" x-text="err('date_to')"></span>
                         <span class="hint" x-show="! err('date_from') && ! err('date_to') && ! type?.calendar">Weekends are not counted.</span>
+                        <span class="hint block" x-show="! type?.calendar && (result.holidays ?? []).length">
+                            Not counted as holidays:
+                            <span x-text="(result.holidays ?? []).map(h => h.name + ' (' + new Date(h.date + 'T00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) + ')').join(', ')"></span>.
+                        </span>
                     </div>
                 </div>
 
@@ -362,7 +369,7 @@
                 @endif
 
                 <div>
-                    <input type="file" name="attachments[]" multiple accept=".pdf,.jpg,.jpeg,.png"
+                    <input type="file" name="attachments[]" multiple accept=".pdf,.jpg,.jpeg,.png" aria-label="Attach supporting documents (PDF, JPG or PNG)"
                            @change="newFiles = $event.target.files.length"
                            class="file-input file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-maroon-50 file:text-maroon-800 hover:file:bg-maroon-100 file:cursor-pointer">
                     @foreach (['attachments', 'attachments.0', 'attachments.1', 'attachments.2', 'attachments.3', 'attachments.4'] as $key)
@@ -381,7 +388,7 @@
                 </div>
             </div>
             <div class="p-5">
-                <textarea name="reason" rows="2" maxlength="500" class="textarea"
+                <textarea name="reason" rows="2" maxlength="500" class="textarea" aria-label="Note to your reviewers (optional)"
                           placeholder="Anything the reviewers should know">{{ $old('reason') }}</textarea>
                 @error('reason') <span class="error-text">{{ $message }}</span> @enderror
             </div>
@@ -484,7 +491,7 @@
             types,
             serverErrors,
             touched: {},
-            result: { errors: {}, warnings: [], documents: [], days: 0 },
+            result: { errors: {}, warnings: [], documents: [], days: 0, holidays: [] },
             ready: false,
             checking: false,
             removing: [],
