@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <title>@yield('title', 'Sign in') | NexHRIS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    @include('partials.favicons')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,11 +20,6 @@
          is the order a college portal is read in.
          ------------------------------------------------------------------ --}}
     <div class="auth-brand hidden lg:flex lg:w-[58%] xl:w-[60%] flex-col px-16 py-12">
-
-        {{-- The seal as a watermark, running off the edge so only half of it
-             sits on the panel — a mark behind the page, not a picture on it. --}}
-        <img src="{{ asset('images/ispsc-logo.png') }}" alt=""
-             class="auth-watermark -right-[19rem] top-1/2 w-[38rem] -translate-y-1/2">
 
         {{-- The institutional lockup: seal and name side by side, as a
              letterhead carries them. --}}
@@ -55,9 +50,19 @@
                 </span>
             </div>
 
-            <div class="flex items-baseline gap-4">
-                <h2 class="text-[42px] font-bold leading-none tracking-tight">NexHRIS</h2>
-                <span class="text-[13px] text-white/70">Human Resource Information System</span>
+            {{-- The system's own lockup: mark, then the wordmark with HRIS in
+                 the seal's gold. --}}
+            <div class="flex items-center gap-4">
+                <img src="{{ asset('images/nexhris/nexhris-icon-on-maroon.svg') }}" alt=""
+                     class="auth-seal h-16 w-16 shrink-0">
+                <div>
+                    <h2 class="text-[42px] font-extrabold leading-none tracking-tight">
+                        Nex<span class="text-gold-400">HRIS</span>
+                    </h2>
+                    <p class="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">
+                        Human Resource Information System
+                    </p>
+                </div>
             </div>
 
             {{-- No database query on this page: the sign-in screen has to
@@ -109,7 +114,7 @@
 
             {{-- Compact lockup for small screens, where the panel is hidden. --}}
             <div class="mb-8 flex flex-col items-center text-center lg:hidden">
-                <img src="{{ asset('images/ispsc-logo.png') }}" alt="ISPSC seal"
+                <img src="{{ asset('images/nexhris/nexhris-icon.svg') }}" alt="NexHRIS logo"
                      class="mb-3 h-16 w-16">
                 <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-maroon-700">
                     ISPSC Tagudin Campus

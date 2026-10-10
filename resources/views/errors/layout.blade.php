@@ -11,7 +11,7 @@
     <meta charset="UTF-8">
     <title>@yield('title', 'Something went wrong') | NexHRIS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    @include('partials.favicons')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@
     <div class="w-full max-w-lg">
 
         <div class="flex items-center gap-4 mb-8">
-            <img src="{{ asset('images/ispsc-logo.png') }}" alt=""
+            <img src="{{ asset('images/nexhris/nexhris-icon.svg') }}" alt=""
                  class="w-12 h-12 object-contain shrink-0">
             <div class="leading-tight">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-maroon-800">

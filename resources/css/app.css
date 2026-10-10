@@ -283,15 +283,8 @@
         border-right: 3px solid theme('colors.gold.400');
     }
 
-    /* The seal, very faint, sitting behind the lockup like a watermark on
-       campus stationery. */
-    .auth-watermark {
-        @apply pointer-events-none absolute -z-10 select-none opacity-[0.07];
-    }
-
-    /* The seal is a transparent PNG and carries its own white field inside
-       the gear ring. Sitting it on a white disc added a second, larger
-       circle that is not part of the mark. */
+    /* The seal and the NexHRIS mark, lifted off the maroon panel with a
+       soft shadow. */
     .auth-seal {
         filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.35));
     }
