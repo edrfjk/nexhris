@@ -131,4 +131,21 @@ return [
 
     'two_factor_enabled' => (bool) env('TWO_FACTOR_ENABLED', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | First HR Administrator
+    |--------------------------------------------------------------------------
+    |
+    | Read by AdminUserSeeder on a fresh install. There is deliberately no
+    | default password: one written in the source is public. The seeder never
+    | touches an administrator that already exists. Remove the password from
+    | .env once the account has signed in and changed it.
+    |
+    */
+
+    'initial_admin' => [
+        'email' => env('ADMIN_INITIAL_EMAIL', 'admin@ispsc.edu.ph'),
+        'password' => env('ADMIN_INITIAL_PASSWORD'),
+    ],
+
 ];

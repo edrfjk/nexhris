@@ -52,17 +52,45 @@
     <meta charset="UTF-8">
     <title>@yield('title', 'NexHRIS') | ISPSC Tagudin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <link rel="icon" type="image/png" href="/favicon.png">
     {{-- Alpine is bundled into resources/js/app.js. Loading it from a CDN as
          well would start it twice. --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    {{-- A form inside a dialog that failed validation: forms.js reopens that
+         dialog, puts back what was typed, and shows each error beside its
+         field. Passwords and tokens are never echoed back. --}}
+    @if ($errors->any() && is_string(old('_dialog')))
+        @php
+            $dialogState = [
+                'id' => old('_dialog'),
+                'old' => collect(session()->getOldInput())
+                    ->except(['_token', '_method', '_dialog', 'password', 'password_confirmation', 'current_password'])
+                    ->filter(fn ($value) => is_scalar($value))
+                    ->all(),
+                'errors' => $errors->getMessages(),
+            ];
+        @endphp
+        <script>
+            window.NexDialogState = @json($dialogState);
+        </script>
+    @endif
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
 <body>
-<div class="flex min-h-screen" x-data="{ sidebarOpen: false }"
+{{-- Keyboard and screen-reader users jump past the navigation. --}}
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+{{-- desktop tracks the lg breakpoint so the off-canvas sidebar can be made
+     inert while it is closed on a phone: off-screen links must not take
+     keyboard focus. --}}
+<div class="flex min-h-screen"
+     x-data="{ sidebarOpen: false, desktop: window.matchMedia('(min-width: 1024px)').matches }"
+     x-init="window.matchMedia('(min-width: 1024px)').addEventListener('change', e => desktop = e.matches)"
      @keydown.escape.window="sidebarOpen = false" x-cloak>
 
     <!-- Mobile overlay: Escape closes the drawer as well as a tap outside it. -->
@@ -73,6 +101,8 @@
          SIDEBAR
          ============================================================ -->
     <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+           :inert="! desktop && ! sidebarOpen"
+           aria-label="Main navigation"
            class="fixed inset-y-0 left-0 z-40 w-64 h-screen flex flex-col
                   transition-transform duration-300 ease-smooth bg-maroon-900 text-white">
 
@@ -87,6 +117,13 @@
                 <p class="text-sm font-bold tracking-wide">NexHRIS</p>
                 <p class="text-[10px] text-white/60 truncate">ISPSC Tagudin Campus</p>
             </div>
+            {{-- On a phone the open menu covers the header's menu button, so
+                 it carries its own way out. --}}
+            <button type="button" @click="sidebarOpen = false"
+                    class="lg:hidden ml-auto -mr-1 p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10"
+                    aria-label="Close the navigation menu">
+                <x-heroicon-o-x-mark class="w-5 h-5" />
+            </button>
         </div>
 
         {{-- Ordered the same way for every role: what is waiting on you,
@@ -122,6 +159,9 @@
                     </x-nav.item>
                     <x-nav.item :href="route('admin.leave.calendar')" :active="request()->routeIs('admin.leave.calendar')" icon="calendar-days">
                         Leave Calendar
+                    </x-nav.item>
+                    <x-nav.item :href="route('admin.holidays.index')" :active="request()->routeIs('admin.holidays.*')" icon="sun">
+                        Holidays
                     </x-nav.item>
                 </x-nav.section>
 
@@ -278,6 +318,7 @@
                     <button @click="sidebarOpen = !sidebarOpen"
                             class="lg:hidden text-sand-500 hover:text-sand-900 shrink-0"
                             :aria-expanded="sidebarOpen"
+                            :aria-label="sidebarOpen ? 'Close the navigation menu' : 'Open the navigation menu'"
                             aria-label="Open the navigation menu">
                         <x-heroicon-o-bars-3 class="w-6 h-6" />
                     </button>
@@ -312,9 +353,9 @@
             </div>
         </header>
 
-        <main class="p-4 sm:p-5 flex-1">
+        <main id="main-content" tabindex="-1" class="p-4 sm:p-5 flex-1 focus:outline-none">
             @if (session('success'))
-                <div data-flash class="alert alert-success mb-4">
+                <div data-flash role="status" class="alert alert-success mb-4">
                     <x-heroicon-o-check-circle />
                     <span>{{ session('success') }}</span>
                 </div>
@@ -324,21 +365,21 @@
                  something to act on, and some list several names — they
                  stay until the next page. --}}
             @if (session('warning'))
-                <div class="alert alert-warning mb-4">
+                <div role="alert" class="alert alert-warning mb-4">
                     <x-heroicon-o-exclamation-triangle />
                     <span>{{ session('warning') }}</span>
                 </div>
             @endif
 
             @if (session('error'))
-                <div class="alert alert-error mb-4">
+                <div role="alert" class="alert alert-error mb-4">
                     <x-heroicon-o-exclamation-triangle />
                     <span>{{ session('error') }}</span>
                 </div>
             @endif
 
             @if ($errors->any())
-                <div class="alert alert-error mb-4">
+                <div role="alert" class="alert alert-error mb-4">
                     <x-heroicon-o-exclamation-circle />
                     <div>
                         <p class="font-semibold mb-1">Please correct the following:</p>

@@ -62,8 +62,8 @@ class LeaveFormPdfTest extends TestCase
         return LeaveApplication::create(array_merge([
             'user_id' => $this->employee->id,
             'leave_type' => 'VL',
-            'date_from' => now()->addWeek(),
-            'date_to' => now()->addWeek(),
+            'date_from' => now()->next('Monday')->addWeek(),
+            'date_to' => now()->next('Monday')->addWeek(),
             'days' => 1,
             'status' => 'submitted',
             'uploaded_at' => now(),

@@ -38,7 +38,7 @@ class BackupRunCommand extends Command
         }
 
         $name = 'nexhris-' . now()->format('Y-m-d-Hi') . '.zip';
-        $directory = storage_path('app/backups');
+        $directory = (string) config('backup.directory');
 
         if (! is_dir($directory)) {
             mkdir($directory, 0775, true);
@@ -165,7 +165,13 @@ class BackupRunCommand extends Command
             return;
         }
 
-        $archives = glob(storage_path('app/backups/nexhris-*.zip')) ?: [];
+        // Only archives this command names itself. A hand-made copy such as
+        // nexhris-before-upgrade.zip, or anything else in the folder, is never
+        // touched by retention.
+        $archives = array_values(array_filter(
+            glob(config('backup.directory') . DIRECTORY_SEPARATOR . 'nexhris-*.zip') ?: [],
+            fn (string $path) => self::isOwnArchive(basename($path)),
+        ));
         rsort($archives);
 
         foreach (array_slice($archives, $keep) as $old) {
@@ -180,7 +186,10 @@ class BackupRunCommand extends Command
         }
 
         try {
-            $remote = Storage::disk($disk)->files('backups');
+            $remote = array_values(array_filter(
+                Storage::disk($disk)->files('backups'),
+                fn (string $path) => self::isOwnArchive(basename($path)),
+            ));
             rsort($remote);
 
             foreach (array_slice($remote, $keep) as $old) {
@@ -189,6 +198,12 @@ class BackupRunCommand extends Command
         } catch (\Throwable $e) {
             $this->warn('  Could not prune the off-site copies: ' . $e->getMessage());
         }
+    }
+
+    /** nexhris-YYYY-MM-DD-HHMM.zip, exactly as handle() names an archive. */
+    public static function isOwnArchive(string $name): bool
+    {
+        return (bool) preg_match('/^nexhris-\d{4}-\d{2}-\d{2}-\d{4}\.zip$/', $name);
     }
 
     private function readableSize(int $bytes): string

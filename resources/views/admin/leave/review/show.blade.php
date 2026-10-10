@@ -490,6 +490,7 @@
                         <p class="text-sm text-sand-600">
                             This leave was recorded on {{ $employee->name }}'s ledger card.
                         </p>
+                        @include('admin.leave.partials.posting-adjustments', ['application' => $application])
                         <a href="{{ route('admin.leave.ledger', $employee) }}"
                            class="mt-3 inline-block text-xs font-medium text-maroon-700 hover:text-maroon-900">
                             Open ledger card →
@@ -510,6 +511,10 @@
                                  itself was sick or vacation. --}}
                             @php
                                 $defaultLedger = old('ledger', $application->preferredLedger());
+                                // The approved and certified figures; posting
+                                // anything else needs a reason (LEDGER-03).
+                                $expected = app(\App\Services\LeavePostingReconciler::class)->expected($application);
+                                $prefill = fn (string $column) => old($column, number_format($expected['charges'][$column], 2, '.', ''));
                             @endphp
                             <div x-data="{ card: @js($defaultLedger) }" class="mb-4">
                                 <span class="label">Record on</span>
@@ -570,12 +575,12 @@
                                     <label class="block">
                                         <span class="label">With pay</span>
                                         <input type="number" step="0.01" min="0" name="vl_used"
-                                               value="{{ old('vl_used', \App\Support\Leave\LeaveTypes::charge($application->leave_type) === 'vl' ? number_format((float) $application->days, 2, '.', '') : '0') }}"
+                                               value="{{ $prefill('vl_used') }}"
                                                class="input mt-1">
                                     </label>
                                     <label class="block">
                                         <span class="label">Without pay</span>
-                                        <input type="number" step="0.01" min="0" name="vl_used_wop" value="{{ old('vl_used_wop', '0') }}"
+                                        <input type="number" step="0.01" min="0" name="vl_used_wop" value="{{ $prefill('vl_used_wop') }}"
                                                class="input mt-1">
                                     </label>
                                 </div>
@@ -589,12 +594,12 @@
                                     <label class="block">
                                         <span class="label">With pay</span>
                                         <input type="number" step="0.01" min="0" name="sl_used"
-                                               value="{{ old('sl_used', \App\Support\Leave\LeaveTypes::charge($application->leave_type) === 'sl' ? number_format((float) $application->days, 2, '.', '') : '0') }}"
+                                               value="{{ $prefill('sl_used') }}"
                                                class="input mt-1">
                                     </label>
                                     <label class="block">
                                         <span class="label">Without pay</span>
-                                        <input type="number" step="0.01" min="0" name="sl_used_wop" value="{{ old('sl_used_wop', '0') }}"
+                                        <input type="number" step="0.01" min="0" name="sl_used_wop" value="{{ $prefill('sl_used_wop') }}"
                                                class="input mt-1">
                                     </label>
                                 </div>
@@ -603,7 +608,7 @@
                             <label class="block pt-2 border-t border-sand-100">
                                 <span class="label">Service credits used</span>
                                 <input type="number" step="0.01" min="0" name="service_used"
-                                       value="{{ old('service_used', \App\Support\Leave\LeaveTypes::charge($application->leave_type) === 'service' ? number_format((float) $application->days, 2, '.', '') : '0') }}"
+                                       value="{{ $prefill('service_used') }}"
                                        class="input mt-1">
                             </label>
 
@@ -613,6 +618,29 @@
                                        value="{{ old('remarks', $application->typeLabel() . ' — ' . ($application->reason ?: 'Approved leave')) }}"
                                        class="input mt-1">
                             </label>
+
+                            {{-- LEDGER-03: the form keeps the approved figures. Anything
+                                 posted differently is recorded as an adjustment. --}}
+                            <div class="rounded-lg border border-sand-200 bg-sand-50 p-3 space-y-2">
+                                <p class="text-xs text-sand-600 leading-relaxed">
+                                    Approved: {{ \App\Services\LeaveForm\LeavePolicy::number($expected['days']) }} day(s),
+                                    {{ \App\Services\LeaveForm\LeaveFormPrintout::inclusiveDates($expected['date_from'], $expected['date_to']) }}.
+                                    If you post different dates, days or charges — including days without pay —
+                                    give the reason and confirm. The approved form is not changed.
+                                </p>
+                                <label class="block">
+                                    <span class="label">Reason for an adjustment</span>
+                                    <textarea name="adjustment_reason" rows="2" maxlength="1000"
+                                              class="textarea mt-1 @error('adjustment_reason') input-error @enderror">{{ old('adjustment_reason') }}</textarea>
+                                    @error('adjustment_reason')
+                                        <span class="error-text">{{ $message }}</span>
+                                    @enderror
+                                </label>
+                                <label class="flex items-start gap-2 text-xs text-sand-700">
+                                    <input type="checkbox" name="confirm_adjustment" value="1" class="mt-0.5" @checked(old('confirm_adjustment'))>
+                                    <span>These figures differ from the approved form, and I am recording the adjustment.</span>
+                                </label>
+                            </div>
 
                             <button class="btn btn-lg btn-primary w-full">
                                 Post to ledger

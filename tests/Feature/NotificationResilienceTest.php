@@ -46,8 +46,8 @@ class NotificationResilienceTest extends TestCase
         return LeaveApplication::create([
             'user_id' => $employee->id,
             'leave_type' => 'VL',
-            'date_from' => now()->addWeek(),
-            'date_to' => now()->addWeek(),
+            'date_from' => now()->next('Monday')->addWeek(),
+            'date_to' => now()->next('Monday')->addWeek(),
             'days' => 1,
             'status' => 'submitted',
         ]);

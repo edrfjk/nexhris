@@ -4,6 +4,7 @@ namespace App\Services\LeaveForm;
 
 use App\Models\LeaveApplication;
 use App\Models\User;
+use App\Services\Leave\WorkingDayCalculator;
 use App\Support\Leave\LeaveTypes;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
@@ -31,15 +32,32 @@ class LeavePolicy
     /** Statuses that mean a filing no longer counts against a limit. */
     private const NOT_COUNTED = ['draft', 'dean_returned', 'hr_returned', 'cd_returned'];
 
+    /** Filed on the on-screen form: every part of the form is checked. */
+    public const FORM = 'form';
+
+    /**
+     * Filed as an uploaded workbook or PDF. Only the type and dates are typed
+     * into NexHRIS; the details, commutation and calamity date are written in
+     * the file itself, so those are left to the reviewers reading it. Every
+     * rule that depends on the type and dates applies exactly as on screen.
+     */
+    public const UPLOAD = 'upload';
+
+    public function __construct(private ?WorkingDayCalculator $calculator = null)
+    {
+        $this->calculator ??= new WorkingDayCalculator();
+    }
+
     /**
      * @param  array  $input  leave_type, others_specify, date_from, date_to, days,
      *                        details[location, location_specify, sickness, illness,
      *                        women_illness, study, calamity_date], commutation,
      *                        has_attachments
-     * @return array{errors: array<string, string>, warnings: list<string>, documents: list<string>, days: float, calendar_days: int}
+     * @return array{errors: array<string, string>, warnings: list<string>, documents: list<string>, days: float, calendar_days: int, holidays: list<array{date: string, name: string}>}
      */
-    public function check(array $input, User $applicant, ?int $ignoreApplicationId = null, ?CarbonInterface $today = null): array
+    public function check(array $input, User $applicant, ?int $ignoreApplicationId = null, ?CarbonInterface $today = null, string $mode = self::FORM): array
     {
+        $upload = $mode === self::UPLOAD;
         $today = Carbon::parse($today ?? now())->startOfDay();
         $errors = [];
         $warnings = [];
@@ -50,7 +68,7 @@ class LeavePolicy
         if (! LeaveTypes::has($code)) {
             return [
                 'errors' => ['leave_type' => 'Choose the type of leave.'],
-                'warnings' => [], 'documents' => [], 'days' => 0.0, 'calendar_days' => 0,
+                'warnings' => [], 'documents' => [], 'days' => 0.0, 'calendar_days' => 0, 'holidays' => [],
             ];
         }
 
@@ -61,7 +79,7 @@ class LeavePolicy
         // ------------------------------------------------------------
         // 6.A Others
         // ------------------------------------------------------------
-        if ($code === 'OTHERS' && ! filled($input['others_specify'] ?? null)) {
+        if (! $upload && $code === 'OTHERS' && ! filled($input['others_specify'] ?? null)) {
             $errors['others_specify'] = 'Say what the leave is for — it is printed on the form\'s "Others" line.';
         }
 
@@ -71,8 +89,17 @@ class LeavePolicy
         [$from, $to] = [$this->date($input['date_from'] ?? null), $this->date($input['date_to'] ?? null)];
         $days = 0.0;
         $calendarDays = 0;
+        $holidays = [];
 
-        if ($type['days_only']) {
+        if ($type['days_only'] && $upload) {
+            // Monetization and terminal leave are a number of days, written on
+            // the uploaded form. The upload screen asks for dates only, so the
+            // days are counted from them as they always were, and the date
+            // rules below — written for leave actually taken — do not apply.
+            if ($from && $to && ! $to->lt($from)) {
+                $days = (float) self::workingDays($from, $to);
+            }
+        } elseif ($type['days_only']) {
             $days = round((float) ($input['days'] ?? 0), 2);
 
             if ($days <= 0) {
@@ -92,14 +119,23 @@ class LeavePolicy
             }
         }
 
-        if ($from && $to && ! $to->lt($from)) {
+        if ($from && $to && ! $to->lt($from) && ! ($type['days_only'] && $upload)) {
             $calendarDays = (int) $from->diffInDays($to) + 1;
-            $days = $type['calendar']
-                ? (float) $calendarDays
-                : (float) self::workingDays($from, $to);
+
+            if ($type['calendar']) {
+                $days = (float) $calendarDays;
+            } else {
+                $count = $this->calculator->breakdown(
+                    $from, $to, WorkingDayCalculator::excludesHolidaysFor($code),
+                );
+                $days = (float) $count['days'];
+                $holidays = $count['holidays'];
+            }
 
             if ($days <= 0) {
-                $errors['date_from'] = 'Those dates fall on a weekend — there are no working days to file.';
+                $errors['date_from'] = $holidays
+                    ? 'The selected dates contain no chargeable working days — they fall on weekends and holidays.'
+                    : 'Those dates fall on a weekend — there are no working days to file.';
             }
 
             if ($type['max_days'] !== null && $days > $type['max_days']) {
@@ -149,7 +185,7 @@ class LeavePolicy
         // ------------------------------------------------------------
         // 6.B Details
         // ------------------------------------------------------------
-        switch ($type['detail']) {
+        switch ($upload ? null : $type['detail']) {
             case LeaveTypes::DETAIL_LOCATION:
                 $location = $details['location'] ?? null;
 
@@ -184,7 +220,11 @@ class LeavePolicy
         }
 
         // Calamity leave runs within thirty days of the calamity.
-        if ($code === 'SEL') {
+        if ($code === 'SEL' && $upload) {
+            $warnings[] = 'Calamity leave is taken within thirty (30) days of the calamity. The reviewers will check the date written on your form.';
+        }
+
+        if ($code === 'SEL' && ! $upload) {
             $calamity = $this->date($details['calamity_date'] ?? null);
 
             if (! $calamity) {
@@ -208,7 +248,7 @@ class LeavePolicy
         // ------------------------------------------------------------
         // 6.D Commutation
         // ------------------------------------------------------------
-        if (! isset(LeaveTypes::COMMUTATION[$input['commutation'] ?? null])) {
+        if (! $upload && ! isset(LeaveTypes::COMMUTATION[$input['commutation'] ?? null])) {
             $errors['commutation'] = 'Say whether commutation is requested.';
         }
 
@@ -292,10 +332,15 @@ class LeavePolicy
             'documents' => array_values(array_unique($documents)),
             'days' => $days,
             'calendar_days' => $calendarDays,
+            'holidays' => $holidays,
         ];
     }
 
-    /** Monday to Friday between two dates, both included. */
+    /**
+     * Monday to Friday between two dates, both included, with no holiday
+     * exclusion. Kept for the types whose count does not leave holidays out;
+     * WorkingDayCalculator decides which those are.
+     */
     public static function workingDays(CarbonInterface $from, CarbonInterface $to): int
     {
         return (int) Carbon::parse($from)->startOfDay()->diffInWeekdays(Carbon::parse($to)->startOfDay()->addDay());

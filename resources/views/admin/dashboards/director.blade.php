@@ -26,7 +26,7 @@
        class="lg:col-span-2 card card-interactive p-6 flex items-center gap-5">
         <div @class([
             'w-14 h-14 rounded-lg border flex items-center justify-center shrink-0',
-            'bg-gold-50 text-gold-700 border-gold-200' => $data['pending'] > 0,
+            'bg-gold-50 text-gold-800 border-gold-200' => $data['pending'] > 0,
             'bg-forest-50 text-forest-700 border-forest-200' => $data['pending'] === 0,
         ])>
             <x-heroicon-o-inbox-arrow-down class="w-7 h-7" />

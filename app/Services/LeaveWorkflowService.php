@@ -70,6 +70,65 @@ class LeaveWorkflowService
         return $dean->college_id === $employee->college_id;
     }
 
+    /**
+     * Locks the application row and checks, on the locked copy, that this
+     * reviewer may decide it now. Must run inside a transaction.
+     *
+     * Someone acting on a stage that has already been decided gets
+     * LeaveAlreadyDecided — told plainly, nothing written. Anyone else who
+     * may not act gets the 403 they always did.
+     */
+    private function lockForDecision(User $reviewer, LeaveApplication $application): LeaveApplication
+    {
+        $locked = LeaveApplication::query()->lockForUpdate()->findOrFail($application->id);
+        $locked->setRelation('user', $application->user()->first());
+
+        $stage = $reviewer->approvalStage();
+
+        if ($stage !== null && $this->canReview($reviewer, $locked)) {
+            return $locked;
+        }
+
+        if ($stage !== null && ($decision = $this->decisionAlreadyMade($reviewer, $locked, $stage))) {
+            throw new LeaveAlreadyDecided($decision);
+        }
+
+        abort(403, 'This leave form is not waiting on your review.');
+    }
+
+    /**
+     * Describes the decision already taken at the reviewer's own stage, when
+     * the reviewer would otherwise have been entitled to take it.
+     */
+    private function decisionAlreadyMade(User $reviewer, LeaveApplication $application, string $stage): ?string
+    {
+        if ($application->user_id === $reviewer->id || ! $this->chain->stageApplies($application->user, $stage)) {
+            return null;
+        }
+
+        if ($stage === 'dean' && ! $this->deanCoversEmployee($reviewer, $application->user)) {
+            return null;
+        }
+
+        $prefix = LeaveChain::PREFIX[$stage];
+        $action = $application->{$prefix . '_status'};
+
+        if (! in_array($action, ['approved', 'returned'], true)) {
+            return null;
+        }
+
+        $by = $application->{$prefix . '_id'} ? User::find($application->{$prefix . '_id'})?->name : null;
+        $when = $application->{$prefix . '_reviewed_at'};
+
+        return sprintf(
+            'This leave form was already %s at the %s stage%s%s. Nothing further was recorded.',
+            $action,
+            LeaveChain::LABELS[$stage],
+            $by ? " by {$by}" : '',
+            $when ? ' on ' . \Illuminate\Support\Carbon::parse($when)->format('M j, Y g:i A') : '',
+        );
+    }
+
     // ------------------------------------------------------------------
     // Submission
     // ------------------------------------------------------------------
@@ -98,14 +157,17 @@ class LeaveWorkflowService
     {
         $stage = $reviewer->approvalStage();
 
-        abort_unless($stage !== null && $this->canReview($reviewer, $application), 403,
-            'This leave form is not waiting on your review.');
+        DB::transaction(function () use ($application, $reviewer, $stage, $remarks) {
+            // The decision is made on the row as it stands under the lock,
+            // not on the copy loaded when the page was opened: two reviewers
+            // at the same stage, or one double click, must produce exactly one
+            // transition and one history row.
+            $locked = $this->lockForDecision($reviewer, $application);
 
-        $nextStatus = $this->chain->statusAfterApproval($application, $stage);
-        $prefix = LeaveChain::PREFIX[$stage];
+            $nextStatus = $this->chain->statusAfterApproval($locked, $stage);
+            $prefix = LeaveChain::PREFIX[$stage];
 
-        DB::transaction(function () use ($application, $reviewer, $stage, $prefix, $nextStatus, $remarks) {
-            $application->update([
+            $locked->update([
                 'status' => $nextStatus,
                 $prefix . '_status' => 'approved',
                 $prefix . '_id' => $reviewer->id,
@@ -113,7 +175,7 @@ class LeaveWorkflowService
                 $prefix . '_remarks' => $remarks,
                 'reviewed_by' => $reviewer->id,
                 'reviewed_at' => now(),
-            ] + $this->certificationFor($application, $stage, $nextStatus));
+            ] + $this->certificationFor($locked, $stage, $nextStatus));
 
             LeaveApproval::create([
                 'leave_application_id' => $application->id,
@@ -175,13 +237,13 @@ class LeaveWorkflowService
     {
         $stage = $reviewer->approvalStage();
 
-        abort_unless($stage !== null && $this->canReview($reviewer, $application), 403,
-            'This leave form is not waiting on your review.');
+        DB::transaction(function () use ($application, $reviewer, $stage, $remarks) {
+            // Same lock as approve(): an approval and a return racing for the
+            // same stage cannot both succeed.
+            $locked = $this->lockForDecision($reviewer, $application);
+            $prefix = LeaveChain::PREFIX[$stage];
 
-        $prefix = LeaveChain::PREFIX[$stage];
-
-        DB::transaction(function () use ($application, $reviewer, $stage, $prefix, $remarks) {
-            $application->update([
+            $locked->update([
                 'status' => LeaveChain::RETURNED_STATUS[$stage],
                 $prefix . '_status' => 'returned',
                 $prefix . '_id' => $reviewer->id,
@@ -200,6 +262,8 @@ class LeaveWorkflowService
                 'remarks' => $remarks,
             ]);
         });
+
+        $application->refresh();
 
         $this->log->log(
             'leave.returned',

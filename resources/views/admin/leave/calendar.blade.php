@@ -217,13 +217,13 @@
             <div class="flex min-w-0 flex-wrap items-center justify-center gap-2 sm:gap-3">
                 <!-- Jump straight to a month/year instead of clicking prev/next repeatedly -->
                 <form method="GET" action="{{ route('admin.leave.calendar') }}" class="flex min-w-0 flex-wrap items-center justify-center gap-2">
-                    <input type="month" name="month" value="{{ $current->format('Y-m') }}" onchange="this.form.submit()"
+                    <input type="month" name="month" aria-label="Month" value="{{ $current->format('Y-m') }}" onchange="this.form.submit()"
                            class="input min-w-0 max-w-full sm:text-xl font-semibold cursor-pointer hover:bg-sand-50 -mx-1">
 
                     {{-- HR and the Campus Director may narrow to one college.
                          A Dean has no picker: their scope is fixed to their own. --}}
                     @if ($colleges->isNotEmpty())
-                        <select name="college" onchange="this.form.submit()" class="select select-sm w-auto">
+                        <select name="college" aria-label="College" onchange="this.form.submit()" class="select select-sm w-auto">
                             <option value="">All colleges</option>
                             @foreach ($colleges as $college)
                                 <option value="{{ $college->id }}"

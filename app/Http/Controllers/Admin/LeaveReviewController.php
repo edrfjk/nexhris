@@ -9,6 +9,7 @@ use App\Services\LeaveForm\LeaveFormDocuments;
 use App\Services\LeaveForm\LeaveFormTemplateMismatch;
 use App\Services\LeaveForm\LeavePolicy;
 use App\Services\LeaveLedgerService;
+use App\Services\LeavePostingReconciler;
 use App\Services\LeaveWorkflowService;
 use App\Services\XlsxToPdfService;
 use Illuminate\Http\Request;
@@ -132,6 +133,8 @@ class LeaveReviewController extends Controller
 
         try {
             $message = $this->workflow->approve(auth()->user(), $application, $data['remarks'] ?? null);
+        } catch (\App\Services\LeaveAlreadyDecided $e) {
+            return $this->alreadyDecided($application, $e);
         } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface | \Illuminate\Validation\ValidationException $e) {
             // Authorization and validation failures are deliberate responses,
             // not failed follow-up work. Preserve their real status codes.
@@ -179,11 +182,27 @@ class LeaveReviewController extends Controller
             'remarks.required' => 'Tell the employee what needs to be corrected.',
         ]);
 
-        $message = $this->workflow->returnForRevision(auth()->user(), $application, $data['remarks']);
+        try {
+            $message = $this->workflow->returnForRevision(auth()->user(), $application, $data['remarks']);
+        } catch (\App\Services\LeaveAlreadyDecided $e) {
+            return $this->alreadyDecided($application, $e);
+        }
 
         return redirect()
             ->route('admin.leave.review.index')
             ->with('success', $message);
+    }
+
+    /**
+     * A second click, a second tab, or a second reviewer at the same stage:
+     * the form was already decided, so say who decided it rather than show an
+     * error page — and never invite a retry.
+     */
+    private function alreadyDecided(LeaveApplication $application, \App\Services\LeaveAlreadyDecided $e)
+    {
+        return redirect()
+            ->route('admin.leave.review.show', $application)
+            ->with('warning', $e->getMessage());
     }
 
     /**
@@ -251,9 +270,10 @@ class LeaveReviewController extends Controller
      * The final HR step: once the Campus Director has approved, HR records the
      * actual days, dates and credits against the employee's ledger card.
      */
-    public function postToLedger(Request $request, LeaveApplication $application, LeaveLedgerService $ledger)
+    public function postToLedger(Request $request, LeaveApplication $application, LeaveLedgerService $ledger, ?LeavePostingReconciler $reconciler = null)
     {
         abort_unless(auth()->user()->isAdmin(), 403, 'Only HR can post leave to the ledger.');
+        $reconciler ??= app(LeavePostingReconciler::class);
         abort_unless($application->isFullyApproved(), 422,
             'This form must be approved by the Campus Director before it can be posted.');
         abort_if($application->ledger_posted, 422, 'This leave has already been posted to the ledger.');
@@ -268,6 +288,10 @@ class LeaveReviewController extends Controller
             'sl_used_wop' => ['nullable', 'numeric', 'min:0'],
             'service_used' => ['nullable', 'numeric', 'min:0'],
             'remarks' => ['required', 'string', 'max:255'],
+            // Needed only when the figures differ from the approved form;
+            // checked against the locked row below.
+            'adjustment_reason' => ['nullable', 'string', 'max:1000'],
+            'confirm_adjustment' => ['nullable', 'boolean'],
             // Which card this leave is written on. The campus keeps two, and
             // the choice belongs to HR once the form is fully approved.
             'ledger' => ['required', \Illuminate\Validation\Rule::in([
@@ -277,7 +301,7 @@ class LeaveReviewController extends Controller
         ]);
 
         try {
-            $entry = DB::transaction(function () use ($application, $data, $ledger) {
+            $entry = DB::transaction(function () use ($application, $data, $ledger, $reconciler, $request) {
                 // The page-level check above is only a convenience. Lock and
                 // re-check here so two simultaneous HR submissions cannot
                 // each write a deduction for the same leave application.
@@ -298,29 +322,78 @@ class LeaveReviewController extends Controller
                     ]);
                 }
 
+                // LEDGER-03: compared on the locked row, so the record of
+                // what differed is about the form exactly as it was posted.
+                $charges = [];
+                foreach (LeavePostingReconciler::CHARGE_COLUMNS as $column) {
+                    $charges[$column] = (float) ($data[$column] ?? 0);
+                }
+                $differences = $reconciler->differences($application, [
+                    'period_from' => $data['period_from'],
+                    'period_to' => $data['period_to'],
+                    'days' => $data['days'],
+                    'charges' => $charges,
+                ], $data['ledger']);
+
+                if ($differences && (! filled($data['adjustment_reason'] ?? null) || empty($data['confirm_adjustment']))) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'adjustment_reason' => 'These figures differ from the approved form ('
+                            . LeavePostingReconciler::describe($differences)
+                            . '). Give the reason for the adjustment and tick the confirmation to post them.',
+                    ]);
+                }
+
                 $entry = $ledger->postEntry(
                     employee: $application->user,
                     periodFrom: $data['period_from'],
                     periodTo: $data['period_to'],
                     type: 'leave_deduction',
                     remarks: $data['remarks'],
-                    vlUsed: (float) ($data['vl_used'] ?? 0),
-                    vlUsedWop: (float) ($data['vl_used_wop'] ?? 0),
-                    slUsed: (float) ($data['sl_used'] ?? 0),
-                    slUsedWop: (float) ($data['sl_used_wop'] ?? 0),
-                    serviceUsed: (float) ($data['service_used'] ?? 0),
+                    vlUsed: $charges['vl_used'],
+                    vlUsedWop: $charges['vl_used_wop'],
+                    slUsed: $charges['sl_used'],
+                    slUsedWop: $charges['sl_used_wop'],
+                    serviceUsed: $charges['service_used'],
                     leaveApplicationId: $application->id,
                     ledger: $data['ledger'],
                 );
 
+                // The approved dates and days stay as the reviewers signed
+                // them (decision A); the ledger line carries what was posted.
                 $application->update([
                     'status' => 'completed',
                     'ledger_posted' => true,
                     'leave_ledger_entry_id' => $entry->id,
-                    'days' => $data['days'],
-                    'date_from' => $data['period_from'],
-                    'date_to' => $data['period_to'],
+                    'posting_checked_at' => now(),
                 ]);
+
+                if ($differences) {
+                    $expected = $reconciler->expected($application);
+
+                    $adjustment = \App\Models\LeavePostingAdjustment::create([
+                        'leave_application_id' => $application->id,
+                        'leave_ledger_entry_id' => $entry->id,
+                        'original_date_from' => $expected['date_from'],
+                        'original_date_to' => $expected['date_to'],
+                        'original_days' => $expected['days'],
+                        'original_charges' => $expected['charges'],
+                        'posted_date_from' => $data['period_from'],
+                        'posted_date_to' => $data['period_to'],
+                        'posted_days' => $data['days'],
+                        'posted_charges' => $charges,
+                        'differences' => $differences,
+                        'reason' => trim($data['adjustment_reason']),
+                        'adjusted_by' => $request->user()->id,
+                    ]);
+
+                    app(\App\Services\ActivityLogger::class)->log(
+                        'leave.posting_adjusted',
+                        "{$request->user()->name} posted {$application->user->name}'s leave with adjusted figures: "
+                            . LeavePostingReconciler::describe($differences) . '.',
+                        $application,
+                        ['adjustment_id' => $adjustment->id, 'differences' => $differences, 'reason' => $adjustment->reason],
+                    );
+                }
 
                 return $entry;
             });

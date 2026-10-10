@@ -175,7 +175,7 @@ class DashboardTest extends TestCase
         // A Dean's own form skips the Dean stage, but guard the count anyway.
         LeaveApplication::create([
             'user_id' => $dean->id, 'leave_type' => 'VL',
-            'date_from' => now()->addWeek(), 'date_to' => now()->addWeek(), 'days' => 1,
+            'date_from' => now()->next('Monday')->addWeek(), 'date_to' => now()->next('Monday')->addWeek(), 'days' => 1,
             'status' => 'submitted', 'file_path' => 'x.xlsx',
         ]);
 

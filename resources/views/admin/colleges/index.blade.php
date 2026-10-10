@@ -66,8 +66,8 @@
 <form method="GET" class="toolbar mb-4">
     <x-heroicon-o-magnifying-glass class="w-4 h-4 text-sand-400" />
     <input type="text" name="search" value="{{ request('search') }}"
-           placeholder="Search by name or code…" class="input input-sm flex-1 min-w-[200px]">
-    <select name="status" class="select select-sm w-auto">
+           placeholder="Search by name or code…" aria-label="Search colleges by name or code" class="input input-sm flex-1 min-w-[200px]">
+    <select name="status" aria-label="Show colleges" class="select select-sm w-auto">
         <option value="">All</option>
         <option value="active" @selected(request('status') === 'active')>Active only</option>
         <option value="inactive" @selected(request('status') === 'inactive')>Inactive only</option>
@@ -236,6 +236,7 @@
 <dialog id="add-college" class="card w-[min(30rem,92vw)] p-0 backdrop:bg-sand-900/40">
     <form method="POST" action="{{ route('admin.colleges.store') }}">
         @csrf
+        <input type="hidden" name="_dialog" value="add-college">
         <div class="card-header">
             <h3 class="card-title"><x-heroicon-o-building-library />Add College or Office</h3>
         </div>
@@ -277,6 +278,7 @@
     <dialog id="edit-{{ $college->id }}" class="card w-[min(30rem,92vw)] p-0 backdrop:bg-sand-900/40">
         <form method="POST" action="{{ route('admin.colleges.update', $college) }}">
             @csrf @method('PUT')
+            <input type="hidden" name="_dialog" value="edit-{{ $college->id }}">
             <div class="card-header">
                 <h3 class="card-title"><x-heroicon-o-pencil-square />Edit {{ $college->code }}</h3>
             </div>
@@ -329,6 +331,7 @@
     <dialog id="add-dept-{{ $college->id }}" class="card w-[min(30rem,92vw)] p-0 backdrop:bg-sand-900/40">
         <form method="POST" action="{{ route('admin.departments.store', $college) }}">
             @csrf
+            <input type="hidden" name="_dialog" value="add-dept-{{ $college->id }}">
             <div class="card-header">
                 <h3 class="card-title">
                     <x-heroicon-o-rectangle-group />
@@ -379,6 +382,7 @@
         <dialog id="edit-dept-{{ $department->id }}" class="card w-[min(30rem,92vw)] p-0 backdrop:bg-sand-900/40">
             <form method="POST" action="{{ route('admin.departments.update', $department) }}">
                 @csrf @method('PUT')
+                <input type="hidden" name="_dialog" value="edit-dept-{{ $department->id }}">
                 <div class="card-header">
                     <h3 class="card-title"><x-heroicon-o-pencil-square />Edit {{ $department->code }}</h3>
                 </div>
@@ -448,6 +452,7 @@
 
     <form method="POST" action="{{ route('admin.positions.store') }}" class="border-b border-sand-100 bg-sand-50 p-4">
         @csrf
+        <input type="hidden" name="_dialog" value="manage-positions">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-6">
             <div class="sm:col-span-2">
                 <label class="label label-required">Position title</label>
@@ -478,6 +483,7 @@
                     @foreach ($group as $position)
                         <form method="POST" action="{{ route('admin.positions.update', $position) }}" class="grid grid-cols-1 items-end gap-2 sm:grid-cols-12">
                             @csrf @method('PUT')
+                            <input type="hidden" name="_dialog" value="manage-positions">
                             <div class="sm:col-span-5">
                                 <label class="sr-only">Position title</label>
                                 <input name="name" value="{{ $position->name }}" required maxlength="150" class="input input-sm">
@@ -496,6 +502,7 @@
                         </form>
                         <form id="delete-position-{{ $position->id }}" method="POST" action="{{ route('admin.positions.destroy', $position) }}" onsubmit="return confirm({{ Js::from('Remove this title from future employee selections? Existing employee records will keep their title.') }})">
                             @csrf @method('DELETE')
+                            <input type="hidden" name="_dialog" value="manage-positions">
                         </form>
                     @endforeach
                 </div>

@@ -14,8 +14,8 @@
     $tones = [
         'maroon' => 'bg-maroon-50 text-maroon-700 border-maroon-200',
         'green'  => 'bg-forest-50 text-forest-700 border-forest-200',
-        'yellow' => 'bg-gold-50 text-gold-700 border-gold-200',
-        'amber'  => 'bg-gold-50 text-gold-700 border-gold-200',
+        'yellow' => 'bg-gold-50 text-gold-800 border-gold-200',
+        'amber'  => 'bg-gold-50 text-gold-800 border-gold-200',
         'blue'   => 'bg-sky-50 text-sky-700 border-sky-200',
         'red'    => 'bg-red-50 text-red-700 border-red-200',
         'gray'   => 'bg-sand-100 text-sand-600 border-sand-200',
