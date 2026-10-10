@@ -7,7 +7,7 @@
     <meta charset="UTF-8">
     <title>Terms and Conditions | NexHRIS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    @include('partials.favicons')
     <meta name="robots" content="noindex, nofollow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +19,7 @@
 <div class="mx-auto w-full max-w-3xl">
 
     <div class="mb-6 flex items-center gap-4">
-        <img src="{{ asset('images/ispsc-logo.png') }}" alt="ISPSC seal" class="h-14 w-14 shrink-0">
+        <img src="{{ asset('images/nexhris/nexhris-icon.svg') }}" alt="NexHRIS logo" class="h-14 w-14 shrink-0">
         <div>
             <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-maroon-700">
                 Ilocos Sur Polytechnic State College &middot; Tagudin Campus

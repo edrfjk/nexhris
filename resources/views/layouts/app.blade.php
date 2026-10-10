@@ -52,8 +52,7 @@
     <meta charset="UTF-8">
     <title>@yield('title', 'NexHRIS') | ISPSC Tagudin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
-    <link rel="icon" type="image/png" href="/favicon.png">
+    @include('partials.favicons')
     {{-- Alpine is bundled into resources/js/app.js. Loading it from a CDN as
          well would start it twice. --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -106,12 +105,10 @@
            class="fixed inset-y-0 left-0 z-40 w-64 h-screen flex flex-col
                   transition-transform duration-300 ease-smooth bg-maroon-900 text-white">
 
-        {{-- Seal, system name, campus — the standard institutional lockup. --}}
+        {{-- NexHRIS mark, system name, campus. The white-hexagon version,
+             since the maroon one would vanish into the sidebar. --}}
         <div class="shrink-0 flex items-center gap-3 px-5 h-16 border-b border-white/10">
-            {{-- The seal's own transparency does the work: no white disc behind
-                 it, and object-contain so the maroon ground shows through the
-                 corners instead of cropping them off. --}}
-            <img src="{{ asset('images/ispsc-logo.png') }}" alt="ISPSC Seal"
+            <img src="{{ asset('images/nexhris/nexhris-icon-on-maroon.svg') }}" alt="NexHRIS logo"
                  class="w-10 h-10 object-contain shrink-0">
             <div class="min-w-0 leading-tight">
                 <p class="text-sm font-bold tracking-wide">NexHRIS</p>

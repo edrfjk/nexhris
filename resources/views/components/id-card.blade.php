@@ -4,7 +4,7 @@
     <div class="bg-white rounded-lg shadow-lg border border-sand-200 overflow-hidden">
         <!-- Header strip -->
         <div class="bg-maroon-800 px-5 py-3 flex items-center gap-2.5">
-            <img src="{{ asset('images/ispsc-logo.png') }}" alt="ISPSC seal" class="w-9 h-9 rounded-full object-cover flex-shrink-0">
+            <img src="{{ asset('images/nexhris/nexhris-icon-on-maroon.svg') }}" alt="NexHRIS logo" class="w-9 h-9 object-contain flex-shrink-0">
             <div class="leading-tight text-white">
                 <p class="text-xs font-bold">ISPSC TAGUDIN CAMPUS</p>
                 <p class="text-[10px] text-sand-300">Employee Identification Card</p>

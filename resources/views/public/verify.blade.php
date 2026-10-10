@@ -5,6 +5,7 @@
     <title>Employee Verification | NexHRIS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
+    @include('partials.favicons')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,7 +15,7 @@
 
 <div class="w-full max-w-sm">
     <div class="text-center mb-6">
-        <img src="{{ asset('images/ispsc-logo.png') }}" alt="ISPSC Seal" class="w-16 h-16 mx-auto mb-3">
+        <img src="{{ asset('images/nexhris/nexhris-icon.svg') }}" alt="NexHRIS logo" class="w-16 h-16 mx-auto mb-3">
         <h1 class="text-lg font-bold text-maroon-800">NexHRIS</h1>
         <p class="text-xs text-sand-500">Ilocos Sur Polytechnic State College · Tagudin Campus</p>
     </div>
