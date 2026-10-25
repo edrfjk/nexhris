@@ -35,6 +35,8 @@ class ActivityLog extends Model
     public function tone(): string
     {
         return match (true) {
+            str_contains($this->action, 'after_failures'),
+            str_contains($this->action, 'denied'),
             str_contains($this->action, 'failed'),
             str_contains($this->action, 'locked'),
             str_contains($this->action, 'deleted') => 'red',

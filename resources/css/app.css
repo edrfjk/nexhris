@@ -298,11 +298,47 @@
        wide and a single column of text left it looking empty. Flat fills and
        hairline borders, so it reads as structure and not as decoration. */
     .auth-tile {
-        @apply rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3.5;
+        @apply flex items-start gap-3.5 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3.5;
+    }
+
+    /* The icon on a small gold-tinted plate, beside the text rather than
+       above it, so each tile reads as one line of meaning. */
+    .auth-tile-icon {
+        @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-md
+               bg-gold-400/10 ring-1 ring-inset ring-gold-400/25;
     }
 
     .auth-tile svg {
-        @apply mb-2 h-[18px] w-[18px] text-gold-400;
+        @apply h-[18px] w-[18px] text-gold-400;
+    }
+
+    /* The seal, large and faint behind the panel's empty half — the way it
+       sits under the text of a certificate. Desaturated so it reads as
+       texture in the maroon, not as a second logo. `isolate` on the panel
+       keeps the negative z-index inside it. */
+    .auth-watermark {
+        @apply pointer-events-none absolute -z-10 select-none;
+        width: 560px;
+        right: -150px;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0.06;
+        filter: grayscale(1) brightness(1.4);
+        /* Faded on the side facing the text, so on a narrower panel it does
+           not sit behind the tiles. */
+        -webkit-mask-image: linear-gradient(to right, transparent, #000 45%);
+        mask-image: linear-gradient(to right, transparent, #000 45%);
+    }
+
+    /* A 1366-wide laptop leaves no empty half to fill: move the seal further
+       off the edge so only its outer ring shows past the tiles. */
+    @media (max-width: 1599px) {
+        .auth-watermark { right: -240px; }
+    }
+
+    .auth-footer-link {
+        @apply inline-flex items-center gap-1.5 text-white/60 underline-offset-2
+               transition-colors hover:text-gold-400 hover:underline;
     }
 
     .auth-tile-title {

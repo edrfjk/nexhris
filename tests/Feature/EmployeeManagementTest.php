@@ -212,6 +212,53 @@ class EmployeeManagementTest extends TestCase
         $this->assertSame('employee', $previous->fresh()->role);
     }
 
+    public function test_replacing_the_campus_director_requires_confirmation_and_returns_the_previous_one_to_employee(): void
+    {
+        $admin = $this->hr();
+        $previous = User::factory()->create(['role' => 'campus_director']);
+
+        $payload = [
+            'employee_number' => 'NEW-CD', 'first_name' => 'Jordan', 'last_name' => 'Reyes',
+            'email' => 'jordan.reyes@example.test', 'position' => 'Campus Director',
+            'role' => 'campus_director', 'first_day_of_service' => '2020-06-01',
+            'password' => 'password123', 'password_confirmation' => 'password123',
+        ];
+
+        $this->actingAs($admin)->post(route('admin.employees.store'), $payload)
+            ->assertSessionHasErrors('role');
+        $this->assertDatabaseMissing('users', ['employee_number' => 'NEW-CD']);
+        $this->assertSame('campus_director', $previous->fresh()->role);
+
+        $this->actingAs($admin)->post(route('admin.employees.store'), $payload + ['confirm_replace_campus_director' => true])
+            ->assertRedirect(route('admin.employees.index'));
+
+        $replacement = User::where('employee_number', 'NEW-CD')->firstOrFail();
+        $this->assertSame('campus_director', $replacement->fresh()->role);
+        $this->assertSame('employee', $previous->fresh()->role);
+        $this->assertSame(1, User::where('role', 'campus_director')->count());
+    }
+
+    public function test_promoting_an_existing_employee_to_campus_director_also_requires_confirmation(): void
+    {
+        $admin = $this->hr();
+        $previous = User::factory()->create(['role' => 'campus_director']);
+        $employee = User::factory()->create(['role' => 'employee', 'employee_number' => 'EMP-TO-CD']);
+
+        $this->actingAs($admin)->put(route('admin.employees.update', $employee), [
+            'employee_number' => $employee->employee_number, 'name' => $employee->name,
+            'email' => $employee->email, 'role' => 'campus_director',
+        ])->assertSessionHasErrors('role');
+        $this->assertSame('employee', $employee->fresh()->role);
+
+        $this->actingAs($admin)->put(route('admin.employees.update', $employee), [
+            'employee_number' => $employee->employee_number, 'name' => $employee->name,
+            'email' => $employee->email, 'role' => 'campus_director', 'confirm_replace_campus_director' => true,
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('campus_director', $employee->fresh()->role);
+        $this->assertSame('employee', $previous->fresh()->role);
+    }
+
     public function test_hr_can_manage_categories_and_the_position_catalogue(): void
     {
         $admin = $this->hr();

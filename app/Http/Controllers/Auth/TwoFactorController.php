@@ -77,6 +77,7 @@ class TwoFactorController extends Controller
         RateLimiter::clear($key);
 
         $user = $challenge->user;
+        $remember = (bool) $request->session()->pull(TwoFactorService::SESSION_REMEMBER, false);
 
         // Promote the session to fully authenticated.
         $request->session()->forget([
@@ -85,6 +86,12 @@ class TwoFactorController extends Controller
         ]);
         $request->session()->put(TwoFactorService::SESSION_VERIFIED, now()->timestamp);
         $request->session()->regenerate();
+
+        // The remember-me cookie asked for on the sign-in form, issued only
+        // now that both factors have been cleared.
+        if ($remember) {
+            Auth::login($user, true);
+        }
 
         $this->log->twoFactorPassed($user);
         $this->log->loginSucceeded($user);

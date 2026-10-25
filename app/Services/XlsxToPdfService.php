@@ -59,12 +59,20 @@ class XlsxToPdfService
     private const MARGIN_FLOOR_MM = 5.0;
 
     /** Bump whenever the painted output changes; it invalidates the cache. */
-    public const RENDERER_VERSION = '2026-10-02-leave-form';
+    public const RENDERER_VERSION = '2026-10-25-pds-legal-fill';
 
     /** ECMA-376 paper-size codes. */
     private const PAPER_A4 = 9;
 
     private const PAPER_LEGAL = 5;
+
+    /**
+     * LibreOffice lays these columns out about 3% wider than the character
+     * rule used to measure them here, so a PDS stretched to the exact paper
+     * height stopped short of the bottom margin. Overshooting by that much is
+     * safe: the page is also fitted one page tall, so any excess shrinks.
+     */
+    private const LEGAL_FILL_ALLOWANCE = 1.03;
 
     /**
      * A token safe to put in a filename, so anything that keeps a converted
@@ -382,6 +390,8 @@ HTML;
 
         try {
             $isPds = $this->isPersonalDataSheet($zip);
+            $printAreas = $isPds ? $this->printAreas($zip) : [];
+            $stretches = [];
 
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $name = (string) $zip->getNameIndex($i);
@@ -407,7 +417,8 @@ HTML;
                     : $this->withUnclippedShapeText($xml);
 
                 if ($isSheet && $isPds) {
-                    $updated = $this->withUniformPdsPage($updated);
+                    $updated = $this->withUniformPdsPage($updated, $printAreas[$name] ?? null, $stretch);
+                    $stretches[$name] = $stretch;
                 }
 
                 if ($updated !== $xml) {
@@ -428,6 +439,57 @@ HTML;
             } finally {
                 $zip->close();
             }
+        }
+
+        // After flattening, so the redrawn check boxes move with their rows too.
+        if (array_filter($stretches ?? [], fn ($stretch) => $stretch > 1.0) && $zip->open($path) === true) {
+            try {
+                $this->withShapesFollowingStretchedRows($zip, $stretches);
+            } finally {
+                $zip->close();
+            }
+        }
+    }
+
+    /**
+     * Keeps each shape where it was within its row once the rows are taller.
+     *
+     * A shape is anchored to a cell plus an offset in EMU from that cell's top.
+     * The rows grow, the offset does not, so every tick box and label crept
+     * towards the top of its row — "Single" ended up on the row's border.
+     * Scaling the offsets by the rows' own factor puts each back in place.
+     *
+     * @param  array<string, float>  $stretches  sheet part => factor its rows grew by
+     */
+    private function withShapesFollowingStretchedRows(\ZipArchive $zip, array $stretches): void
+    {
+        foreach ($stretches as $sheetPart => $stretch) {
+            if ($stretch <= 1.0) {
+                continue;
+            }
+
+            $relationships = (string) $zip->getFromName(
+                dirname($sheetPart) . '/_rels/' . basename($sheetPart) . '.rels'
+            );
+
+            if (! preg_match('#<Relationship\b[^>]*\bType="[^"]*/drawing"[^>]*\bTarget="([^"]+)"#', $relationships, $m)
+                && ! preg_match('#<Relationship\b[^>]*\bTarget="([^"]+)"[^>]*\bType="[^"]*/drawing"#', $relationships, $m)) {
+                continue;
+            }
+
+            // Targets are relative to xl/worksheets/, e.g. ../drawings/drawing1.xml.
+            $drawingPart = 'xl/' . preg_replace('#^\.\./#', '', $m[1]);
+            $xml = $zip->getFromName($drawingPart);
+
+            if ($xml === false) {
+                continue;
+            }
+
+            $zip->addFromString($drawingPart, (string) preg_replace_callback(
+                '#<xdr:rowOff>(\d+)</xdr:rowOff>#',
+                fn (array $offset) => '<xdr:rowOff>' . (int) round((int) $offset[1] * $stretch) . '</xdr:rowOff>',
+                $xml,
+            ));
         }
     }
 
@@ -474,8 +536,10 @@ HTML;
      * margins and centred, so all four (and any continuation sheet) line up
      * on both edges. At that width every page still fits its height.
      */
-    private function withUniformPdsPage(string $sheetXml): string
+    private function withUniformPdsPage(string $sheetXml, ?array $printArea = null, ?float &$stretch = null): string
     {
+        $stretch = 1.0;
+
         // The custom view's page setup is the one LibreOffice honours.
         $sheetXml = preg_replace('#<customSheetViews>.*?</customSheetViews>#s', '', $sheetXml);
 
@@ -493,7 +557,10 @@ HTML;
         $sheetXml = preg_replace_callback('#<pageSetup\b([^>]*?)(/?)>#', function (array $m): string {
             $attributes = preg_replace('#\s+(scale|fitToWidth|fitToHeight)="[^"]*"#', '', $m[1]);
 
-            return '<pageSetup' . $attributes . ' fitToWidth="1" fitToHeight="0"' . $m[2] . '>';
+            // One page tall as well: the rows are stretched to the paper below,
+            // and should that estimate run long the page shrinks rather than
+            // spilling a line onto another sheet.
+            return '<pageSetup' . $attributes . ' fitToWidth="1" fitToHeight="1"' . $m[2] . '>';
         }, $sheetXml);
 
         // The same quarter-inch at the sides of every page.
@@ -503,9 +570,139 @@ HTML;
             : $sheetXml;
 
         // Centred between those margins.
-        return preg_match('#<printOptions\b#', $sheetXml)
+        $sheetXml = preg_match('#<printOptions\b#', $sheetXml)
             ? preg_replace('#<printOptions\b([^>]*?)(\s*/?)>#', '<printOptions horizontalCentered="1"$2>', $sheetXml, 1)
             : preg_replace('#(<pageMargins\b)#', '<printOptions horizontalCentered="1"/>$1', $sheetXml, 1);
+
+        return $printArea ? $this->withRowsStretchedToLegal($sheetXml, $printArea, $stretch) : $sheetXml;
+    }
+
+    /**
+     * Makes a PDS page fill the Legal sheet it is printed on.
+     *
+     * CS Form 212 is drawn about 1.38 times as tall as it is wide; the
+     * printable area of Legal paper between the margins above is 1.675.
+     * Fitted to the width, every page stopped a fifth of the way up the
+     * sheet — in Excel too, whose own print views use the same 67–77% scale.
+     * Every row in the print area is made taller by one factor, so the form
+     * keeps its proportions across, its type stays the size width-fitting
+     * gives it, and the boxes reach the bottom margin as on a form typed on
+     * long bond paper.
+     *
+     * @param  array{0: int, 1: int, 2: int, 3: int}  $area  first column, first row, last column, last row
+     * @param  float|null  $stretch  set to the factor the rows grew by
+     */
+    private function withRowsStretchedToLegal(string $sheetXml, array $area, ?float &$stretch = null): string
+    {
+        $stretch = 1.0;
+
+        [$firstColumn, $firstRow, $lastColumn, $lastRow] = $area;
+
+        $doc = new \DOMDocument();
+        $doc->preserveWhiteSpace = true;
+
+        if (! @$doc->loadXML($sheetXml)) {
+            return $sheetXml;
+        }
+
+        $xpath = new \DOMXPath($doc);
+        $xpath->registerNamespace('m', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
+
+        $format = $xpath->query('//m:sheetFormatPr')->item(0);
+        $defaultHeight = $format instanceof \DOMElement && $format->getAttribute('defaultRowHeight') !== ''
+            ? (float) $format->getAttribute('defaultRowHeight') : 12.75;
+        $defaultWidth = $format instanceof \DOMElement && $format->getAttribute('defaultColWidth') !== ''
+            ? (float) $format->getAttribute('defaultColWidth') : 8.43;
+
+        $widths = [];
+        foreach ($xpath->query('//m:cols/m:col') as $col) {
+            for ($i = (int) $col->getAttribute('min'); $i <= (int) $col->getAttribute('max'); $i++) {
+                $widths[$i] = $col->getAttribute('hidden') === '1' ? 0.0 : (float) $col->getAttribute('width');
+            }
+        }
+
+        // Column widths are in characters of the default font: 7px each plus
+        // 5px of padding, at 0.75pt a pixel (as TemplateFiller::boxSize()).
+        $width = 0.0;
+        for ($i = $firstColumn; $i <= $lastColumn; $i++) {
+            $characters = $widths[$i] ?? $defaultWidth;
+            $width += $characters > 0 ? floor($characters * 7 + 5) * 0.75 : 0;
+        }
+
+        // A row missing from sheetData prints at the default height and is
+        // left as it is; CS Form 212 declares every row it prints.
+        $height = 0.0;
+        $rows = [];
+        for ($r = $firstRow; $r <= $lastRow; $r++) {
+            $row = $xpath->query("//m:sheetData/m:row[@r='{$r}']")->item(0);
+
+            if (! $row instanceof \DOMElement) {
+                $height += $defaultHeight;
+                continue;
+            }
+
+            if ($row->getAttribute('hidden') === '1') {
+                continue;
+            }
+
+            $rowHeight = $row->getAttribute('ht') !== '' ? (float) $row->getAttribute('ht') : $defaultHeight;
+            $rows[] = [$row, $rowHeight];
+            $height += $rowHeight;
+        }
+
+        // Legal is 8.5 x 14in; less the 0.25in sides and 0.3in top and
+        // bottom set above, 576 x 964.8pt is printable.
+        $stretch = $width > 0 && $height > 0
+            ? (964.8 / 576) * ($width / $height) * self::LEGAL_FILL_ALLOWANCE
+            : 1.0;
+
+        if ($stretch <= 1.0) {
+            $stretch = 1.0;
+
+            return $sheetXml;
+        }
+
+        foreach ($rows as [$row, $rowHeight]) {
+            $row->setAttribute('ht', (string) round($rowHeight * $stretch, 2));
+            $row->setAttribute('customHeight', '1');
+        }
+
+        return $doc->saveXML();
+    }
+
+    /**
+     * Each worksheet part's print area, as column and row numbers.
+     *
+     * @return array<string, array{0: int, 1: int, 2: int, 3: int}>  part path => area
+     */
+    private function printAreas(\ZipArchive $zip): array
+    {
+        $workbook = (string) $zip->getFromName('xl/workbook.xml');
+        $relationships = (string) $zip->getFromName('xl/_rels/workbook.xml.rels');
+
+        preg_match_all('#<Relationship\b[^>]*\bId="([^"]+)"[^>]*\bTarget="([^"]+)"#', $relationships, $targets, PREG_SET_ORDER);
+        $targetById = [];
+        foreach ($targets as [, $id, $target]) {
+            $targetById[$id] = str_starts_with($target, '/') ? ltrim($target, '/') : 'xl/' . $target;
+        }
+
+        // localSheetId counts sheets in the order <sheets> lists them.
+        preg_match_all('#<sheet\b[^>]*\br:id="([^"]+)"#', $workbook, $sheets);
+        preg_match_all('#<definedName name="_xlnm\.Print_Area" localSheetId="(\d+)">([^<]*)</definedName>#', $workbook, $areas, PREG_SET_ORDER);
+
+        $found = [];
+        foreach ($areas as [, $index, $reference]) {
+            $part = $targetById[$sheets[1][(int) $index] ?? ''] ?? null;
+
+            if ($part && preg_match('#\$?([A-Z]+)\$?(\d+):\$?([A-Z]+)\$?(\d+)#', html_entity_decode($reference), $m)) {
+                $found[$part] = [
+                    Coordinate::columnIndexFromString($m[1]), (int) $m[2],
+                    Coordinate::columnIndexFromString($m[3]), (int) $m[4],
+                ];
+            }
+        }
+
+        return $found;
     }
 
     /**

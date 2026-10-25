@@ -191,6 +191,57 @@ class TemplateFidelityTest extends TestCase
         $this->assertGreaterThanOrEqual(4, $checked, 'no page setups were examined');
     }
 
+    public function test_every_pds_page_is_stretched_to_fill_its_legal_sheet(): void
+    {
+        $source = resource_path('templates/CS-Form-212-2026.xlsx');
+        $prepared = $this->prepared($source);
+
+        // Print areas of the four pages: last column and first/last row.
+        $areas = ['sheet1' => [14, 1, 61], 'sheet2' => [13, 2, 48], 'sheet3' => [11, 1, 51], 'sheet4' => [13, 1, 71]];
+
+        foreach ($areas as $sheet => [$lastColumn, $firstRow, $lastRow]) {
+            $xml = (string) $this->entry($prepared, "xl/worksheets/{$sheet}.xml");
+
+            $widths = [];
+            preg_match_all('#<col\b[^>]*\bmin="(\d+)"[^>]*\bmax="(\d+)"[^>]*\bwidth="([\d.]+)"#', $xml, $cols, PREG_SET_ORDER);
+            foreach ($cols as [, $min, $max, $width]) {
+                for ($i = (int) $min; $i <= (int) $max; $i++) {
+                    $widths[$i] = (float) $width;
+                }
+            }
+
+            $width = 0.0;
+            for ($i = 1; $i <= $lastColumn; $i++) {
+                $width += floor(($widths[$i] ?? 8.43) * 7 + 5) * 0.75;
+            }
+
+            $height = 0.0;
+            preg_match_all('#<row\b([^>]*)>#', $xml, $rows);
+            foreach ($rows[1] as $attributes) {
+                preg_match('#\br="(\d+)"#', $attributes, $r);
+                if ((int) $r[1] < $firstRow || (int) $r[1] > $lastRow || str_contains($attributes, 'hidden="1"')) {
+                    continue;
+                }
+                $height += preg_match('#\bht="([\d.]+)"#', $attributes, $ht) ? (float) $ht[1] : 12.75;
+            }
+
+            // Fitted to Legal's printable width, the page now reaches its
+            // printable height (964.8pt of 576pt across) instead of stopping
+            // a fifth short of it.
+            $this->assertGreaterThanOrEqual(964.8, $height * 576 / $width, "{$sheet} does not fill a Legal page");
+            $this->assertMatchesRegularExpression('#<pageSetup\b[^>]*fitToWidth="1"[^>]*fitToHeight="1"#', $xml,
+                "{$sheet} could spill past one page");
+        }
+
+        // The shapes kept their place within their taller rows: their offsets
+        // from the top of each row grew with it.
+        $offsets = fn (string $path) => array_sum(array_map('intval',
+            preg_match_all('#<xdr:rowOff>(\d+)</xdr:rowOff>#', (string) $this->entry($path, 'xl/drawings/drawing1.xml'), $m) ? $m[1] : []));
+
+        $this->assertGreaterThan(0, $offsets($source));
+        $this->assertGreaterThan($offsets($source) * 1.1, $offsets($prepared));
+    }
+
     public function test_the_leave_form_stays_on_a4(): void
     {
         $zip = new ZipArchive();

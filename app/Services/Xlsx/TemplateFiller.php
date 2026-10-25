@@ -368,6 +368,47 @@ class TemplateFiller
         return ['width' => $width, 'height' => $height];
     }
 
+    /**
+     * The font and alignment the template gave a cell, so an answer can be
+     * written in the form's own style instead of one chosen here.
+     *
+     * @return array{font: string, size: float, bold: bool, italic: bool, horizontal: string, vertical: string}
+     */
+    public function cellStyle(string $sheet, string $coordinate): array
+    {
+        $xpath = new DOMXPath($this->sheet($sheet));
+        $xpath->registerNamespace('m', self::MAIN_NS);
+        $cell = $xpath->query("//m:sheetData/m:row/m:c[@r='" . strtoupper($coordinate) . "']")->item(0);
+        $index = $cell instanceof DOMElement && $cell->getAttribute('s') !== '' ? (int) $cell->getAttribute('s') : 0;
+
+        $styles = new DOMXPath($this->stylesDocument());
+        $styles->registerNamespace('m', self::MAIN_NS);
+        $xf = $styles->query('//m:cellXfs/m:xf')->item($index);
+        $font = $xf instanceof DOMElement
+            ? $styles->query('//m:fonts/m:font')->item((int) $xf->getAttribute('fontId'))
+            : null;
+        $alignment = $xf instanceof DOMElement ? $styles->query('m:alignment', $xf)->item(0) : null;
+
+        $value = fn (string $child, string $default) => $font instanceof DOMElement
+            && ($node = $styles->query("m:{$child}", $font)->item(0)) instanceof DOMElement
+                ? $node->getAttribute('val') : $default;
+        // <b/> and <i/> are on unless val says otherwise.
+        $flag = fn (string $child) => $font instanceof DOMElement
+            && ($node = $styles->query("m:{$child}", $font)->item(0)) instanceof DOMElement
+            && ! in_array($node->getAttribute('val'), ['0', 'false'], true);
+
+        return [
+            'font' => $value('name', 'Arial Narrow'),
+            'size' => (float) $value('sz', '10'),
+            'bold' => $flag('b'),
+            'italic' => $flag('i'),
+            'horizontal' => $alignment instanceof DOMElement && $alignment->getAttribute('horizontal') !== ''
+                ? $alignment->getAttribute('horizontal') : 'general',
+            'vertical' => $alignment instanceof DOMElement && $alignment->getAttribute('vertical') !== ''
+                ? $alignment->getAttribute('vertical') : 'bottom',
+        ];
+    }
+
     /** The index of a font with these properties, added to the workbook if new. */
     private function fontId(DOMDocument $styles, DOMXPath $xpath, array $format): int
     {

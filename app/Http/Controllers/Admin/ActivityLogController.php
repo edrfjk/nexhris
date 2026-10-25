@@ -48,7 +48,7 @@ class ActivityLogController extends Controller
             'people' => User::orderBy('name')->get(['id', 'name']),
             'todayCount' => ActivityLog::whereDate('created_at', today())->count(),
             'failedToday' => ActivityLog::whereDate('created_at', today())
-                ->whereIn('action', ['auth.login_failed', 'auth.2fa_failed', 'auth.locked'])
+                ->whereIn('action', ['auth.login_failed', 'auth.2fa_failed', 'auth.locked', 'auth.login_after_failures'])
                 ->count(),
         ]);
     }

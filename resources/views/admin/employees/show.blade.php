@@ -187,6 +187,7 @@
                             <option value="dean" @selected(old('role', $employee->role) === 'dean')>Dean</option>
                             <option value="campus_director" @selected(old('role', $employee->role) === 'campus_director')>Campus Director</option>
                         </select>
+                        @error('role')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="label">Profile Photo <span class="font-normal text-sand-400">(optional)</span></label>

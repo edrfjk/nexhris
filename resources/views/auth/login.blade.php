@@ -21,9 +21,17 @@
         </div>
     @endunless
 
-    <form method="POST" action="{{ route('login') }}" class="space-y-4" autocomplete="off"
-          x-data="{ agreed: {{ old('terms') ? 'true' : 'false' }}, showTerms: false }">
+    {{-- No autocomplete="off" on the form: the fields name themselves as
+         username and current-password, which is what lets a password manager
+         fill them. --}}
+    <form method="POST" action="{{ route('login') }}" class="space-y-4"
+          x-data="{ agreed: {{ old('terms') ? 'true' : 'false' }}, showTerms: false, submitting: false }"
+          @submit="submitting = true">
         @csrf
+
+        {{-- Every sign-in failure is reported against the email, and the
+             message never says which field was wrong, so both are marked. --}}
+        @php($failed = $errors->has('email') || $errors->has('password'))
 
         <div>
             <label for="email" class="label">Email address</label>
@@ -31,8 +39,10 @@
                 <x-heroicon-o-envelope
                     class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sand-400" />
                 <input type="email" id="email" name="email" value="{{ old('email') }}"
-                       required autofocus autocomplete="username"
-                       class="input pl-9" placeholder="you@ispsc.edu.ph">
+                       required autocomplete="username"
+                       @if (! old('email')) autofocus @endif
+                       @if ($failed) aria-invalid="true" @endif
+                       class="input pl-9 @if ($failed) input-error @endif" placeholder="you@ispsc.edu.ph">
             </div>
         </div>
 
@@ -45,11 +55,15 @@
                 <x-heroicon-o-lock-closed
                     class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sand-400" />
 
+                {{-- After a failed attempt the email is kept, so the cursor
+                     goes where the retyping happens. --}}
                 <input :type="show ? 'text' : 'password'" id="password" name="password"
                        required autocomplete="current-password"
+                       @if (old('email')) autofocus @endif
+                       @if ($failed) aria-invalid="true" @endif
                        @keyup="caps = $event.getModifierState && $event.getModifierState('CapsLock')"
                        @keydown="caps = $event.getModifierState && $event.getModifierState('CapsLock')"
-                       class="input pl-9 pr-11" placeholder="••••••••">
+                       class="input pl-9 pr-11 @if ($failed) input-error @endif" placeholder="••••••••">
 
                 <button type="button" @click="show = !show"
                         class="absolute inset-y-0 right-0 flex items-center px-3 text-sand-400 transition-colors hover:text-maroon-800"
@@ -66,7 +80,16 @@
             </p>
         </div>
 
-        <div class="flex items-center justify-end pt-1">
+        {{-- For a privileged account the cookie is issued only after the
+             emailed code is verified — see LoginController. --}}
+        <div class="flex items-center justify-between gap-3 pt-1">
+            <label class="flex cursor-pointer items-center gap-2 text-[13px] text-sand-700">
+                <input type="checkbox" name="remember" value="1"
+                       @if (old('remember')) checked @endif
+                       class="h-4 w-4 rounded border-sand-300 text-maroon-800 focus:ring-maroon-500">
+                Keep me signed in
+            </label>
+
             <a href="{{ route('password.request') }}"
                class="text-[13px] font-medium text-maroon-700 transition-colors hover:text-maroon-900">
                 Forgot password?
@@ -94,12 +117,23 @@
             </label>
         </div>
 
-        {{-- Disabled until the box is ticked. The cursor and the muted fill say
-             why, so it does not read as a broken button. --}}
-        <button type="submit" class="btn btn-lg btn-primary w-full" :disabled="!agreed">
-            <x-heroicon-o-arrow-right-end-on-rectangle />
-            Sign in
-        </button>
+        {{-- Disabled until the box is ticked, and once pressed, so a second
+             click cannot send a second attempt into the lockout counter. --}}
+        <div>
+            <button type="submit" class="btn btn-lg btn-primary w-full" :disabled="!agreed || submitting">
+                <x-heroicon-o-arrow-right-end-on-rectangle x-show="!submitting" />
+                <svg x-show="submitting" x-cloak class="animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" class="opacity-25" />
+                    <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                </svg>
+                <span x-text="submitting ? 'Signing in…' : 'Sign in'">Sign in</span>
+            </button>
+
+            {{-- A muted button with no reason given reads as a broken one. --}}
+            <p x-show="!agreed" x-cloak class="hint text-center">
+                Accept the Terms and Conditions to continue.
+            </p>
+        </div>
 
         {{-- --------------------------------------------------------------
              Terms dialog. Same wording as /terms — one partial, included in
@@ -161,6 +195,10 @@
         <span>
             For employees, Deans, the Campus Director and the HR Office of
             ISPSC Tagudin Campus.
+            @if (\App\Services\TwoFactorService::isEnabled())
+                Deans, the Campus Director and HR will also be asked for a code
+                sent to their email.
+            @endif
         </span>
     </p>
 @endsection

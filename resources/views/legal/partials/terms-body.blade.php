@@ -117,7 +117,8 @@
     </section>
 
     {{-- 6 --------------------------------------------------------------- --}}
-    <section>
+    {{-- Linked to directly as /terms#privacy from the sign-in footer. --}}
+    <section id="privacy" class="scroll-mt-6">
         <h3 class="mb-1.5 font-semibold text-sand-900">6. Your rights under the Data Privacy Act</h3>
         <p>
             Republic Act No. 10173, the Data Privacy Act of 2012, gives you the

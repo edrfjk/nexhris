@@ -554,7 +554,7 @@ class PdsOnlineFormTest extends TestCase
      * and not, left, centred and "general". Every answer printed must instead
      * be in the one house style, whichever cell it lands in.
      */
-    public function test_every_printed_answer_is_in_the_same_style(): void
+    public function test_every_printed_answer_is_in_its_official_cell_style(): void
     {
         $path = $this->generate([
             'personal' => $this->personal([
@@ -581,6 +581,7 @@ class PdsOnlineFormTest extends TestCase
 
         $template = IOFactory::load(resource_path('templates/CS-Form-212-2026.xlsx'));
         $filled = IOFactory::load($path);
+        $styleFrom = (new \ReflectionClassConstant(PdsWorkbookGenerator::class, 'STYLE_FROM'))->getValue();
         $checked = 0;
 
         foreach (['C1', 'C2', 'C3', 'C4'] as $name) {
@@ -612,13 +613,17 @@ class PdsOnlineFormTest extends TestCase
                     $font = $style->getFont();
                     $where = "{$name}!{$ref} ('{$value}')";
 
-                    $this->assertSame('Arial Narrow', $font->getName(), "{$where} font");
-                    $this->assertTrue($font->getBold(), "{$where} is not bold");
-                    $this->assertFalse($font->getItalic(), "{$where} is italic");
-                    $this->assertSame(9.0, (float) $font->getSize(), "{$where} size");
+                    // The official font of this cell — or of the neighbour it
+                    // is set like — unless the template's is a defect.
+                    $official = $before->getStyle($styleFrom[$name][$ref] ?? $ref)->getFont();
+                    $defect = $official->getSize() < 8 || ! in_array($official->getName(), ['Arial Narrow', 'Arial'], true);
+
+                    $this->assertSame($defect ? 'Arial Narrow' : $official->getName(), $font->getName(), "{$where} font");
+                    $this->assertSame($defect || $official->getBold(), (bool) $font->getBold(), "{$where} weight");
+                    $this->assertSame(! $defect && $official->getItalic(), (bool) $font->getItalic(), "{$where} italic");
+                    $this->assertSame($defect ? 10.0 : (float) $official->getSize(), (float) $font->getSize(), "{$where} size");
                     $this->assertSame('FF000000', $font->getColor()->getARGB(), "{$where} colour");
-                    $this->assertContains($style->getAlignment()->getHorizontal(), ['left', 'center'], "{$where} alignment");
-                    $this->assertSame('center', $style->getAlignment()->getVertical(), "{$where} vertical alignment");
+                    $this->assertContains($style->getAlignment()->getHorizontal(), ['left', 'center', 'right'], "{$where} alignment");
                     $checked++;
                 }
             }

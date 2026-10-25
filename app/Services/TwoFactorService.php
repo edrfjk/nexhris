@@ -21,6 +21,9 @@ class TwoFactorService
     public const SESSION_CHALLENGE = '2fa.challenge_id';
     public const SESSION_VERIFIED = '2fa.verified_at';
 
+    /** "Keep me signed in", held back until the code is verified. */
+    public const SESSION_REMEMBER = '2fa.remember';
+
     /** How long an emailed code stays valid. */
     public const TTL_MINUTES = 10;
 

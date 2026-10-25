@@ -61,6 +61,18 @@ class ActivityLogger
         ]);
     }
 
+    /**
+     * The password was right, but only after a run of wrong ones. That is
+     * what a guessed password looks like from the inside, so HR sees it as
+     * its own line rather than an ordinary green sign-in.
+     */
+    public function loginAfterFailures(User $user, int $failures): void
+    {
+        $this->log('auth.login_after_failures',
+            "{$user->name} signed in after {$failures} failed attempt(s).", $user,
+            ['failed_attempts' => $failures], actor: $user);
+    }
+
     public function accountLocked(User $user, int $minutes): void
     {
         $this->log('auth.locked', "{$user->name} locked out for {$minutes} minute(s).", $user,
@@ -97,5 +109,20 @@ class ActivityLogger
     public function passwordReset(User $user): void
     {
         $this->log('auth.password_reset', "{$user->name} reset their password.", $user, actor: $user);
+    }
+
+    // ------------------------------------------------------------------
+    // Authorisation
+    // ------------------------------------------------------------------
+
+    /** A signed-in account asked for something its role does not allow. */
+    public function accessDenied(User $user, string $method, string $path, ?string $route): void
+    {
+        $this->log('access.denied', "{$user->name} was refused {$method} /{$path}.", null, [
+            'method' => $method,
+            'path' => $path,
+            'route' => $route,
+            'role' => $user->role,
+        ], actor: $user);
     }
 }

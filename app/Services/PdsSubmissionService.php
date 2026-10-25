@@ -183,8 +183,12 @@ class PdsSubmissionService
     private function convertQuietly(PdsSubmission $submission): void
     {
         // Shared hosting caps a request at thirty seconds by default, which a
-        // four-page PDS can approach on a slow box.
-        if (function_exists('set_time_limit')) {
+        // four-page PDS can approach on a slow box. Only ever raised: a limit
+        // of 0 (none, as on the command line) or above must not be replaced
+        // by a fresh two-minute countdown for the rest of the process.
+        $limit = (int) ini_get('max_execution_time');
+
+        if (function_exists('set_time_limit') && $limit > 0 && $limit < 120) {
             @set_time_limit(120);
         }
 

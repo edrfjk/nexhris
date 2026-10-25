@@ -197,13 +197,13 @@
                             @endif
                         </td>
                         <td>
-                            @if ($employee->isEmployee())
-                                <span class="text-sand-500">—</span>
-                            @else
-                                <x-badge :color="$employee->isDean() ? 'violet' : 'amber'">
-                                    {{ $employee->roleLabel() }}
-                                </x-badge>
-                            @endif
+                            <x-badge :color="match (true) {
+                                $employee->isDean() => 'violet',
+                                $employee->isCampusDirector() => 'amber',
+                                default => 'gray',
+                            }">
+                                {{ $employee->roleLabel() }}
+                            </x-badge>
                         </td>
                         <td>
                             <x-badge :color="$employee->status === 'active' ? 'green' : 'gray'">
@@ -326,6 +326,7 @@
                             <option value="campus_director" @selected(old('role') === 'campus_director')>Campus Director</option>
                         </select>
                         <span class="hint">Role controls access; position is the job title.</span>
+                        @error('role') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="label label-required">First day of government service</label>

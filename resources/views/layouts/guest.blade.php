@@ -21,20 +21,53 @@
          ------------------------------------------------------------------ --}}
     <div class="auth-brand hidden lg:flex lg:w-[58%] xl:w-[60%] flex-col px-16 py-12">
 
+        {{-- The seal again, large and faint, the way it sits behind the text
+             on a certificate. It fills the half of the panel the text does
+             not reach. --}}
+        <img src="{{ asset('images/ispsc-seal-640.png') }}" alt="" aria-hidden="true"
+             class="auth-watermark">
+
         {{-- The institutional lockup: seal and name side by side, as a
              letterhead carries them. --}}
-        <div class="flex items-center gap-5">
-            <img src="{{ asset('images/ispsc-logo.png') }}" alt="ISPSC seal"
-                 class="auth-seal h-[72px] w-[72px] shrink-0">
+        <div class="flex items-start justify-between gap-8">
+            <div class="flex items-center gap-5">
+                <img src="{{ asset('images/ispsc-seal-640.png') }}" alt="ISPSC seal"
+                     class="auth-seal h-[72px] w-[72px] shrink-0">
 
-            <div>
+                <div>
+                    <p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-400">
+                        Republic of the Philippines
+                    </p>
+                    <h1 class="mt-1 text-xl font-bold leading-tight tracking-tight">
+                        Ilocos Sur Polytechnic State College
+                    </h1>
+                    <p class="mt-0.5 text-[13px] text-white/70">Tagudin Campus, Ilocos Sur</p>
+                </div>
+            </div>
+
+            {{-- Philippine Standard Time, as government sites carry it. The
+                 server's clock, not the visitor's: the offset is taken once
+                 at load, so a wrong clock on a shared office PC still shows
+                 the right time. Rendered on the server first, so it reads
+                 correctly before Alpine starts. --}}
+            <div class="hidden shrink-0 text-right xl:block"
+                 x-data="{
+                     offset: {{ now()->getTimestampMs() }} - Date.now(),
+                     now: null,
+                     tick() { this.now = new Date(Date.now() + this.offset) },
+                     init() { this.tick(); setInterval(() => this.tick(), 1000) },
+                 }">
                 <p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-400">
-                    Republic of the Philippines
+                    Philippine Standard Time
                 </p>
-                <h1 class="mt-1 text-xl font-bold leading-tight tracking-tight">
-                    Ilocos Sur Polytechnic State College
-                </h1>
-                <p class="mt-0.5 text-[13px] text-white/70">Tagudin Campus, Ilocos Sur</p>
+                <p class="mt-1 text-xl font-bold leading-tight tabular-nums"
+                   x-text="now && now.toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' })">
+                    {{ now()->format('g:i A') }}
+                </p>
+                <p class="mt-0.5 text-[13px] text-white/70"
+                   x-text="now && now.toLocaleDateString('en-US', { timeZone: 'Asia/Manila', weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })">
+                    {{ now()->format('l, F j, Y') }}
+                </p>
             </div>
         </div>
 
@@ -74,36 +107,55 @@
 
             <div class="mt-8 grid max-w-2xl grid-cols-2 gap-3">
                 <div class="auth-tile">
-                    <x-heroicon-o-document-text />
-                    <span class="auth-tile-title">Personal Data Sheet</span>
-                    <span class="auth-tile-note">Filed online and reviewed by HR</span>
+                    <span class="auth-tile-icon"><x-heroicon-o-document-text /></span>
+                    <div>
+                        <span class="auth-tile-title">Personal Data Sheet</span>
+                        <span class="auth-tile-note">Filed online and reviewed by HR</span>
+                    </div>
                 </div>
 
                 <div class="auth-tile">
-                    <x-heroicon-o-check-badge />
-                    <span class="auth-tile-title">Leave approvals</span>
-                    <span class="auth-tile-note">Dean, HR and the Campus Director</span>
+                    <span class="auth-tile-icon"><x-heroicon-o-check-badge /></span>
+                    <div>
+                        <span class="auth-tile-title">Leave approvals</span>
+                        <span class="auth-tile-note">Dean, HR and the Campus Director</span>
+                    </div>
                 </div>
 
                 <div class="auth-tile">
-                    <x-heroicon-o-book-open />
-                    <span class="auth-tile-title">Ledger cards</span>
-                    <span class="auth-tile-note">Leave and service credits, to the official form</span>
+                    <span class="auth-tile-icon"><x-heroicon-o-book-open /></span>
+                    <div>
+                        <span class="auth-tile-title">Ledger cards</span>
+                        <span class="auth-tile-note">Leave and service credits, to the official form</span>
+                    </div>
                 </div>
 
                 <div class="auth-tile">
-                    <x-heroicon-o-identification />
-                    <span class="auth-tile-title">Digital ID</span>
-                    <span class="auth-tile-note">With a QR code anyone can verify</span>
+                    <span class="auth-tile-icon"><x-heroicon-o-identification /></span>
+                    <div>
+                        <span class="auth-tile-title">Digital ID</span>
+                        <span class="auth-tile-note">With a QR code anyone can verify</span>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="auth-divider mb-5 mt-8"></div>
 
-        <p class="text-xs text-white/60">
-            &copy; {{ date('Y') }} ISPSC Tagudin Campus · Human Resource Management Office
-        </p>
+        {{-- New tabs, so a half-filled sign-in form is not thrown away. --}}
+        <div class="flex items-center justify-between gap-6 text-xs text-white/60">
+            <p>&copy; {{ date('Y') }} ISPSC Tagudin Campus · Human Resource Management Office</p>
+
+            <nav class="flex shrink-0 items-center gap-4" aria-label="Legal">
+                <a href="{{ route('terms') }}#privacy" target="_blank" rel="noopener" class="auth-footer-link">
+                    <x-heroicon-o-lock-closed class="h-3.5 w-3.5" />
+                    Data Privacy
+                </a>
+                <a href="{{ route('terms') }}" target="_blank" rel="noopener" class="auth-footer-link">
+                    Terms and Conditions
+                </a>
+            </nav>
+        </div>
     </div>
 
     {{-- ------------------------------------------------------------------

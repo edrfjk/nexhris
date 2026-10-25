@@ -26,5 +26,35 @@ return Application::configure(basePath: dirname(__DIR__))
     ]);
 })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Every error line in laravel.log says who hit it and where, so a run
+        // of 500s can be traced to one page, one account, one address.
+        $exceptions->context(function () {
+            try {
+                return [
+                    'user_id' => auth()->id(),
+                    'method' => request()->method(),
+                    'url' => request()->fullUrl(),
+                    'ip' => request()->ip(),
+                ];
+            } catch (\Throwable) {
+                return [];
+            }
+        });
+
+        // A 403 is the server refusing a role, which is the control working —
+        // but a run of them from one account is someone probing for HR
+        // screens. Record it, then let Laravel render the usual error page.
+        // Policy refusals arrive here too: they are mapped to a 403 first.
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, \Illuminate\Http\Request $request) {
+            if ($e->getStatusCode() === 403 && $request->user()) {
+                app(\App\Services\ActivityLogger::class)->accessDenied(
+                    $request->user(),
+                    $request->method(),
+                    $request->path(),
+                    $request->route()?->getName(),
+                );
+            }
+
+            return null;
+        });
     })->create();

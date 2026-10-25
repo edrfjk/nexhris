@@ -16,6 +16,7 @@ class LoginController extends Controller
 {
     private const MAX_ATTEMPTS = 5;
     private const LOCKOUT_MINUTES = 15;
+    private const SUSPICIOUS_AFTER = 3;
 
     public function __construct(
         private TwoFactorService $twoFactor,
@@ -72,7 +73,14 @@ class LoginController extends Controller
                 ->onlyInput('email');
         }
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        // A remember-me cookie issued here would outlive the half-authenticated
+        // session: drop the session cookie and the recaller signs the user
+        // straight back in, past the code screen. Accounts that need a second
+        // factor get the cookie only once the code is verified.
+        $remember = $request->boolean('remember');
+        $needsSecondFactor = $user && $this->twoFactor->isRequiredFor($user);
+
+        if (! Auth::attempt($credentials, $remember && ! $needsSecondFactor)) {
             RateLimiter::hit($throttleKey, self::LOCKOUT_MINUTES * 60);
 
             if ($user) {
@@ -114,7 +122,15 @@ class LoginController extends Controller
             ]);
         }
 
-        // Password accepted: clear the throttle and any lockout state.
+        // Password accepted: clear the throttle and any lockout state. The
+        // count is read first — a success that ends a run of failures is
+        // recorded as such, since that is how a guessed password looks.
+        $priorFailures = (int) $user->failed_login_attempts;
+
+        if ($priorFailures >= self::SUSPICIOUS_AFTER) {
+            $this->log->loginAfterFailures($user, $priorFailures);
+        }
+
         RateLimiter::clear($throttleKey);
         $user->update(['failed_login_attempts' => 0, 'locked_until' => null]);
         $request->session()->regenerate();
@@ -136,6 +152,7 @@ class LoginController extends Controller
 
             $request->session()->put(TwoFactorService::SESSION_USER, $user->id);
             $request->session()->put(TwoFactorService::SESSION_CHALLENGE, $challenge->id);
+            $request->session()->put(TwoFactorService::SESSION_REMEMBER, $remember);
 
             return redirect()->route('two-factor.challenge');
         }

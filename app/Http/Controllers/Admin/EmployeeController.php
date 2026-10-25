@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Position;
 use App\Models\Department;
+use App\Services\ActivityLogger;
 use App\Support\DocumentName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +18,13 @@ use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class EmployeeController extends Controller
 {
+    /** Fields whose values never go into the audit trail, only their names. */
+    private const UNLOGGED_VALUES = ['password', 'remember_token'];
+
+    public function __construct(private ActivityLogger $log)
+    {
+    }
+
 public function index(Request $request)
 {
     $employees = User::with(['college', 'departmentRecord'])->whereIn('role', ['employee', 'dean', 'campus_director'])
@@ -56,8 +64,10 @@ public function index(Request $request)
 
     $positions = Position::active()->orderBy('category')->orderBy('sort_order')->orderBy('name')->get();
 
+    $campusDirector = $this->currentCampusDirector();
+
     return view('admin.employees.index', compact(
-        'employees', 'colleges', 'positions', 'activeCount', 'inactiveCount', 'newThisMonthCount'
+        'employees', 'colleges', 'positions', 'activeCount', 'inactiveCount', 'newThisMonthCount', 'campusDirector'
     ));
 }
 
@@ -141,6 +151,7 @@ public function store(Request $request)
         'photo' => ['nullable', 'image', 'max:2048'],
         'confirm_replace_dean' => ['nullable', 'boolean'],
         'confirm_replace_program_head' => ['nullable', 'boolean'],
+        'confirm_replace_campus_director' => ['nullable', 'boolean'],
         ]);
 
     $this->normaliseStructuredName($validated, true);
@@ -159,7 +170,7 @@ public function store(Request $request)
     $validated = $this->withLegacyOrgStrings($validated);
 
     $employee = User::create([
-        ...collect($validated)->except(['photo', 'confirm_replace_dean', 'confirm_replace_program_head'])->toArray(),
+        ...collect($validated)->except(['photo', 'confirm_replace_dean', 'confirm_replace_program_head', 'confirm_replace_campus_director'])->toArray(),
         'role' => $validated['role'],
         'status' => 'active',
         'password' => Hash::make($validated['password']),
@@ -167,6 +178,12 @@ public function store(Request $request)
     ]);
 
     $this->syncOrganisationAssignments($employee);
+
+    $role = $employee->fresh()->role;
+    $this->log->log('employee.created', "Created the account of {$employee->name} as {$role}.", $employee, [
+        'employee_number' => $employee->employee_number,
+        'role' => $role,
+    ]);
 
     return redirect()->route('admin.employees.index')
         ->with('success', 'Employee account created successfully.');
@@ -179,7 +196,9 @@ public function edit(User $employee)
     $colleges = $this->organisations();
     $positions = Position::active()->orderBy('category')->orderBy('sort_order')->orderBy('name')->get();
 
-    return view('admin.employees.edit', compact('employee', 'colleges', 'positions'));
+    $campusDirector = $this->currentCampusDirector($employee);
+
+    return view('admin.employees.edit', compact('employee', 'colleges', 'positions', 'campusDirector'));
 }
 
     public function update(Request $request, User $employee)
@@ -205,6 +224,7 @@ public function edit(User $employee)
         'photo' => ['nullable', 'image', 'max:2048'],
         'confirm_replace_dean' => ['nullable', 'boolean'],
         'confirm_replace_program_head' => ['nullable', 'boolean'],
+        'confirm_replace_campus_director' => ['nullable', 'boolean'],
         ]);
 
         foreach (['college_id', 'department_id', 'role', 'contact_number', 'position', 'first_day_of_service', 'date_hired', 'first_name', 'middle_name', 'last_name'] as $field) {
@@ -249,9 +269,13 @@ public function edit(User $employee)
         }
         unset($validated['photo']);
 
-        $employee->update(collect($validated)->except([
-            'confirm_replace_dean', 'confirm_replace_program_head',
-        ])->toArray());
+        $payload = collect($validated)->except([
+            'confirm_replace_dean', 'confirm_replace_program_head', 'confirm_replace_campus_director',
+        ])->toArray();
+        $before = $employee->only(array_keys($payload));
+
+        $employee->update($payload);
+        $this->logEmployeeChange($employee, $before);
         $this->syncOrganisationAssignments($employee->fresh());
 
         return redirect()->route('admin.employees.show', $employee)
@@ -261,6 +285,21 @@ public function edit(User $employee)
     /** Make the account's official position the source of organisational assignments. */
     private function syncOrganisationAssignments(User $employee): void
     {
+        // The campus has one Campus Director. Handing the role to someone new
+        // returns whoever held it to a regular Employee account.
+        if ($employee->role === 'campus_director') {
+            User::where('role', 'campus_director')->whereKeyNot($employee->id)->get()
+                ->each(function (User $previous) use ($employee) {
+                    $previous->update(['role' => 'employee']);
+                    $this->log->log('employee.updated',
+                        "Returned {$previous->name} to Employee; {$employee->name} is now Campus Director.", $previous, [
+                            'changed' => ['role'],
+                            'before' => ['role' => 'campus_director'],
+                            'after' => ['role' => 'employee'],
+                        ]);
+                });
+        }
+
         $isProgramHead = $employee->position === 'Program Chair / Program Head';
 
         // A person no longer holding the position, or moved to another
@@ -302,6 +341,16 @@ public function edit(User $employee)
         $position = $data['position'] ?? $employee?->position;
         $collegeId = $data['college_id'] ?? $employee?->college_id;
         $departmentId = $data['department_id'] ?? $employee?->department_id;
+        $role = $data['role'] ?? $employee?->role;
+
+        if ($role === 'campus_director' && empty($data['confirm_replace_campus_director'])) {
+            $current = $this->currentCampusDirector($employee);
+            if ($current) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'role' => "{$current->name} is already the Campus Director. Confirm the replacement to continue.",
+                ]);
+            }
+        }
 
         if ($position === 'College Dean' && $collegeId) {
             $current = \App\Models\College::find($collegeId)?->dean_id;
@@ -434,7 +483,17 @@ public function edit(User $employee)
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ]);
 
+        $previous = $employee->status;
         $employee->update(['status' => $data['status']]);
+
+        if ($previous !== $data['status']) {
+            $this->log->log(
+                $data['status'] === 'inactive' ? 'employee.deactivated' : 'employee.activated',
+                "Set the account of {$employee->name} to {$data['status']}.",
+                $employee,
+                ['before' => ['status' => $previous], 'after' => ['status' => $data['status']]],
+            );
+        }
 
         $response = back()->with('success', "{$employee->name}'s account is now " . $data['status'] . '.');
 
@@ -488,6 +547,7 @@ public function show(Request $request, User $employee)
         'employee' => $employee,
         'colleges' => $colleges,
         'positions' => $positions,
+        'campusDirector' => $this->currentCampusDirector($employee),
         'balance' => $employee->leaveBalance,
         'pds' => $employee->pdsSubmissions()->where('applicable_year', $year)->first(),
         'pdsYear' => $year,
@@ -512,7 +572,34 @@ public function show(Request $request, User $employee)
         $path = $request->file('photo')->store('profile-photos', 'public');
         $employee->update(['profile_photo_path' => $path]);
 
+        $this->log->log('employee.photo_updated', "Replaced the photo of {$employee->name}.", $employee);
+
         return back()->with('success', 'Photo updated successfully.');
+    }
+
+    /**
+     * One audit line per saved edit: which fields moved, from what, to what.
+     * Password values are never written — only that the password changed.
+     */
+    private function logEmployeeChange(User $employee, array $before): void
+    {
+        $changed = array_keys(collect($employee->getChanges())->except('updated_at')->all());
+
+        if (! $changed) {
+            return;
+        }
+
+        $values = fn (array $source) => collect($changed)
+            ->reject(fn ($field) => in_array($field, self::UNLOGGED_VALUES, true))
+            ->mapWithKeys(fn ($field) => [$field => $source[$field] ?? null])
+            ->all();
+
+        $this->log->log('employee.updated',
+            "Updated the account of {$employee->name} (" . implode(', ', $changed) . ').', $employee, [
+                'changed' => $changed,
+                'before' => $values($before),
+                'after' => $values($employee->only($changed)),
+            ]);
     }
 
     /**
@@ -524,6 +611,14 @@ public function show(Request $request, User $employee)
     private function assertManagedHere(User $employee): void
     {
         abort_unless(in_array($employee->role, ['employee', 'dean', 'campus_director'], true), 404);
+    }
+
+    /** The account currently holding the Campus Director role, if any. */
+    private function currentCampusDirector(?User $except = null): ?User
+    {
+        return User::where('role', 'campus_director')
+            ->when($except, fn ($query) => $query->whereKeyNot($except->id))
+            ->first(['id', 'name']);
     }
 
     private function organisations()

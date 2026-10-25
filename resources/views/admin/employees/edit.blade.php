@@ -134,6 +134,7 @@
                                 <option value="campus_director" @selected(old('role', $employee->role) === 'campus_director')>Campus Director</option>
                             </select>
                             <span class="hint">Decides which screens this person sees.</span>
+                            @error('role')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                         </div>
 
                         <div>

@@ -290,6 +290,55 @@ class AuthenticationTest extends TestCase
         $this->assertNotNull(TwoFactorChallenge::first()->consumed_at);
     }
 
+    public function test_an_employee_can_ask_to_stay_signed_in(): void
+    {
+        $user = $this->user('employee');
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'correct-horse-battery',
+            'terms' => '1',
+            'remember' => '1',
+        ])->assertRedirect('/dashboard')
+            ->assertCookie(auth()->guard()->getRecallerName());
+
+        $this->assertNotNull($user->fresh()->remember_token);
+    }
+
+    /**
+     * A remember-me cookie issued at the password step would sign the user
+     * back in, fully, once the half-authenticated session was dropped — the
+     * code screen skipped entirely.
+     */
+    public function test_remember_me_waits_for_the_second_factor(): void
+    {
+        $user = $this->user('admin');
+        Mail::fake();
+        $code = null;
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'correct-horse-battery',
+            'terms' => '1',
+            'remember' => '1',
+        ])->assertRedirect(route('two-factor.challenge'))
+            ->assertCookieMissing(auth()->guard()->getRecallerName());
+
+        $this->assertNull($user->fresh()->remember_token);
+
+        Mail::assertSent(TwoFactorCodeMail::class, function ($mail) use (&$code) {
+            $code = $mail->code;
+
+            return true;
+        });
+
+        $this->post(route('two-factor.verify'), ['code' => $code])
+            ->assertRedirect('/admin/dashboard')
+            ->assertCookie(auth()->guard()->getRecallerName());
+
+        $this->assertNotNull($user->fresh()->remember_token);
+    }
+
     public function test_wrong_code_is_rejected_and_counted(): void
     {
         $user = $this->user('admin');

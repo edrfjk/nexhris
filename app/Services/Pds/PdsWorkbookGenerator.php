@@ -34,12 +34,40 @@ class PdsWorkbookGenerator
     private const CENTER = 'center';
 
     /**
-     * One look for every answer on the form, whatever the template's cell
-     * said: the form's own Arial Narrow, bold, black. 9pt is the largest
-     * size every answer box on the form can hold, down to page 4's 11pt
-     * lines; only text too long for its box, even wrapped, is set smaller.
+     * Every answer is printed in the font the official template gives its
+     * cell — mostly Arial Narrow 10pt bold, the addresses 8pt — so a form
+     * filled here reads like one typed into the CSC workbook. A handful of
+     * the template's answer cells are plainly defects (the children's names
+     * at 5pt, the course column at 7pt); those take this standard answer
+     * style instead. Text too long for its box, even wrapped, is set smaller.
      */
-    private const ANSWER_SIZE = 9.0;
+    private const STANDARD_STYLE = ['font' => 'Arial Narrow', 'size' => 10.0, 'bold' => true, 'italic' => false];
+
+    /** Below this a template cell's size is a defect, not a choice. */
+    private const SMALLEST_OFFICIAL_SIZE = 8.0;
+
+    /**
+     * Answer cells styled out of line with the rest of their group in the
+     * template, and the cell whose style they take: page 1's ID numbers are
+     * half centred and half left-set, its date of birth is the one answer
+     * not in bold, the permanent address alone is italic, and so on. Each is
+     * set like its neighbours, which is how the form reads on paper.
+     * Continuation pages share their page's map.
+     */
+    private const STYLE_FROM = [
+        'C1' => [
+            'D13' => 'D22', 'D15' => 'D22', 'D24' => 'D22',
+            'D31' => 'D22', 'D32' => 'D22', 'D33' => 'D22', 'D34' => 'D22',
+            'I25' => 'I17', 'L25' => 'L17', 'I27' => 'I17', 'L27' => 'L17',
+            'I29' => 'I17', 'L29' => 'L17', 'I31' => 'I17',
+            'G54' => 'G57', 'G55' => 'G57', 'K54' => 'K55', 'L55' => 'L54',
+        ],
+        'C3' => [
+            'A19' => 'A18', 'A20' => 'A18', 'A21' => 'A18', 'A22' => 'A18',
+            'A23' => 'A18', 'A24' => 'A18', 'A25' => 'A18',
+        ],
+        'C4' => ['I15' => 'I11', 'K32' => 'K20', 'K35' => 'K20'],
+    ];
 
     private const SMALLEST_SIZE = 6.0;
 
@@ -584,8 +612,9 @@ class PdsWorkbookGenerator
     }
 
     /**
-     * Writes one answer in the house style: bold Arial Narrow at 9pt, wrapped
+     * Writes one answer in its cell's official font and alignment, wrapped
      * within its box, stepped down only if the text would not otherwise fit.
+     * $align applies where the template leaves alignment to Excel.
      * Nothing is written for a blank value.
      */
     private function answer(TemplateFiller $f, string $sheet, string $cell, mixed $value, string $align = self::LEFT): void
@@ -597,25 +626,40 @@ class PdsWorkbookGenerator
         $text = trim((string) $value);
         $f->setCell($sheet, $cell, $text);
 
+        $page = preg_replace('/ \(\d+\)$/', '', $sheet);
+        $style = $f->cellStyle($sheet, self::STYLE_FROM[$page][strtoupper($cell)] ?? $cell);
+
+        if ($style['size'] < self::SMALLEST_OFFICIAL_SIZE || ! in_array($style['font'], ['Arial Narrow', 'Arial'], true)) {
+            $style = self::STANDARD_STYLE + ['vertical' => 'center'] + $style;
+        }
+
+        $horizontal = in_array($style['horizontal'], [self::LEFT, self::CENTER, 'right'], true) ? $style['horizontal'] : $align;
+        $vertical = in_array($style['vertical'], ['top', 'center', 'bottom'], true) ? $style['vertical'] : 'center';
+
         // An indent keeps left-set text off the box's border.
-        $indent = $align === self::LEFT ? 1 : 0;
+        $indent = $horizontal === self::LEFT ? 1 : 0;
         $box = $f->boxSize($sheet, $cell);
 
         $f->formatCell($sheet, $cell, [
-            'size' => $this->fittingSize($text, $box['width'] - 4 - $indent * 7.5, $box['height']),
-            'bold' => true,
-            'horizontal' => $align,
-            'vertical' => 'center',
+            'font' => $style['font'],
+            'size' => $this->fittingSize($text, $box['width'] - 4 - $indent * 7.5, $box['height'], $style),
+            'bold' => $style['bold'],
+            'italic' => $style['italic'],
+            'horizontal' => $horizontal,
+            'vertical' => $vertical,
             'wrap' => true,
             'indent' => $indent,
         ]);
     }
 
-    /** The largest size, from 9pt down, at which the text fits its box. */
-    private function fittingSize(string $text, float $width, float $height): float
+    /** The largest size, from the cell's own down, at which the text fits its box. */
+    private function fittingSize(string $text, float $width, float $height, array $style): float
     {
-        for ($size = self::ANSWER_SIZE; $size > self::SMALLEST_SIZE; $size -= 0.5) {
-            if ($this->linesNeeded($text, $width, $size) * $size * 1.15 <= $height) {
+        // Full-width Arial runs about a fifth wider than Arial Narrow.
+        $widthFactor = $style['font'] === 'Arial' ? 1.2 : 1.0;
+
+        for ($size = $style['size']; $size > self::SMALLEST_SIZE; $size -= 0.5) {
+            if ($this->linesNeeded($text, $width / $widthFactor, $size) * $size * 1.15 <= $height) {
                 return $size;
             }
         }
@@ -687,7 +731,7 @@ class PdsWorkbookGenerator
         $caption = trim($f->getCellText('C1', $cell));
         $f->setRichCell('C1', $cell, [
             [$caption . '  ', null],
-            [strtoupper(trim($value)), ['size' => self::ANSWER_SIZE, 'bold' => true]],
+            [strtoupper(trim($value)), ['size' => self::STANDARD_STYLE['size'], 'bold' => true]],
         ]);
     }
 
