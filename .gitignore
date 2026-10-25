@@ -20,6 +20,10 @@
 /storage/*.key
 /storage/pail
 /vendor
+/docs/
+/video-assets/
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+/docs/
