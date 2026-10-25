@@ -121,8 +121,9 @@ class PdsCheckboxPrintingTest extends TestCase
 
             // No per-page custom view with its own scale and margins …
             $this->assertStringNotContainsString('<customSheetViews>', $xml, "sheet{$sheet}");
-            // … but one width-fit, the same margins, centred.
-            $this->assertMatchesRegularExpression('/<pageSetup\b[^>]*fitToWidth="1" fitToHeight="0"/', $xml, "sheet{$sheet}");
+            // … but one page wide and tall (the rows are stretched to fill
+            // Legal), the same margins, centred.
+            $this->assertMatchesRegularExpression('/<pageSetup\b[^>]*fitToWidth="1" fitToHeight="1"/', $xml, "sheet{$sheet}");
             $this->assertStringContainsString('<pageMargins left="0.25" right="0.25"', $xml, "sheet{$sheet}");
             $this->assertStringContainsString('horizontalCentered="1"', $xml, "sheet{$sheet}");
         }
